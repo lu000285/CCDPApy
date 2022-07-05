@@ -1,0 +1,17 @@
+Measurements differences compared to CL1
+1.  No feed concentration, but have measurements after feeding.
+2.  Sparse measurements in AA, except glutamine and glutamate.
+3.  Supplements are different, including meadia feed, glucose feed, and base feed.
+
+Ways to calculate cumulative comsuption of metabolites:
+1.  Add a new column to calculate volume after feeding at time t. (Also append this column in other CLs)
+    Formula: Volume After Sampling + Feed Media added + Glucose Added + Base Added
+2.  Formula for cumulative consumption (S) of metabolites i at time t:
+    S(i,t) = S(i,t-1) + [volume after feeding(t-1)*Conc(i,t-1) 
+            - volume after feeding(t)**Conc(i,t)]/1000
+    Notes: 
+    a.  1000 is for unit conversion
+    b.  When it is a sparse measurement, t-1 should be the previous time point that have the measurement.
+
+
+

@@ -1,0 +1,19 @@
+Measurements differences compared to CL1
+1.  No feed concentration and no concentration measurements after feeding
+2.  Have calculated cumulative consumption of glucose and production of lactate
+
+
+Ways to calculate cumulative comsuption of metabolites:
+1.  Direct use the reported cumulative cons.of glucose. 
+    Notes:
+    a.	Beaware of the unit. It is [mM], so the caculation of specific rate is different.
+    b.  Fommula = "time derivative of cumulative cons."/"viable cell concentraion (Xv) at time t"
+2.  Calculate cumulative cons. of lactate (prod.), glutamine, asparagine, aspartate
+    Formula for cumulative consumption (S) of i at time t:
+    S(i,t) = S(i,t-1) + [volume after feeding(t-1)*Conc(i,t-1) 
+            - volume after feeding(t)**Conc(i,t)]/1000
+    Notes: 
+    a.  1000 is for unit conversion
+
+
+
