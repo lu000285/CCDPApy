@@ -1,4 +1,4 @@
-PATpy is a Python Package for Process Analytical Technology Tool in Biomanufacturing
+CCDPApy is a Python Package for Cell Culture Data Processing and Analysis Tool in Biomanufacturing
 
 
 ------------------
