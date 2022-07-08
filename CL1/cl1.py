@@ -45,7 +45,7 @@ def main():
 
         # Savitzky-Golay Filter
         polyorder=3
-        windos_size = 5
+        windos_size = 13
         savgol_df = savgolFilterCalc(bio_process.get_measured_data(),
                                     bio_process.get_species_dict(),
                                     polyorder=polyorder,
@@ -59,9 +59,9 @@ def main():
 
     # Plotting via BioProcess class
     species = ['Lactate', 'Glucose', 'Glutamine', 'Asparagine', 'Aspartate']
-    img_1 = 'CL1_1_WS_5.png'
-    img_2 = 'CL1_2_WS_5.png'
-    img_3 = 'CL1_3_WS_5.png'
+    img_1 = 'CL1_1_WS_13.png'
+    img_2 = 'CL1_2_WS_13.png'
+    img_3 = 'CL1_3_WS_13.png'
     img_lst = [img_1, img_2, img_3]
     output_img_path = [os.path.join(OUTPUT_BASE, img_name) for img_name in img_lst]
 
@@ -70,74 +70,7 @@ def main():
         fig.savefig(output_img_path[i])
         print(img_lst[i] + ' saved')
 
-    # Savgol Filter Window Size = 7
-    exp_2 = {}
-    for key, value in exp.items():
-        # Savitzky-Golay Filter
-        windos_size = 7
-        savgol_df = savgolFilterCalc(value.get_measured_data(), value.get_species_dict(), window_size=windos_size)
-        value.set_post_process(savgol_df)
 
-        exp_2[key] = value
-
-    # Plotting via BioProcess class
-    img_1 = 'CL1_1_WS_7.png'
-    img_2 = 'CL1_2_WS_7.png'
-    img_3 = 'CL1_3_WS_7.png'
-    img_lst = [img_1, img_2, img_3]
-    output_img_path = [os.path.join(OUTPUT_BASE, img_name) for img_name in img_lst]
-
-    for i, x in enumerate(exp_2.values()):
-        fig = x.plot_profile(species, polyreg=True, savgol=True)
-        fig.savefig(output_img_path[i])
-        print(img_lst[i] + ' saved')
-
-    # Savgol Filter Window Size = 9
-    exp_3 = {}
-    for key, value in exp.items():
-        # Savitzky-Golay Filter
-        windos_size = 9
-        savgol_df = savgolFilterCalc(value.get_measured_data(), value.get_species_dict(), window_size=windos_size)
-        value.set_post_process(savgol_df)
-
-        exp_3[key] = value
-
-    # Plotting via BioProcess class
-    img_1 = 'CL1_1_WS_9.png'
-    img_2 = 'CL1_2_WS_9.png'
-    img_3 = 'CL1_3_WS_9.png'
-    img_lst = [img_1, img_2, img_3]
-    output_img_path = [os.path.join(OUTPUT_BASE, img_name) for img_name in img_lst]
-
-    for i, x in enumerate(exp_3.values()):
-        fig = x.plot_profile(species, polyreg=True, savgol=True)
-        fig.savefig(output_img_path[i])
-        print(img_lst[i] + ' saved')
-
-    # Savgol Filter Window Size = 13
-    exp_4 = {}
-    for key, value in exp.items():
-        # Savitzky-Golay Filter
-        windos_size = 13
-        savgol_df = savgolFilterCalc(value.get_measured_data(), value.get_species_dict(), window_size=windos_size)
-        value.set_post_process(savgol_df)
-
-        exp_4[key] = value
-
-    # Plotting via BioProcess class
-    img_1 = 'CL1_1_WS_13.png'
-    img_2 = 'CL1_2_WS_13.png'
-    img_3 = 'CL1_3_WS_13.png'
-    img_lst = [img_1, img_2, img_3]
-    output_img_path = [os.path.join(OUTPUT_BASE, img_name) for img_name in img_lst]
-
-    for i, x in enumerate(exp_4.values()):
-        fig = x.plot_profile(species, polyreg=True, savgol=True)
-        fig.savefig(output_img_path[i])
-        print(img_lst[i] + ' saved')
-
-
-    
     return 0
 
 
@@ -230,6 +163,8 @@ class Species:
         self._savgol_order = np.nan
         self._savgol_cumulative = pd.Series(data=np.nan, name='Savgol Filter CUM CONS.')
         self._savgol_sp_rate = pd.Series(data=np.nan, name='Savogol Filter SP.')
+        self._savgol_sp_rate_mrr = None
+        self._savgol_sp_rate_const = None
 
     # Setters
     def set_cumlative(self, cumulative):
@@ -378,9 +313,19 @@ def plot(self, concentration=True, cumulative=True, sp_rate=True,
         if (savgol):
             # ax = fig.add_subplot(column, factor, ax_idx) # add axis
             y2 = self._savgol_sp_rate
+            y3 = self._savgol_sp_rate_mrr
+            y4 = self._savgol_sp_rate_const
 
-            ax.plot(x, y2, ls='-.', label=('Savgol. Fil.\nOrder: ' + str(self._savgol_order) +\
+            # interapt
+            ax.plot(x, y2, ls='-.', label=('Savgol. Fil. interp\nOrder: ' + str(self._savgol_order) +\
                                 '\nWindow Size: ' + str(self._window_size)))   # plot
+            # mirror
+            ax.plot(x, y3, ls='-.', label=('Savgol. Fil. mirror\nOrder: ' + str(self._savgol_order) +\
+                                '\nWindow Size: ' + str(self._window_size)))   # plot
+            # const
+            ax.plot(x, y4, ls='-.', label=('Savgol. Fil. const\nOrder: ' + str(self._savgol_order) +\
+                                '\nWindow Size: ' + str(self._window_size)))   # plot
+
 
             # ax.set_title('SP. Rate\nSavitzky Golay Filter', loc='left')
             ax.set_ylabel('SP. rate (mmol/109 cell/hr)')
@@ -1225,7 +1170,7 @@ def polynomialRegressionCalc(df_measured_data, spc_dict):
 
     # Calculate Polynomial Regression
     for name, order in poly_reg_order_dict.items():
-        # order = 3
+        order = 3
         spc = spc_dict[name]
         spc.poly_regression(polyreg_order=order)
         unit = ' (mmol/10e9 cells/hr)'
@@ -1277,16 +1222,24 @@ def savgolFilter(self, polyorder, window):
     self._savgol_cumulative = pd.Series(p)  # cumulative df
 
     # initialize df
-    q = pd.Series([np.nan] * len(t)) 
+    q = pd.Series([np.nan] * len(t))
+    q_mrr = pd.Series([np.nan] * len(t)) 
+    q_const = pd.Series([np.nan] * len(t)) 
 
     # 1st derivetive of cumulatie curve numpy list
     dpdt = savgol_filter(y, window_length=window, polyorder=polyorder, deriv=1, delta=dt)   
-    
+    dpdt_mrr = savgol_filter(y, window_length=window, polyorder=polyorder, deriv=1, delta=dt, mode='mirror')
+    dpdt_const = savgol_filter(y, window_length=window, polyorder=polyorder, deriv=1, delta=dt, mode='constant')
+
     # Calculate SP. rate
     for i in range(1, len(t)):
         q.iat[i] = dpdt[i] / (vcc.iat[i] * v.iat[i]) * 1000
+        q_mrr.iat[i] = dpdt_mrr[i] / (vcc.iat[i] * v.iat[i]) * 1000
+        q_const.iat[i] = dpdt_const[i] / (vcc.iat[i] * v.iat[i]) * 1000
 
     self._savgol_sp_rate = q
+    self._savgol_sp_rate_mrr = q_mrr
+    self._savgol_sp_rate_const = q_const
 
 # Setter for SP. Oxygen Consumption Rate
 def set_savgol_sp_OUR(self, poly_sp_our):
