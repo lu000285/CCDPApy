@@ -92,7 +92,7 @@ def main():
         fig.savefig(output_img_path[i])
         print(img_lst[i] + ' saved')
 
-    # Savgol Filter Window Size = 7
+    # Savgol Filter Window Size = 9
     exp_3 = {}
     for key, value in exp.items():
         # Savitzky-Golay Filter
@@ -113,6 +113,29 @@ def main():
         fig = x.plot_profile(species, polyreg=True, savgol=True)
         fig.savefig(output_img_path[i])
         print(img_lst[i] + ' saved')
+
+    # Savgol Filter Window Size = 13
+    exp_4 = {}
+    for key, value in exp.items():
+        # Savitzky-Golay Filter
+        windos_size = 13
+        savgol_df = savgolFilterCalc(value.get_measured_data(), value.get_species_dict(), window_size=windos_size)
+        value.set_post_process(savgol_df)
+
+        exp_4[key] = value
+
+    # Plotting via BioProcess class
+    img_1 = 'CL1_1_WS_13.png'
+    img_2 = 'CL1_2_WS_13.png'
+    img_3 = 'CL1_3_WS_13.png'
+    img_lst = [img_1, img_2, img_3]
+    output_img_path = [os.path.join(OUTPUT_BASE, img_name) for img_name in img_lst]
+
+    for i, x in enumerate(exp_4.values()):
+        fig = x.plot_profile(species, polyreg=True, savgol=True)
+        fig.savefig(output_img_path[i])
+        print(img_lst[i] + ' saved')
+
 
     
     return 0
@@ -343,7 +366,7 @@ def plot(self, concentration=True, cumulative=True, sp_rate=True,
             # ax = fig.add_subplot(column, factor, ax_idx) # add axis
             y2 = self._polyreg_sp_rate
 
-            ax.plot(x, y2, label=('Poly. Reg. Fit.\nOrder: ' + str(self._polyreg_order)))   # plot
+            ax.plot(x, y2, ls=':', label=('Poly. Reg. Fit.\nOrder: ' + str(self._polyreg_order)))   # plot
 
             # ax.set_title('SP. Rate\nPolynomial Fit Estimate', loc='left')
             ax.set_ylabel('SP. rate (mmol/109 cell/hr)')
@@ -356,7 +379,7 @@ def plot(self, concentration=True, cumulative=True, sp_rate=True,
             # ax = fig.add_subplot(column, factor, ax_idx) # add axis
             y2 = self._savgol_sp_rate
 
-            ax.plot(x, y2, label=('Savgol. Fil.\nOrder: ' + str(self._savgol_order) +\
+            ax.plot(x, y2, ls='-.', label=('Savgol. Fil.\nOrder: ' + str(self._savgol_order) +\
                                 '\nWindow Size: ' + str(self._window_size)))   # plot
 
             # ax.set_title('SP. Rate\nSavitzky Golay Filter', loc='left')
@@ -1202,6 +1225,7 @@ def polynomialRegressionCalc(df_measured_data, spc_dict):
 
     # Calculate Polynomial Regression
     for name, order in poly_reg_order_dict.items():
+        # order = 3
         spc = spc_dict[name]
         spc.poly_regression(polyreg_order=order)
         unit = ' (mmol/10e9 cells/hr)'
@@ -1246,7 +1270,7 @@ def savgolFilter(self, polyorder, window):
     self._savgol_order = polyorder
     
 
-    dt = dt = t[1] - t[0]
+    dt = t[1] - t[0]
 
     # Calcultate cumulative consumption/production
     p = savgol_filter(y, window_length=window, polyorder=polyorder) # cumulative numpy list
