@@ -206,7 +206,8 @@ class Species:
                  conc=pd.Series(data=np.nan, name='CONC.'),
                  viable_cell=pd.Series(data=np.nan, name='VIABLE CELL CONC.'),
                  v_before=pd.Series(data=np.nan, name='VOLUME BEFORE SAMPLING.'),
-                 v_after=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.')):
+                 v_after=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.'),
+                 v_after_feed=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.')):
         
         # Members
         self._name = name
@@ -215,6 +216,7 @@ class Species:
         self._vcc = viable_cell
         self._v_before = v_before
         self._v_after = v_after
+        self._v_after_feed = v_after_feed
 
         self._cumulative = pd.Series(data=np.nan, name='CUM CONS.')
         self._sp_rate = pd.Series(data=np.nan, name='SP.')
@@ -224,6 +226,12 @@ class Species:
         self._polyreg_cumulative = pd.Series(data=np.nan, name='Poly. Fit CUM CONS.')
         self._polyreg_sp_rate = pd.Series(data=np.nan, name='Poly. Fit SP.')
         self._polyfit_cumulative = np.nan
+
+        # For rolling polynomial regression
+        self._rollpolyreg_order = np.nan
+        self._rollpolyreg_cumulative = pd.Series(data=np.nan, name='Poly. Fit CUM CONS.')
+        self._rollpolyreg_sp_rate = pd.Series(data=np.nan, name='Poly. Fit SP.')
+        self._rollpolyfit_cumulative = np.nan
 
         # For svitzky golay filter
         self._window_size = np.nan
@@ -269,7 +277,8 @@ class Metabolites(Species):
                  feed_flowrate,
                  viable_cell=pd.Series(data=np.nan, name='VIABLE CELL CONC.'),
                  v_before=pd.Series(data=np.nan, name='VOLUME BEFORE SAMPLING.'),
-                 v_after=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.')
+                 v_after=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.'),
+                 v_after_feed=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.')
                  ):
         
         super().__init__(name, run_time, conc, viable_cell, v_before, v_after)
@@ -430,6 +439,7 @@ def runTime_h(dt):
 def volumeCalc(df, init_vol):
     v_after_sampling = pd.Series([0] * len(df))
     v_before_sampling = pd.Series([0] * len(df))
+    v_after_feeding = pd.Series([0] * len(df))
     v0 = init_vol
 
     v_before_sampling[0] = v0
@@ -437,10 +447,13 @@ def volumeCalc(df, init_vol):
     for i in range(len(df)-1):
         v_after_sampling.iat[i] = v_before_sampling.iat[i] - df['SAMPLE VOLUME (mL)'].iat[i]
         v_before_sampling.iat[i+1] = df['FEED MEDIA ADDED (mL)'].iat[i] + df['GLUTAMINE FEED ADDED (mL)'].iat[i] + df['BASE ADDED (mL)'].iat[i] + v_after_sampling.iat[i]
+        v_after_feeding.iat[i] = df['FEED MEDIA ADDED (mL)'].iat[i] + df['GLUTAMINE FEED ADDED (mL)'].iat[i] + df['BASE ADDED (mL)'].iat[i] + v_after_sampling.iat[i]
 
     v_after_sampling.iat[-1] = v_before_sampling.iat[-1] - df['SAMPLE VOLUME (mL)'].iat[-1]
+    v_after_feeding.iat[-1] = df['FEED MEDIA ADDED (mL)'].iat[-1] + df['GLUTAMINE FEED ADDED (mL)'].iat[-1] + df['BASE ADDED (mL)'].iat[-1] + v_after_sampling.iat[-1]
 
-    return (v_before_sampling, v_after_sampling)
+    return (v_before_sampling, v_after_sampling, v_after_feeding)
+
 
 ##############################################################################################
 # Initialize Data Frame
@@ -449,7 +462,7 @@ def inializeDF(df_data ,initial_culture_volume=0, feed_status = [0]):
     df = pd.DataFrame()
     df['RUN TIME (DAYS)'] = runTIme_d(df_data["TIME"])
     df['RUN TIME (HOURS)'] = runTime_h(df_data["TIME"])
-    df['VOLUEME BEFORE SAMPLING (mL)'], df['VOLUME AFTER SAMPLING (mL)'] = volumeCalc(df_data, initial_culture_volume)
+    df['VOLUEME BEFORE SAMPLING (mL)'], df['VOLUME AFTER SAMPLING (mL)'], df['VOLUME AFTER FEEDING (mL)'] = volumeCalc(df_data, initial_culture_volume)
     df['FEED MEDIA ADDED (mL)'] = df_data['FEED MEDIA ADDED (mL)']
     df['GLUTAMINE ADDED (mL)'] = df_data['GLUTAMINE FEED ADDED (mL)']
     df['BASE ADDED (mL)'] = df_data['BASE ADDED (mL)']
@@ -624,6 +637,7 @@ def cumulativeCalc(df_data, init_df, AA_lst):
     # Necessary variables
     v1 = init_df['VOLUEME BEFORE SAMPLING (mL)']    # culture volume before sampling (mM)
     v2 = init_df['VOLUME AFTER SAMPLING (mL)']      # culture volume after sampling (mM)
+    v3 = init_df['VOLUME AFTER FEEDING (mL)']      # culture volume after sampling (mM)
     f = init_df['FEED MEDIA ADDED (mL)']            # feed flowrate (ml/hr)
     t = init_df['RUN TIME (HOURS)']                 # run time (hrs)
 
@@ -633,7 +647,7 @@ def cumulativeCalc(df_data, init_df, AA_lst):
 
 ######################################## Calculations about Cells ########################################
     vcc = df_data['VIABLE CELL CONC. XV (x106 cells/mL)']
-    cell = Species('Cell', run_time=t, conc=vcc, viable_cell=vcc, v_before=v1, v_after=v2)
+    cell = Species('Cell', run_time=t, conc=vcc, viable_cell=vcc, v_before=v1, v_after=v2, v_after_feed=v3)
     vcc_0 = 0 # initial cell concentration
 
     # Add methods to cell obj
@@ -656,7 +670,7 @@ def cumulativeCalc(df_data, init_df, AA_lst):
 ######################################## Calculations about Oxygen ########################################
     # Oxygen consumed
     oxy_c = df_data['OXYGEN CONSUMED (mmol/L)'] # oxygen concentraion
-    oxy = Species('Oxygen', run_time=t, conc=oxy_c, viable_cell=vcc, v_before=v1, v_after=v2)
+    oxy = Species('Oxygen', run_time=t, conc=oxy_c, viable_cell=vcc, v_before=v1, v_after=v2, v_after_feed=v3)
     oxy_0 = 0     # initial concentration
     
     # Add method to oxy obj
@@ -674,7 +688,7 @@ def cumulativeCalc(df_data, init_df, AA_lst):
 ######################################## Calculations about Oxygen ########################################
     # IgG Produced
     xv = df_data['IgG CONC. (mg/L)']    # IgG concentraion
-    igg = Species('IgG', run_time=t, conc=xv, viable_cell=vcc, v_before=v1, v_after=v2)
+    igg = Species('IgG', run_time=t, conc=xv, viable_cell=vcc, v_before=v1, v_after=v2, v_after_feed=v3)
     igg_0 = 0     # initial concentration
 
     # Add method to igg obj
@@ -710,7 +724,8 @@ def cumulativeCalc(df_data, init_df, AA_lst):
                                feed_flowrate=glucose,
                                viable_cell=vcc,
                                v_before=v1,
-                               v_after=v2)
+                               v_after=v2,
+                               v_after_feed=v3)
         else:
             meta = Metabolites(name.upper(),
                                run_time=t,
@@ -719,7 +734,8 @@ def cumulativeCalc(df_data, init_df, AA_lst):
                                feed_flowrate=f,
                                viable_cell=vcc,
                                v_before=v1,
-                               v_after=v2)
+                               v_after=v2,
+                               v_after_feed=v3)
            
         # Calculate cumulative consumption/production
         if name.capitalize() == 'Lactate':
@@ -741,9 +757,9 @@ def cumulativeCalc(df_data, init_df, AA_lst):
 
 ######################################## Calculations about Others ########################################
     # Create Species obj for Nitrogen, Nitrogen (w/o NH3, Ala), and AA Carbon
-    nitrogen = Species('Nitrogen', run_time=t, viable_cell=vcc, v_before=v1, v_after=v2)    # NITROGEN
-    nitrogen_w_o_NH3_Ala = Species('Nitrogen (w/o NH3, Ala)', run_time=t, viable_cell=vcc, v_before=v1, v_after=v2) # NITROGEN (w/o NH3, Ala)
-    aa_carbon = Species('AA Carbon', run_time=t, viable_cell=vcc, v_before=v1, v_after=v2)    # AA CARBON
+    nitrogen = Species('Nitrogen', run_time=t, viable_cell=vcc, v_before=v1, v_after=v2, v_after_feed=v3)    # NITROGEN
+    nitrogen_w_o_NH3_Ala = Species('Nitrogen (w/o NH3, Ala)', run_time=t, viable_cell=vcc, v_before=v1, v_after=v2, v_after_feed=v3) # NITROGEN (w/o NH3, Ala)
+    aa_carbon = Species('AA Carbon', run_time=t, viable_cell=vcc, v_before=v1, v_after=v2, v_after_feed=v3)    # AA CARBON
 
     # Calculate cumulative consumption for Nitrogen, Nitrogen (w/o NH3, Ala), and AA Carbon
     nitrogen_cum, nitrogen_w_o_NH3_Ala_cum, aa_carbon_cum = cumOthers(spc_dict)
@@ -1121,12 +1137,12 @@ def inProcessCalc(df_measured_data, feed_status, initial_volume, first_column, n
 
     # Split
     aa_lst, aa_feed_lst, df_conc = AA_tuple
+    print(aa_lst)
 
     return (aa_lst, spc_dict, pd.concat([init_df, in_process_calc_df], axis=1))
 
     # Save
     # output_df.to_excel(output_file_path, sheet_name=output_sheet_name, index=False)
-
 
 #############################################################################################
 ############################## Polynomial Regression Functions ##############################
