@@ -1,6 +1,7 @@
 import sys
 import pandas as pd
 import numpy as np
+from pyrsistent import v
 import scipy as sc
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
@@ -220,6 +221,7 @@ class Species:
 
         self._cumulative = pd.Series(data=np.nan, name='CUM CONS.')
         self._sp_rate = pd.Series(data=np.nan, name='SP.')
+        self._conc_after_feed = pd.Series(data=np.nan, name='CONC. AFTER FEEDING')
 
         # For polynomial regression
         self._polyreg_order = np.nan
@@ -267,6 +269,9 @@ class Species:
 
     def get_sp_rate(self):
         return self._sp_rate
+    
+    def get_conc_after_feed(self):
+        return self._conc_after_feed
             
 class Metabolites(Species):
     def __init__(self,
@@ -281,11 +286,10 @@ class Metabolites(Species):
                  v_after_feed=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.')
                  ):
         
-        super().__init__(name, run_time, conc, viable_cell, v_before, v_after)
+        super().__init__(name, run_time, conc, viable_cell, v_before, v_after, v_after_feed)
 
         self._feed_concentration = feed_conc
         self._feed_flowrate = feed_flowrate
-        self._conc_after_feeding = None
 
     # getters
     def get_feed_conc(self):
@@ -640,7 +644,6 @@ def cumulativeCalc(df_data, init_df, AA_lst):
     v3 = init_df['VOLUME AFTER FEEDING (mL)']      # culture volume after sampling (mM)
     f = init_df['FEED MEDIA ADDED (mL)']            # feed flowrate (ml/hr)
     t = init_df['RUN TIME (HOURS)']                 # run time (hrs)
-
     # Initialize DF
     df = pd.DataFrame()
     df_feed = pd.DataFrame() # Concentration After Feeding
@@ -709,6 +712,7 @@ def cumulativeCalc(df_data, init_df, AA_lst):
 ######################################## Calculations about Amino Acids ########################################
     # Add method to Metabolites class
     Metabolites.calc_cumulative = cumulativeCons
+    Metabolites.calc_conc_after_feed = conc_after_feeding_calc
 
     for i, name in enumerate(aa_lst):
         s = df_aa_conc.iloc[:, i].squeeze()     # species concentration
@@ -748,12 +752,15 @@ def cumulativeCalc(df_data, init_df, AA_lst):
 
         # Add cumulative consumption to DF
         df['CUM. ' + name.upper() +' (mmol)'] = meta.get_cumulative()
-
-        ##### Concentration After Feeding
-        # concentration = (concentration * volume after feed + feed concentration * feed added) / (volume after feed + feed added + glutamine added)
-        # after feed
-        g = init_df['GLUTAMINE ADDED (mL)']
-        df_feed[name.upper() +' (mmol)\nafter feeding'] = (s*v2  + sf*f) / (v2 + f + g)
+        
+        # Calculate conc. after feeding and add it to DF
+        meta.calc_conc_after_feed()
+        df['CONC. ' + name.upper() +' (mM), after feeding'] = meta.get_conc_after_feed()
+        # ##### Concentration After Feeding
+        # # concentration = (concentration * volume after feed + feed concentration * feed added) / (volume after feed + feed added + glutamine added)
+        # # after feed
+        # g = init_df['GLUTAMINE ADDED (mL)']
+        # df_feed[name.upper() +' (mmol)\nafter feeding'] = (s*v2  + sf*f) / (v2 + f + g)
 
 ######################################## Calculations about Others ########################################
     # Create Species obj for Nitrogen, Nitrogen (w/o NH3, Ala), and AA Carbon
@@ -1026,7 +1033,7 @@ def specificRate(df_data, df_init, spc_dict, AA_lst):
     df['kd'] = cell.get_kd()
     df['mv'] = cell.get_mv()
 
-######################################## Calculations about IgG ########################################
+######################################## Calculations about Iger_feedG ########################################
     # IgG obj
     igg = spc_dict['IgG']
 
@@ -1104,6 +1111,23 @@ def specificRate(df_data, df_init, spc_dict, AA_lst):
 
     return (spc_dict, df)
 
+##############################################################################################
+# Calc. of concentration after feeding
+##############################################################################################
+def conc_after_feeding_calc(self):
+    # sf: substrate feed concentration (mM)
+    # s: substrate concentration (mM)
+    # vf: feed volume (ml)
+    # v2: culture volume after sampling (ml)
+    # v3: culture volume after feeding (ml)
+    # conc_after_feed[i] = (v2[i] * s[i] + vf[i] * sf[i])/v3[i]
+    s = self._concentration
+    sf = self._feed_concentration
+    f = self._feed_flowrate
+    v2 = self._v_after
+    v3 = self._v_after_feed
+    v  = (s* v2 + sf*f)/v3
+    self._conc_after_feed = v
 
 ############################################################################################
 ################################### In Process Function ###################################
