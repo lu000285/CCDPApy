@@ -9,9 +9,20 @@ import math
 import types
 import os
 from pathlib import Path
-
+from RollingRegression import *
+import argparse
 # Main Function
 def main():
+    # input arguments for the .py file
+    parser = argparse.ArgumentParser(description='Data Processing for CL1')
+    optional = parser._action_groups.pop()  # creates group of optional arguments
+    required = parser.add_argument_group('required arguments')  # creates group of required arguments
+
+    # required input, the followinf is an example
+    # required.add_argument('-nig', '--num_ig', help='number of IG run in training', required=True, type=int, default=1)
+    optional.add_argument('-m', '--mid_cal', help='Mid-cal. is on (1) or off (0)',type=int, default=0)
+    args = parser.parse_args()  # get the arguments from the program input, set them to args
+    mid_cal = args.mid_cal
     # Base directry where this file exits
     BASE_DIR = Path(__file__).resolve().parent
 
@@ -35,10 +46,14 @@ def main():
 
     OUTPUT_CL1 = os.path.join(OUTPUT_BASE, output_file)
 
+    midcalc_output_file = 'Mid_Calc_CL1.xlsx'
+    OUTPUT_CL1_midcalc = os.path.join(OUTPUT_BASE, midcalc_output_file)
+    
     exp = {} # For String each experiment
+    exp_mid = {} # empty dict to store mid-calc. results
     for i, input in enumerate(input_path):
         # Pre Process
-        bio_process, exp_no = preProcess(input_file_path=input, sheet_name=INPUT_SHEET)
+        bio_process, exp_no, aa_lst = preProcess(input_file_path=input, sheet_name=INPUT_SHEET)
         
         # Polynomial Regression
         poly_reg_df = polynomialRegressionCalc(bio_process.get_measured_data(), bio_process.get_species_dict())
@@ -53,10 +68,18 @@ def main():
                                     window_size=windos_size)
         bio_process.set_post_process(savgol_df)
 
+        # Mid-Calcaulation
+        if mid_cal == 1:
+            mid_calc_df = RollPolynomialRegressionCalc(bio_process.get_species_dict(),aa_lst)
+            exp_mid[exp_no] = mid_calc_df
         exp[exp_no] = bio_process
 
     # Saving Excel Files
     saveExcell(data=exp, output_file_path=OUTPUT_CL1)
+
+    # Saving Excel Files
+    if mid_cal == 1:
+        saveExcell_midcalc(data=exp_mid, output_file_path=OUTPUT_CL1_midcalc)
 
     # Plotting via BioProcess class
     species = ['Lactate', 'Glucose', 'Glutamine', 'Asparagine', 'Aspartate']
@@ -208,7 +231,8 @@ class Species:
                  viable_cell=pd.Series(data=np.nan, name='VIABLE CELL CONC.'),
                  v_before=pd.Series(data=np.nan, name='VOLUME BEFORE SAMPLING.'),
                  v_after=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.'),
-                 v_after_feed=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.')):
+                 v_after_feed=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.')
+                 ):
         
         # Members
         self._name = name
@@ -222,6 +246,10 @@ class Species:
         self._cumulative = pd.Series(data=np.nan, name='CUM CONS.')
         self._sp_rate = pd.Series(data=np.nan, name='SP.')
         self._conc_after_feed = pd.Series(data=np.nan, name='CONC. AFTER FEEDING')
+
+        # New for mid-point calculation
+        self._run_time_mid = pd.Series(data=np.nan, name='Middle run time')
+        self._conc_mid = pd.Series(data=np.nan, name='Mid-point CONC.') # average of before and after feeding
 
         # For polynomial regression
         self._polyreg_order = np.nan
@@ -272,6 +300,12 @@ class Species:
     
     def get_conc_after_feed(self):
         return self._conc_after_feed
+    
+    def get_run_time_mid(self):
+        return self._run_time_mid
+    
+    def get_conc_mid(self):
+        return self._conc_mid
             
 class Metabolites(Species):
     def __init__(self,
@@ -713,6 +747,7 @@ def cumulativeCalc(df_data, init_df, AA_lst):
     # Add method to Metabolites class
     Metabolites.calc_cumulative = cumulativeCons
     Metabolites.calc_conc_after_feed = conc_after_feeding_calc
+    Metabolites.mid_calc = mid_calc_conc_runtime
 
     for i, name in enumerate(aa_lst):
         s = df_aa_conc.iloc[:, i].squeeze()     # species concentration
@@ -755,7 +790,12 @@ def cumulativeCalc(df_data, init_df, AA_lst):
         
         # Calculate conc. after feeding and add it to DF
         meta.calc_conc_after_feed()
-        df['CONC. ' + name.upper() +' (mM), after feeding'] = meta.get_conc_after_feed()
+        df_feed['CONC. ' + name.upper() +' (mM), after feeding'] = meta.get_conc_after_feed()
+        
+        # mid-clac
+        meta.mid_calc()
+        # df['CONC. ' + name.upper() +' (mM), mid'] = meta.get_conc_mid()
+        
         # ##### Concentration After Feeding
         # # concentration = (concentration * volume after feed + feed concentration * feed added) / (volume after feed + feed added + glutamine added)
         # # after feed
@@ -1126,8 +1166,27 @@ def conc_after_feeding_calc(self):
     f = self._feed_flowrate
     v2 = self._v_after
     v3 = self._v_after_feed
-    v  = (s* v2 + sf*f)/v3
-    self._conc_after_feed = v
+    v_af  = (s* v2 + sf*f)/v3
+    self._conc_after_feed = v_af
+
+##############################################################################################
+# Mid-point calculation of conc. and run time
+##############################################################################################
+def mid_calc_conc_runtime(self):
+    # c1: conc after feeding at t
+    # c2: measured conc at t + 1
+    c1 = self._conc_after_feed
+    c2 = self._concentration   
+    t = self._run_time
+    
+    t_mid = pd.Series([np.nan] * (len(t)-1))
+    c_mid = pd.Series([np.nan] * (len(t)-1))
+    for i in range(len(t_mid)):
+        t_mid.iat[i] = (t.iat[i] + t.iat[i+1])/2
+        c_mid.iat[i] = (c1.iat[i]+c2.iat[i+1])/2
+
+    self._run_time_mid = t_mid
+    self._conc_mid = c_mid
 
 ############################################################################################
 ################################### In Process Function ###################################
@@ -1161,7 +1220,6 @@ def inProcessCalc(df_measured_data, feed_status, initial_volume, first_column, n
 
     # Split
     aa_lst, aa_feed_lst, df_conc = AA_tuple
-    print(aa_lst)
 
     return (aa_lst, spc_dict, pd.concat([init_df, in_process_calc_df], axis=1))
 
@@ -1461,7 +1519,7 @@ def preProcess(input_file_path, sheet_name=None, cell_line=1, input_header_num=5
     
     print(exp_no + ' completed')
     
-    return (bioP, exp_no)
+    return (bioP, exp_no, aa_lst)
 
 
 # Save in process DF in Excell with Sheet name of 'In Process Calc.'
@@ -1473,7 +1531,18 @@ def saveExcell(data, output_file_path):
 
             print(key + ' saved')
 
+# Save in process DF in Excell with Sheet name of 'In Process Calc.'
+def saveExcell_midcalc(data, output_file_path):
+    
+    with pd.ExcelWriter(output_file_path) as writer:
+        for key, value in data.items():
+            value.to_excel(writer, sheet_name=key, index=False)
 
+            print(key + ' saved')
+
+# Add rolling_regression method to Species Class
+Species.rolling_poly_regression = rolling_poly_regression
+Species.get_rollpolyreg_sp_rate = get_rollpolyreg_sp_rate
 
 
 
