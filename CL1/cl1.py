@@ -10,6 +10,7 @@ import types
 import os
 from pathlib import Path
 from RollingRegression import *
+from LogisticGrowth import *
 import argparse
 # Main Function
 def main():
@@ -70,8 +71,9 @@ def main():
 
         # Mid-Calcaulation
         if mid_cal == 1:
-            mid_calc_df = RollPolynomialRegressionCalc(bio_process.get_species_dict(),aa_lst)
-            exp_mid[exp_no] = mid_calc_df
+            mid_calc_df = RollPolynomialRegressionCalc(bio_process.get_species_dict(),aa_lst, windows=4)
+            mu_calc_df = midcalc_growth_rate_calc(bio_process.get_species_dict())
+            exp_mid[exp_no] = pd.concat([mid_calc_df, mu_calc_df], axis=1)#mid_calc_df
         exp[exp_no] = bio_process
 
     # Saving Excel Files
@@ -231,7 +233,9 @@ class Species:
                  viable_cell=pd.Series(data=np.nan, name='VIABLE CELL CONC.'),
                  v_before=pd.Series(data=np.nan, name='VOLUME BEFORE SAMPLING.'),
                  v_after=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.'),
-                 v_after_feed=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.')
+                 v_after_feed=pd.Series(data=np.nan, name='VOLUME AFTER SAMPLING.'),
+                 viability=pd.Series(data=np.nan, name='VIABILITY'),
+                 total_cell=pd.Series(data=np.nan, name='TOTAL CELL CONC.'),
                  ):
         
         # Members
@@ -242,6 +246,8 @@ class Species:
         self._v_before = v_before
         self._v_after = v_after
         self._v_after_feed = v_after_feed
+        self._viability=viability
+        self._tcc=total_cell
 
         self._cumulative = pd.Series(data=np.nan, name='CUM CONS.')
         self._sp_rate = pd.Series(data=np.nan, name='SP.')
@@ -288,6 +294,12 @@ class Species:
     
     def get_vcc(self):
         return self._vcc
+
+    def get_tcc(self):
+        return self._tcc
+
+    def get_viability(self):
+        return self._viability
 
     def get_v_before(self):
         return self._v_before
@@ -684,7 +696,9 @@ def cumulativeCalc(df_data, init_df, AA_lst):
 
 ######################################## Calculations about Cells ########################################
     vcc = df_data['VIABLE CELL CONC. XV (x106 cells/mL)']
-    cell = Species('Cell', run_time=t, conc=vcc, viable_cell=vcc, v_before=v1, v_after=v2, v_after_feed=v3)
+    viability=df_data['VIABILITY (%)']
+    tcc=vcc/df_data['VIABILITY (%)']
+    cell = Species('Cell', run_time=t, conc=vcc, viable_cell=vcc, v_before=v1, v_after=v2, v_after_feed=v3, viability=viability, total_cell=tcc)
     vcc_0 = 0 # initial cell concentration
 
     # Add methods to cell obj
@@ -1545,8 +1559,8 @@ Species.rolling_poly_regression = rolling_poly_regression
 Species.get_rollpolyreg_sp_rate = get_rollpolyreg_sp_rate
 
 
-
-
+# Add LogisticGrowthFit method to Species Class
+Species.LogisticGrowthFit = LogisticGrowthFit
 
 
 if __name__ == '__main__':

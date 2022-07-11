@@ -96,13 +96,15 @@ def ratioCalcRollPolyReg(spc_dict):
     return df
 
 # 
-def RollPolynomialRegressionCalc(spc_dict,aa_lst,windows = 8):
+def RollPolynomialRegressionCalc(spc_dict,aa_lst,windows = 6):
     df = pd.DataFrame() # Initialize
     df['Run Time'] = spc_dict['Glucose'].get_run_time_mid()
     df_conc = pd.DataFrame() # Initialize
     df_q = pd.DataFrame() # Initialize
+    df_r = pd.DataFrame() # Initialize
+    r_lst = ['rglut1','rmct','rglnna','rasnna','raspna']
     # Calculate Polynomial Regression
-    for name in aa_lst:#['Glucose','Lactate','Glutamine','Asparagine','Aspartate']:
+    for  i,name in enumerate(['Glucose','Lactate','Glutamine','Asparagine','Aspartate']): #aa_lst:
         # order = 3
         if any(name == j for j in ['NH3','Oxygen','IgG']):
             continue
@@ -114,6 +116,7 @@ def RollPolynomialRegressionCalc(spc_dict,aa_lst,windows = 8):
         # Sp. Oxygen Consumption Rate
         df_q['q' + name +unit] = spc.get_rollpolyreg_sp_rate()
         df_conc['Conc. '+name+' (mM)'] = spc.get_conc_mid()
+        df_r[r_lst[i]] = df_q['q' + name +unit]/0.0016
         # if name == 'Oxygen':
         #     spc.set_rollpolyreg_sp_OUR = types.MethodType(set_polyreg_sp_OUR, spc)
         #     ocr.mask(ocr <= 0, spc.get_rollpolyreg_sp_rate())
@@ -132,6 +135,6 @@ def RollPolynomialRegressionCalc(spc_dict,aa_lst,windows = 8):
     # Ratio Calculation
     df_ratio = ratioCalcRollPolyReg(spc_dict)
 
-    return pd.concat([df, df_conc, df_q, df_ratio], axis=1)
+    return pd.concat([df, df_conc, df_q, df_ratio,df_r], axis=1)
 
 
