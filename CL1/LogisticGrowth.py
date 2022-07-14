@@ -35,6 +35,10 @@ def midcalc_growth_rate_calc(spc_dict):
     mu = t.apply(lambda x:sp_rate_calc(x,N0,*popt))
     df['Sp. Growth (1/hr)'] = mu
     df['mu_max'] = pd.Series([popt[1]] * len(t))
+    df['N0'] = pd.Series([N0] * len(t))
+    df['K_mu'] = pd.Series([popt[0]] * len(t))
+    print(N0)
+    print(popt)
     print(mu)
     return df
 

@@ -697,7 +697,7 @@ def cumulativeCalc(df_data, init_df, AA_lst):
 ######################################## Calculations about Cells ########################################
     vcc = df_data['VIABLE CELL CONC. XV (x106 cells/mL)']
     viability=df_data['VIABILITY (%)']
-    tcc=vcc/df_data['VIABILITY (%)']
+    tcc=vcc/df_data['VIABILITY (%)']*100
     cell = Species('Cell', run_time=t, conc=vcc, viable_cell=vcc, v_before=v1, v_after=v2, v_after_feed=v3, viability=viability, total_cell=tcc)
     vcc_0 = 0 # initial cell concentration
 
