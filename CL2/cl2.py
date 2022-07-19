@@ -1,81 +1,120 @@
-from operator import imod
 import sys
-import pandas as pd
-import numpy as np
-import scipy as sc
-import matplotlib.pyplot as plt
-from scipy.signal import savgol_filter
-import math
-import types
-import os
-from pathlib import Path
 
-from test_package.my_class_test import CellLine
-from test_package.my_func_test import bio_process
+from test_package.BioProcess.CellLine import CellLine
+from test_package.BioProcess.bio_process import bio_process as BP
+from test_package.pre_process.pre_process import pre_process
+from test_package.in_process.in_process import cumulative_in_pro
+from test_package.post_process.two_point_calc.twopt_post_process import twopt_post_process
+from test_package.post_process.polynomial_regression.polynomial_regression import polyreg_post_pro
+from test_package.post_process.rolling_regression.rolling_regression import rolling_regression
 
 # Main Function
 def main():
-    # Base directry where this file exits
-    BASE_DIR = Path(__file__).resolve().parent
-    # Output directry path
-    OUTPUT_BASE = os.path.join(BASE_DIR, 'output_files')
-    # Make output files directry
-    try:
-        os.makedirs(OUTPUT_BASE)    
-        print("Directory " , OUTPUT_BASE ,  " Created ")
-    except FileExistsError:
-        print("Directory " , OUTPUT_BASE ,  " already exists")
+    # AA List to Analyze; If not specified, all AAs are analyzed.
+    aa_lst = ['Glucose','Lactate','Glutamine','Asparagine','Aspartate']
 
-    aa = ['Lactate', 'Glucose', 'Glutamine', 'Asparagine', 'Aspartate']
-    POLY_ORDER_FILE = 'polynomial_order.xlsx'
-    POLY_ORDER_PATH = os.path.join(BASE_DIR, POLY_ORDER_FILE)
+    #****** BioProcess Obj *******
+    bp = BP(input_file_name='GS_Sigma_FB01_B1',
+            measured_data_sheet_name='Measured Data',
+            aa_list=aa_lst)
 
-    INPUT_SHEET = 'Measured Data'
-    INPUT_FILE1 = 'GS_Sigma_FB01_B1.xlsx'     # File 1
-    INPUT_FILE2 = 'GS_Sigma_FB01_B2.xlsx'     # File 2
-    INPUT_FILE3 = 'GS_Sigma_FB01_B3.xlsx'     # File 3
-    OUTPUT_FILE = 'Process.xlsx'
+    bp2 = BP(input_file_name='GS_Sigma_FB01_B2',
+            measured_data_sheet_name='Measured Data',
+            aa_list=aa_lst)
+    
+    bp3 = BP(input_file_name='GS_Sigma_FB01_B3',
+            measured_data_sheet_name='Measured Data',
+            aa_list=aa_lst)
 
-    IMG_FILE1 = 'CL2_0.png'
-    IMG_FILE2 = 'CL2_1.png'
-    IMG_FILE3 = 'CL2_2.png'
+    #****** Pre Process ******
+    bp = pre_process(bio_process=bp)
+    bp2 = pre_process(bio_process=bp2)
+    bp3 = pre_process(bio_process=bp3)
 
-    INPUT_1  = os.path.join(BASE_DIR, INPUT_FILE1)
-    INPUT_2  = os.path.join(BASE_DIR, INPUT_FILE2)
-    INPUT_3  = os.path.join(BASE_DIR, INPUT_FILE3)
+    #****** In Process -Cumulative Cons/Prod ******
+    # Use Feed Conc.
+    bp = cumulative_in_pro(bio_process=bp, use_feed_conc=False, use_conc_after_feed=True)
+    bp2 = cumulative_in_pro(bio_process=bp2, use_feed_conc=False, use_conc_after_feed=True)
+    bp3 = cumulative_in_pro(bio_process=bp3, use_feed_conc=False, use_conc_after_feed=True)
 
-    OUTPUT = os.path.join(OUTPUT_BASE, OUTPUT_FILE)
-    OUT_IMG1 = os.path.join(OUTPUT_BASE, IMG_FILE1)
-    OUT_IMG2 = os.path.join(OUTPUT_BASE, IMG_FILE2)
-    OUT_IMG3 = os.path.join(OUTPUT_BASE, IMG_FILE3)
+    #***** Post Process -SP. Rate Two Point Calc ******
+    bp = twopt_post_process(bio_process=bp)
+    bp2 = twopt_post_process(bio_process=bp2)
+    bp3 = twopt_post_process(bio_process=bp3)
 
-    # Execute Bio Process
-    bp1 = bio_process(input_file_name=INPUT_1,
-                        measured_data_sheet_name=INPUT_SHEET,
-                        aa_list=aa,
-                        polyorder_file_name=POLY_ORDER_PATH)
-    bp1.get_exp_info()
+    #***** Post Process -SP. Rate Poly. Regression *****
+    bp = polyreg_post_pro(bio_process=bp, polyorder_file='polynomial_order.xlsx')
+    bp2 = polyreg_post_pro(bio_process=bp2, polyorder_file='polynomial_order.xlsx')
+    bp3 = polyreg_post_pro(bio_process=bp3, polyorder_file='polynomial_order.xlsx')
+    
+    #****** Cell Line Obj *******
+    cl = CellLine('CL2')
+    #***** Add each bio processs to Cell Line obj *****
+    cl.add_cell_line(bio_process=bp)
+    cl.add_cell_line(bio_process=bp2)
+    cl.add_cell_line(bio_process=bp3)
 
-    bp2 = bio_process(input_file_name=INPUT_2,
-                        measured_data_sheet_name=INPUT_SHEET,
-                        aa_list=aa,
-                        polyorder_file_name=POLY_ORDER_PATH)
+    #***** Display Info *****
+    # cl.disp_cell_lines()
 
-    bp3 = bio_process(input_file_name=INPUT_3,
-                        measured_data_sheet_name=INPUT_SHEET,
-                        aa_list=aa,
-                        polyorder_file_name=POLY_ORDER_PATH)
+    #***** Saving *****
+    cl.save_excel(file_name='CL2_BioProcess')
 
-    bp1.plot_profile(save_file_path=OUT_IMG1)
-    bp2.plot_profile(save_file_path=OUT_IMG2)
-    bp3.plot_profile(save_file_path=OUT_IMG3)
+    #***** Plotting - Multiple Species *****
+    plot_list = ['lactate', 'glucose', 'glutamine', 'asparagine', 'aspartate']
+    bp.plot_profile(aa_list=plot_list, save_file_name='CL2_1')
+    bp2.plot_profile(aa_list=plot_list, save_file_name='CL2_2')
+    bp3.plot_profile(aa_list=plot_list, save_file_name='CL2_3')
 
-    cl = CellLine()
-    cl.add_cell_line(bp1)
-    cl.add_cell_line(bp2)
-    cl.add_cell_line(bp3)
+    #***** Post Process -SP. Rate Rolling Poly. Regression *****
+    r_lst = ['rglut1','rmct','rglnna']
+    aa_lst = ['Glucose','Lactate','Glutamine']
+    # Window Size: 6
+    bp_ws6 = rolling_regression(bio_process=bp, order=3, windows=6, aa_lst=aa_lst, r_lst=r_lst)
+    bp2_ws6 = rolling_regression(bio_process=bp2, order=3, windows=6, aa_lst=aa_lst, r_lst=r_lst)
+    bp3_ws6 = rolling_regression(bio_process=bp3, order=3, windows=6, aa_lst=aa_lst, r_lst=r_lst)
+    
+    #****** Cell Line Obj with Rolling Reg. for Window Size of 6 *******
+    cl_ws6 = CellLine('CL1_Rolling_Reg_WS6')
+    #***** Add each bio processs to Cell Line obj *****
+    cl_ws6.add_cell_line(bp_ws6)
+    cl_ws6.add_cell_line(bp2_ws6)
+    cl_ws6.add_cell_line(bp3_ws6)
 
-    cl.save_excel(output_file_path=OUTPUT)
+    #***** Saving *****
+    cl_ws6.save_excel_rolling_reg(file_name='CL2_Rolling_Reg_WS6')
+
+    #***** Plotting - Multiple Species *****
+    plot_list = ['lactate', 'glucose', 'glutamine', 'asparagine', 'aspartate']    
+    # With Rolliig Poly. Reg with Saving
+    bp_ws6.plot_profile(aa_list=plot_list, save_file_name='CL2_1_ws_6', rolling=True)
+    bp2_ws6.plot_profile(aa_list=plot_list, save_file_name='CL2_2_ws_6', rolling=True)
+    bp3_ws6.plot_profile(aa_list=plot_list, save_file_name='CL2_3_ws_6', rolling=True)
+
+    #***** Post Process -SP. Rate Rolling Poly. Regression *****
+    # Window Size: 8
+    bp_ws8 = rolling_regression(bio_process=bp, order=3, windows=8, aa_lst=aa_lst, r_lst=r_lst)
+    bp2_ws8 = rolling_regression(bio_process=bp2, order=3, windows=8, aa_lst=aa_lst, r_lst=r_lst)
+    bp3_ws8 = rolling_regression(bio_process=bp3, order=3, windows=8, aa_lst=aa_lst, r_lst=r_lst)
+
+    #****** Cell Line Obj *******
+    cl_ws8 = CellLine('CL2_Rolling_Reg_WS8')
+    #***** Add each bio processs to Cell Line obj *****
+    cl_ws8.add_cell_line(bp_ws8)
+    cl_ws8.add_cell_line(bp2_ws8)
+    cl_ws8.add_cell_line(bp3_ws8)
+
+    #***** Saving *****
+    cl_ws8.save_excel_rolling_reg(file_name='CL2_Rolling_Reg_WS8')
+
+    #***** Plotting - Multiple Species *****
+    plot_list = ['lactate', 'glucose', 'glutamine', 'asparagine', 'aspartate']    
+    # With Rolliig Poly. Reg with Saving
+    bp_ws8.plot_profile(aa_list=plot_list, save_file_name='CL2_1_ws_8', rolling=True)
+    bp2_ws8.plot_profile(aa_list=plot_list, save_file_name='CL2_2_ws_8', rolling=True)
+    bp3_ws8.plot_profile(aa_list=plot_list, save_file_name='CL2_3_ws_8', rolling=True)
+
+
 
 
 if __name__ == '__main__':
