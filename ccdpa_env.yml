@@ -1,0 +1,39 @@
+name: ccdpa_env
+channels:
+  - defaults
+dependencies:
+  - bzip2=1.0.8
+  - ca-certificates=2022.07.19
+  - certifi=2022.6.15
+  - libcxx=12.0.0
+  - libffi=3.3
+  - ncurses=6.3
+  - openssl=1.1.1q
+  - pip=22.1.2
+  - python=3.10.4
+  - readline=8.1.2
+  - setuptools=63.4.1
+  - sqlite=3.39.2
+  - tk=8.6.12
+  - tzdata=2022a
+  - wheel=0.37.1
+  - xz=5.2.5
+  - zlib=1.2.12
+  - pip=22.1.2
+  - pip:
+    - cycler==0.11.0
+    - et-xmlfile==1.1.0
+    - fonttools==4.37.0
+    - kiwisolver==1.4.4
+    - matplotlib==3.5.3
+    - numpy==1.23.2
+    - openpyxl==3.0.10
+    - packaging==21.3
+    - pandas==1.4.3
+    - pillow==9.2.0
+    - pyparsing==3.0.9
+    - python-dateutil==2.8.2
+    - pytz==2022.2.1
+    - scipy==1.9.0
+    - seaborn==0.11.2
+    - six==1.16.0
