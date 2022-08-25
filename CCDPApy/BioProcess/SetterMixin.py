@@ -15,24 +15,24 @@ class SetterMixin:
         self._igg = igg
         self._pre_process = igg.get_pre_data()
 
-    def set_aa_df(self, aa_df):
-        self._aa_df = aa_df
+    def set_spc_df(self, spc_df):
+        self._aa_df = spc_df
 
-    def set_aa_conc(self, conc):
-        self._aa_conc_df = conc
+    def set_spc_conc(self, conc):
+        self._spc_conc_df = conc
         
-    def set_aa_conc_after_feed(self, conc_after_feed):
+    def set_spc_conc_after_feed(self, conc_after_feed):
         self._conc_after_feed_df = conc_after_feed
 
-    def set_aa_dict(self, aa_dict):
-        self._aa_dict = aa_dict
+    def set_spc_dict(self, spc_dict):
+        self._spc_dict = spc_dict
 
-    def set_aa_list(self, aa_list):
-        self._aa_list = aa_list
+    def set_spc_list(self, spc_list):
+        self._spc_list = spc_list
 
     def set_new_spc(self, new_spc_list):
         for new_spc in new_spc_list:
-            self._original_aa_list.append(new_spc)
+            self._original_spc_list.append(new_spc)
 
     def set_pre_process(self, pre_process):
         self._pre_process = pre_process

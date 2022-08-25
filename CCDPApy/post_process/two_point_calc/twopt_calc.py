@@ -15,21 +15,21 @@ def twopt_calc(bio_process):
     igg.post_process_twopt()
 
     # AA
-    aa_dict = bio_process.get_aa_dict()
-    aa_list = bio_process.get_aa_list()
-    aa_rate_twopt_df = pd.DataFrame()   # Initialize
+    spc_dict = bio_process.get_spc_dict()
+    spc_list = bio_process.get_spc_list()
+    spc_rate_twopt_df = pd.DataFrame()   # Initialize
 
-    for aa_name in aa_list:
-        aa_dict[aa_name].sp_rate_twopt()
+    for aa_name in spc_list:
+        spc_dict[aa_name].sp_rate_twopt()
         title = f'Two-Pt. Calc. q{aa_name.capitalize()} (mmol/109 cell/hr)'
 
-        aa_rate_twopt_df[title] = aa_dict[aa_name].get_sp_rate()
+        spc_rate_twopt_df[title] = spc_dict[aa_name].get_sp_rate()
 
     # Add to bp
-    bio_process.set_post_twopt(aa_rate_twopt_df)
+    bio_process.set_post_twopt(spc_rate_twopt_df)
 
     # Nitrogen and AA Carbon
-    if(sorted(aa_list) == sorted(bio_process.get_original_aa_list())):
+    if(sorted(spc_list) == sorted(bio_process.get_original_spc_list())):
         sp_rate_others(bio_process)
 
     # Ratio Calc
@@ -41,7 +41,7 @@ def twopt_calc(bio_process):
 ###########################################################################
 # Calculate Specific Rate for Nitrogne and AA carbon
 def sp_rate_others(bio_process):
-    aa_dict = bio_process.get_aa_dict()
+    aa_dict = bio_process.get_spc_dict()
 
     qAla = aa_dict['Alanine'.upper()].get_sp_rate()
     qArg = aa_dict['Arginine'.upper()].get_sp_rate()
@@ -110,7 +110,7 @@ def sp_rate_others(bio_process):
 ###########################################################################
 # Ratio Caluculaions
 def ratio_calc(bio_process):
-    aa_dict = bio_process.get_aa_dict()
+    aa_dict = bio_process.get_spc_dict()
     df = bio_process.get_post_twopt()
 
     if ('Glucose'.upper() in aa_dict.keys()):

@@ -23,19 +23,19 @@ def cumulative_calc(bio_process, use_feed_conc=True, use_conc_after_feed=False):
     oxygen.in_process()
     bio_process.set_oxygen(oxygen)  # Add
 
-    # IgG
+    # Product/IgG
     igg = Product(experiment_info=exp_info, raw_data=measured_data, name='IgG',)
     igg.in_process()
     bio_process.set_igg(igg)    # Add
 
     # AA Cumulative
-    aa_lst = bio_process.get_aa_list()  # Get AA List to Analyze
-    aa_dict = {}                        # Initialize
-    aa_cumulative_df = pd.DataFrame()   # Initialize
-    aa_conc_df = pd.DataFrame()
-    aa_conc_after_feed_df = pd.DataFrame()
+    spc_lst = bio_process.get_spc_list()  # Get AA List to Analyze
+    spc_dict = {}                        # Initialize
+    spc_cumulative_df = pd.DataFrame()   # Initialize
+    spc_conc_df = pd.DataFrame()
+    spc_conc_after_feed_df = pd.DataFrame()
 
-    for s in aa_lst:
+    for s in spc_lst:
         s = s.upper()   # Name
         conc_before = check_key(measured_data, f'{s} CONC. (mM)')           # Concentration Before Feeding
         conc_after = check_key(measured_data, f'{s} CONC. (mM).1')          # Concentration After Feeding
@@ -59,19 +59,19 @@ def cumulative_calc(bio_process, use_feed_conc=True, use_conc_after_feed=False):
         spc.in_process(use_feed_conc=use_feed_conc, use_conc_after_feed=use_conc_after_feed)
         unit = spc.get_cumulative_unit()    # Unit
         
-        aa_cumulative_df['CUM '+s+' '+unit] = spc.get_cumulative()  # Add to DF
-        aa_conc_df[conc_before.name] = conc_before
-        aa_conc_after_feed_df[s+' (mM) (After Feed)'] = spc.get_conc_after_feed()
-        aa_dict[s] = spc    # Add to Dictionary
+        spc_cumulative_df['CUM '+s+' '+unit] = spc.get_cumulative()  # Add to DF
+        spc_conc_df[conc_before.name] = conc_before
+        spc_conc_after_feed_df[s+' (mM) (After Feed)'] = spc.get_conc_after_feed()
+        spc_dict[s] = spc    # Add to Dictionary
 
     # Add to bp obj
-    bio_process.set_aa_df(aa_cumulative_df)
-    bio_process.set_aa_dict(aa_dict=aa_dict)
-    bio_process.set_aa_conc(aa_conc_df)
-    bio_process.set_aa_conc_after_feed(conc_after_feed=aa_conc_after_feed_df)
+    bio_process.set_spc_df(spc_cumulative_df)
+    bio_process.set_spc_dict(spc_dict=spc_dict)
+    bio_process.set_spc_conc(spc_conc_df)
+    bio_process.set_spc_conc_after_feed(conc_after_feed=spc_conc_after_feed_df)
 
     # Other Spc Cumulative Nitrogen, and AA Carbon
-    if(sorted(aa_lst) == sorted(bio_process.get_original_aa_list())):
+    if(sorted(spc_lst) == sorted(bio_process.get_original_spc_list())):
         cumulative_others(bio_process)
 
     return bio_process
@@ -85,29 +85,29 @@ def cumulative_calc(bio_process, use_feed_conc=True, use_conc_after_feed=False):
 def cumulative_others(bio_process):
     exp_info = bio_process.get_exp_info()
     measured_data = bio_process.get_measured_data()
-    aa_dict = bio_process.get_aa_dict()
+    spc_dict = bio_process.get_spc_dict()
 
-    ala = aa_dict['Alanine'.upper()].get_cumulative()
-    arg = aa_dict['Arginine'.upper()].get_cumulative()
-    asn = aa_dict['Asparagine'.upper()].get_cumulative()
-    asp = aa_dict['Aspartate'.upper()].get_cumulative()
-    cyt = aa_dict['Cystine'.upper()].get_cumulative()
-    gln = aa_dict['Glutamine'.upper()].get_cumulative()
-    glu = aa_dict['Glutamate'.upper()].get_cumulative()
-    gly = aa_dict['Glycine'.upper()].get_cumulative()
-    his = aa_dict['Histidine'.upper()].get_cumulative()
-    iso = aa_dict['Isoleucine'.upper()].get_cumulative()
-    leu = aa_dict['Leucine'.upper()].get_cumulative()
-    lys = aa_dict['Lysine'.upper()].get_cumulative()
-    met = aa_dict['Methionine'.upper()].get_cumulative()
-    nh3 = aa_dict['NH3'.upper()].get_cumulative()
-    phe = aa_dict['Phenylalanine'.upper()].get_cumulative()
-    pro = aa_dict['Proline'.upper()].get_cumulative()
-    ser = aa_dict['Serine'.upper()].get_cumulative()
-    thr = aa_dict['Threonine'.upper()].get_cumulative()
-    tryp = aa_dict['Tryptophan'.upper()].get_cumulative()
-    tyr = aa_dict['Tyrosine'.upper()].get_cumulative()
-    val = aa_dict['Valine'.upper()].get_cumulative()
+    ala = spc_dict['Alanine'.upper()].get_cumulative()
+    arg = spc_dict['Arginine'.upper()].get_cumulative()
+    asn = spc_dict['Asparagine'.upper()].get_cumulative()
+    asp = spc_dict['Aspartate'.upper()].get_cumulative()
+    cyt = spc_dict['Cystine'.upper()].get_cumulative()
+    gln = spc_dict['Glutamine'.upper()].get_cumulative()
+    glu = spc_dict['Glutamate'.upper()].get_cumulative()
+    gly = spc_dict['Glycine'.upper()].get_cumulative()
+    his = spc_dict['Histidine'.upper()].get_cumulative()
+    iso = spc_dict['Isoleucine'.upper()].get_cumulative()
+    leu = spc_dict['Leucine'.upper()].get_cumulative()
+    lys = spc_dict['Lysine'.upper()].get_cumulative()
+    met = spc_dict['Methionine'.upper()].get_cumulative()
+    nh3 = spc_dict['NH3'.upper()].get_cumulative()
+    phe = spc_dict['Phenylalanine'.upper()].get_cumulative()
+    pro = spc_dict['Proline'.upper()].get_cumulative()
+    ser = spc_dict['Serine'.upper()].get_cumulative()
+    thr = spc_dict['Threonine'.upper()].get_cumulative()
+    tryp = spc_dict['Tryptophan'.upper()].get_cumulative()
+    tyr = spc_dict['Tyrosine'.upper()].get_cumulative()
+    val = spc_dict['Valine'.upper()].get_cumulative()
 
     # Calculate cumulative consumption
     # NITROGEN
@@ -140,15 +140,15 @@ def cumulative_others(bio_process):
                             cumulative=aa_carbon_cum)
 
     # Add obj to aa dict
-    aa_dict['NITROGEN'] = nitrogen
-    aa_dict['NITROGEN (W/O NH3, ALA)'] = nitrogen_w_o_NH3_Ala
-    aa_dict['AA CARBON'] = aa_carbon
+    spc_dict['NITROGEN'] = nitrogen
+    spc_dict['NITROGEN (W/O NH3, ALA)'] = nitrogen_w_o_NH3_Ala
+    spc_dict['AA CARBON'] = aa_carbon
 
-    aa_df = bio_process.get_aa_df()
+    spc_df = bio_process.get_spc_df()
     # Add cumulative consumption to DF
-    aa_df['CUM. Nitrogen (mmol)'] = nitrogen_cum
-    aa_df['CUM. Nitrogen (w/o NH3, Ala) (mmol)'] = nitrogen_w_o_NH3_Ala_cum
-    aa_df['CUM. AA Carbon (mmol)'] = aa_carbon_cum
+    spc_df['CUM. Nitrogen (mmol)'] = nitrogen_cum
+    spc_df['CUM. Nitrogen (w/o NH3, Ala) (mmol)'] = nitrogen_w_o_NH3_Ala_cum
+    spc_df['CUM. AA Carbon (mmol)'] = aa_carbon_cum
     
-    bio_process.set_aa_df(aa_df)
-    bio_process.set_aa_dict(aa_dict=aa_dict)
+    bio_process.set_spc_df(spc_df)
+    bio_process.set_spc_dict(spc_dict=spc_dict)

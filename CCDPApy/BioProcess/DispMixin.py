@@ -6,13 +6,12 @@ class DispMixin:
         print(f'Cell Line:              {self._cell_line_name}')
         print(f'Experiment ID:          {self._experiment_id}')
         print(f'Experimenter Name:      {self._experimenter_name}')
-        print(f'Initial Culture Volume: {self._initial_volume}')
+        print(f'Initial Culture Volume: {self._initial_volume} (mL)')
         print('Metabolite List:')
-        if (self._aa_list):
-            print(self._aa_list)
+        if (self._spc_list):
+            print(self._spc_list)
         else:
-            print(self._original_aa_list)
-        print('\n')
+            print(self._original_spc_list)
 
     # Display Pre Process
     def disp_pre_process(self):

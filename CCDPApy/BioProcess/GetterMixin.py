@@ -52,27 +52,27 @@ class GetterMixin:
         return self._in_process
 
     # Get Metabolite List
-    def get_aa_list(self):
-        if (self._aa_list):
-            return self._aa_list
+    def get_spc_list(self):
+        if (self._spc_list):
+            return self._spc_list
         else:
-            return self._original_aa_list
+            return self._original_spc_list
 
     # Get Original Metabolite List
-    def get_original_aa_list(self):
-        return self._original_aa_list
+    def get_original_spc_list(self):
+        return self._original_spc_list
 
 
     # Get Metabolite dictionary
-    def get_aa_dict(self):
-        return self._aa_dict
+    def get_spc_dict(self):
+        return self._spc_dict
 
     # Get Metabolite Concentration DF
-    def get_aa_conc(self):
-        return self._aa_conc_df
+    def get_spc_conc(self):
+        return self._spc_conc_df
 
     # Get Metabolite Cumulative DF
-    def get_aa_df(self):
+    def get_spc_df(self):
         return self._aa_df
 
     # Get Post Process DF

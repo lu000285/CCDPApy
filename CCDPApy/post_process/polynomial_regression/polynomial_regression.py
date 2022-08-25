@@ -34,17 +34,17 @@ def polyreg_calc(bio_process, polyorder_file):
 
     
     # AA
-    aa_dict = bio_process.get_aa_dict()
+    spc_dict = bio_process.get_spc_dict()
     polyreg_df = pd.DataFrame()     # Initialize
 
-    for aa_name, aa_obj in aa_dict.items():
+    for spc_name, aa_obj in spc_dict.items():
         try:
-            order = polyorder.loc[aa_name].iat[0]
+            order = polyorder.loc[spc_name].iat[0]
         except:
             order = 3
         aa_obj.polyreg(polyorder=order)
 
-        title = f'Poly. Reg. Order: {order} q{aa_name.capitalize()} (mmol/109 cell/hr)'
+        title = f'Poly. Reg. Order: {order} q{spc_name.capitalize()} (mmol/109 cell/hr)'
 
         polyreg_df[title] = aa_obj.get_polyreg_sp_rate()
 
@@ -60,7 +60,7 @@ def polyreg_calc(bio_process, polyorder_file):
 ###########################################################################
 # Ratio Caluculaions
 def polyreg_ratio_calc(bio_process):
-    aa_dict = bio_process.get_aa_dict()
+    aa_dict = bio_process.get_spc_dict()
     df = bio_process.get_post_polyreg()
 
     if ('Glucose'.upper() in aa_dict.keys()):

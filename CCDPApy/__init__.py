@@ -1,2 +1,2 @@
-'''from .my_func_test import init
-init()'''
+from CCDPApy.BioProcess.bio_process import bio_process
+from CCDPApy.BioProcess.CellLine import CellLine

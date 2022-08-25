@@ -38,7 +38,7 @@ def rolling_regression(bio_process,
         r_lst = ['rglut1','rmct','rglnna','rasnna','raspna']
         aa_lst = ['Glucose','Lactate','Glutamine','Asparagine','Aspartate']
 
-    aa_dict = bio_process.get_aa_dict()
+    spc_dict = bio_process.get_spc_dict()
     df_conc = pd.DataFrame() # Initialize
     df_q = pd.DataFrame() # Initialize
     df_r = pd.DataFrame() # Initialize
@@ -46,7 +46,7 @@ def rolling_regression(bio_process,
 
     for i, aa_name in enumerate(aa_lst):
         # order = polyorder.loc[aa_name].iat[0]
-        aa_obj = aa_dict[aa_name.upper()]
+        aa_obj = spc_dict[aa_name.upper()]
         aa_obj.rolling_poly_regression(polyreg_order=order, windows=windows)
         pre = f'Roll. Poly. Reg. Order: {order} Window: {windows}'
         title = f'{pre} q{aa_name.capitalize()} (mmol/109 cell/hr)'
@@ -73,7 +73,7 @@ def rolling_regression(bio_process,
 
 # Ratio Caluculaions
 def ratio_calc_rollpolyreg(bio_process):
-    aa_dict = bio_process.get_aa_dict()
+    aa_dict = bio_process.get_spc_dict()
     df = bio_process.get_post_rollpolyreg()
     
     # DL/DG

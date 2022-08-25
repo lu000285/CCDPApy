@@ -1,6 +1,4 @@
-from test_package.Species.MeasuredData import MeasuredData
-
-
+from CCDPApy.Species.MeasuredData import MeasuredData
 ###########################################################################
 
 ###########################################################################
