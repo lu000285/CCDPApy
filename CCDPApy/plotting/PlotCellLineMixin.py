@@ -11,7 +11,7 @@ class PlotMixin:
     '''
     # Plotting different experiments in a cell line on the same figure.
     def plot_exps(self, cell_line, spc_list, method='all',
-                  exp_lst=None, legend=True, file_name=None):
+                  exp_list=None, legend=True, file_name=None):
         '''
         '''
         # Initialize methods as True
@@ -35,8 +35,8 @@ class PlotMixin:
         bp_dict = self._cell_line_dict[cell_line]
 
         # Check Experiment List
-        if (not exp_lst):
-            exp_lst = [exp_id for exp_id in bp_dict.keys()]
+        if (not exp_list):
+            exp_list = [exp_id for exp_id in bp_dict.keys()]
 
         # Check legend
         if (legend):
@@ -46,14 +46,14 @@ class PlotMixin:
         fig, ax = plt.subplots(len(spc_list), 3, figsize=(24, 8*len(spc_list)))
         fig.tight_layout(rect=[0,0,1,0.96])
         plt.subplots_adjust(wspace=0.2, hspace=0.3)
-        fig.suptitle(f'Profiles for {exp_lst}')
+        fig.suptitle(f'Profiles for {exp_list}')
 
-        print(f'Makeing a plot for {exp_lst}')
+        print(f'Makeing a plot for {exp_list}')
         for i, s in enumerate(spc_list):
             inpro_df_lst = []   # In process list for different experiments
             cumulative_lst = [] # Cumulative list for different experiments
             sp_rate_df_lst = [] # SP. rate list for different experiments
-            for exp in exp_lst:
+            for exp in exp_list:
                 spc = bp_dict[exp].get_spc_dict()[s.upper()] # spc object
                 inpro_df = spc.get_inpro_df() # in process df for spceis
                 cumulative_df = spc.get_cumulative_df() # cumulative df for species
@@ -74,7 +74,7 @@ class PlotMixin:
             # Plot Conentration
             set_ax = ax[i, 0] if len(spc_list) != 1 else ax[0]
             sns.lineplot(ax=set_ax, data=inpro, x='RUN TIME (HOURS)', y=f'{s.upper()} CONC. (mM)',
-                            hue="Experiment ID", hue_order=exp_lst,
+                            hue="Experiment ID", hue_order=exp_list,
                             legend=legend)
             set_ax.set_title(f'{s.upper()} Kinetic Curve', loc='center')
             set_ax.set_ylabel('Concentration (mM)')
@@ -83,11 +83,11 @@ class PlotMixin:
             # Plot Cumulative Consumption/Production
             set_ax = ax[i, 1] if len(spc_list) != 1 else ax[1]
             sns.scatterplot(ax=set_ax, data=inpro, x='RUN TIME (HOURS)', y=f'CUM {s.upper()} (mmol)',
-                            hue="Experiment ID", hue_order=exp_lst,
+                            hue="Experiment ID", hue_order=exp_list,
                             style="Experiment ID",
                             legend=legend)
             sns.lineplot(ax=set_ax, data=cumulative, x='RUN TIME (HOURS)', y=f'CUM {s.upper()} (mmol)',
-                            hue="Experiment ID", hue_order=exp_lst,
+                            hue="Experiment ID", hue_order=exp_list,
                             style='Method',
                             legend=legend)
             set_ax.set_title(f'{s.upper()} Cumulative Curve', loc='center')
@@ -97,7 +97,7 @@ class PlotMixin:
             # Plot Sp. Rate.
             set_ax = ax[i, 2] if len(spc_list) != 1 else ax[2]
             sns.lineplot(ax=set_ax, data=sp_rate, x='RUN TIME (HOURS)', y=f'q{s.upper()} (mmol/109 cell/hr)',
-                            hue="Experiment ID", hue_order=exp_lst,
+                            hue="Experiment ID", hue_order=exp_list,
                             style='Method',
                             legend=legend)
             sns.set_theme(style="whitegrid")
