@@ -61,14 +61,13 @@ class CellLine(PlotMixin):
 
 
     # Save Excell for Rolling Regression
-    def save_excel_rolling_reg(self, file_name):
+    def save_excel_rollreg(self, cell_line, file_name):
         if '.xlsx' not in file_name:
             file_name += '.xlsx'
         file_path = output_path(file_name=file_name)
 
         with pd.ExcelWriter(file_path) as writer:
-            print(file_name + ' saving...')
-            for cl in self._cell_line:
+            for cl in self._cell_line_dict[cell_line].values():
                 sheet = cl.get_exp_id()
                 cl.get_post_rollpolyreg().to_excel(writer, sheet_name=sheet, index=False)
             print(file_name + ' saved')

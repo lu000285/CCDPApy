@@ -46,4 +46,10 @@ cell_line.save_excel(cell_line='GS CHOZN Clone 23', file_name='cl_1')
 cell_line.save_excel(cell_line='GS Sigma CHOZN Clone 23', file_name='cl_2')
 cell_line.save_excel(cell_line='Merck', file_name='cl_3')
 
+cell_line.save_excel_rollreg(cell_line='GS CHOZN Clone 23', file_name='cl_1_rollreg')
+cell_line.save_excel_rollreg(cell_line='GS Sigma CHOZN Clone 23', file_name='cl_2_rollreg')
+cell_line.save_excel_rollreg(cell_line='Merck', file_name='cl_3_rollreg')
+
+
+
 #fig = cell_line.plot_cell_lines(spc_list=plot_list, compare_cell_line=True)
