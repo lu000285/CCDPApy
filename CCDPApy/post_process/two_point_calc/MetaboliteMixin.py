@@ -4,6 +4,8 @@ from numpy import diff
 
 ###########################################################################
 class MetaboliteMixinTwoPt:
+    '''
+    '''
     # Calculate Specific Rate
     def sp_rate_twopt(self):
         # Get Measurement Index
@@ -15,7 +17,7 @@ class MetaboliteMixinTwoPt:
         xv = self._xv[idx]                  # Viable Cell Concentration (10e6 cells/mL)
         
         # Initialize
-        rate = pd.Series(data=[pd.NA] * len(self._sample_num),
+        rate = pd.Series(data=[np.nan] * len(self._sample_num),
                          name='q'+self._name+' (mmol/109 cell/hr)')
         
         # IF Have Direct Calculation of Cumulative

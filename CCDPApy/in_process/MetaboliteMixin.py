@@ -8,11 +8,8 @@ na = np.nan
 ###########################################################################
 class MetaboliteMixin:
     # Call Initialize Method
-    # ***********************************************
-    # Modify so User can Choose Which Concentraion to Calculate Cumulative
-    # ***********************************************
-    def in_process(self, use_feed_conc=True, use_conc_after_feed=False):
-        # Which Concentration Use?
+    def in_process(self, use_feed_conc=False, use_conc_after_feed=False):
+        # Concentration Profiles to Calculate Cumulative Comsumption/Production
         self._use_feed_conc = use_feed_conc
         self._use_conc_after_feed = use_conc_after_feed
 
@@ -24,13 +21,10 @@ class MetaboliteMixin:
             self.conc_after_feeding()
             # Mid-point calculation of conc. and run time
             self.mid_calc_conc_runtime()
-
         else:
             self._cumulative_unit = '(mmol)'
-
-            # IF Experiments Measure the Feed Concentration
+            # IF Experiments measure the feed Concentrations
             if (self._use_feed_conc):
-                # print('CONS FROM FEED')
                 # Calculate Concentration After Feeding
                 self.conc_after_feeding()
                 # Calculate Cumulative Consumption/Production with Feed Concentraion
@@ -38,16 +32,14 @@ class MetaboliteMixin:
                 # Mid-point calculation of conc. and run time
                 self.mid_calc_conc_runtime()
 
-            # IF Experiments Measure the Concentraion After Feeding
+            # IF Experiments measure the concentraions after feeding
             elif (self._use_conc_after_feed):
-                # print('CONS FROM AFTER FEED')
                 # Calculate Cumulative Consumption/Production with Concentraion after Feeding
                 self.cumulative_cons_from_conc_after_feed()
                 # Mid-point calculation of conc. and run time
                 self.mid_calc_conc_runtime()
 
             else:
-                # print('CONS FROM WITHOUT AFTER FEED')
                 # Calculate Concentration After Feeding
                 self.conc_after_feeding()
                 # Calculate Cumulative Consumption/Production without Concentraion after Feeding
@@ -55,22 +47,20 @@ class MetaboliteMixin:
                 # Mid-point calculation of conc. and run time
                 self.mid_calc_conc_runtime()
 
+
     # Calculate Concentration After Feeding
     def conc_after_feeding(self):
-        # print(self._name)
         idx = self._idx                     # Measurement Index
         s = self._conc_before_feed[idx]     # Substrate Concentration (mM)
         sf = self._feed_conc[idx]           # Substrate Feed Concentration (mM)
         f = self._feed_media_added[idx]     # Feed Flowrate (ml/hr)
         v = self._v_after_sampling[idx]     # Culture Volume After Sampling (ml)
-        g = self._glutamine_feed_added[idx] # Glutamine Feed Added
+        g = self._feed_added[idx]           # Feed Added (E.g. glutamine, glucose, etc.)
 
         # Concentration After Feeding
         self._conc_after_feed = ((s*v + sf*f) / (v + f + g)).rename(f'{self._name} CONC. AFTER FEED (mM)')
 
-    
-    # Calculate Cumulative Consumption/Production
-    # With Feed Concentration
+    # Calculate Cumulative Consumption/Production With Feed Concentration
     def cumulative_cons_from_feed(self, initial_conc=0):
         idx = self._idx                     # Measurement Index
         s = self._conc_before_feed[idx]     # Substrate Concentration (mM)
@@ -78,9 +68,10 @@ class MetaboliteMixin:
         f = self._feed_media_added[idx]     # Feed Flowrate (ml/hr)
         v1 = self._v_before_sampling[idx]   # Culture Volume Before Sampling (ml)
         v2 = self._v_after_sampling[idx]    # Culture Volume After Sampling (ml)
-        # For Glutamine
-        if self._name == 'GLUTAMINE':
-            f = self._glutamine_feed_added[idx]
+
+        # Check Species name and feed added
+        if self._name.upper() == self._feed_name.upper():
+            f = self._feed_added[idx]
 
         # Initialize
         se = pd.Series(data=[na] * len(self._sample_num),
@@ -100,8 +91,7 @@ class MetaboliteMixin:
         self._cumulative = se.astype('float')
 
 
-    # Calculate Cumulative Consumption/Production
-    # With Concentration After Feeding
+    # Calculate Cumulative Consumption/Production With Concentration After Feeding
     def cumulative_cons_from_conc_after_feed(self, initial_conc=0.0):
         idx = self._idx                     # Measurement Index
         s1 = self._conc_before_feed[idx]    # Substrate Concentration Before Feeding (mM)
@@ -124,8 +114,8 @@ class MetaboliteMixin:
         # Cumulative Consumption/Production
         self._cumulative = s.astype('float')
 
-    # Calculate Cumulative Consumption/Production
-    # Without Concentration After Feeding
+
+    # Calculate Cumulative Consumption/Production Without Concentration After Feeding
     def cumulative_cons_without_feed(self, initial_conc = 0.0):
         idx = self._idx                     # Measurement Index
         s = self._conc_before_feed[idx]     # Substrate Concentration (mM)
@@ -152,15 +142,22 @@ class MetaboliteMixin:
 
     # Mid-point calculation of conc. and run time
     def mid_calc_conc_runtime(self):
-        c1 = self._conc_after_feed      # c1: conc after feeding at t
-        c2 = self._conc_before_feed     # c2: measured conc at t + 1
+        idx = self._idx                 # Measurement index
+        c1 = self._conc_after_feed[idx]      # c1: conc after feeding at t
+        c2 = self._conc_before_feed[idx]     # c2: measured conc at t + 1
+        t = self._run_time_hour[idx]         # run time hour
 
-        c_mid = pd.Series(data=[na] * (len(self._sample_num)-1),
+        c_mid = pd.Series(data=[na] * (len(idx)-1),
                             name=f'{self._name} CONC. MID. (mM)')
+        t_mid = pd.Series(data=[na] * (len(idx)-1),
+                            name='RUN TIME MID (HOURS)')
 
-        for i in range(len(c_mid)):
+        for i in range(len(idx)-1):
             c_mid.iat[i] = (c1.iat[i]+c2.iat[i+1])/2
+            t_mid.iat[i] = (t.iat[i]+t.iat[i+1])/2
+
         self._conc_mid = c_mid.astype('float')
+        self._run_time_mid = t_mid.astype('float')
 
 
     # Getters
@@ -182,4 +179,10 @@ class MetaboliteMixin:
 
     # Display
     def disp_inpro_data(self):
-        print(self._cumulative)
+        if self._in_process_flag:
+            data = pd.concat([self._run_time_hour, self._cumulative],
+                            axis=1)
+            print(data)
+        else:
+            print('In Process Not Yet Done.')
+        

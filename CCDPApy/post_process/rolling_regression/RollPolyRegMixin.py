@@ -4,11 +4,11 @@ import numpy as np
 # Rolling Polynomial Regression Mixin Class
 class RollPolyregMixin:
     def rolling_poly_regression(self, polyreg_order=3, windows=4):
-        # idx = self._idx
-        x = self._run_time_hour
-        y = self._cumulative
-        vcc = self._xv
-        v = self._v_before_sampling
+        idx = self._idx
+        x = self._run_time_hour[idx]
+        y = self._cumulative[idx]
+        vcc = self._xv[idx]
+        v = self._v_before_sampling[idx]
         x_mid = self._run_time_mid
         
         self._rollpolyreg_order = polyreg_order
@@ -32,7 +32,6 @@ class RollPolyregMixin:
 
                 dy = dp1(x_mid[i])      # derivetive values corresponding to x
                 if(self._direct_cumulative):
-                    print(f'{self._name} use direct CUM for Roll. Poly. Reg.')
                     q.iat[i] = dy / (vcc.iat[i] + vcc.iat[i+1])*2
                 else:
                     q.iat[i] = dy / (vcc.iat[i] * v.iat[i]+vcc.iat[i+1] * v.iat[i+1])*2 * 1000
@@ -48,7 +47,6 @@ class RollPolyregMixin:
 
                 dy = dp1(x_mid[i])      # derivetive values corresponding to x
                 if(self._direct_cumulative):
-                    print(f'{self._name} use direct CUM for Roll. Poly. Reg.')
                     q.iat[i] = dy / (vcc.iat[i] + vcc.iat[i+1])*2
                 else:
                     q.iat[i] = dy / (vcc.iat[i] * v.iat[i]+vcc.iat[i+1] * v.iat[i+1])*2 * 1000
@@ -64,13 +62,9 @@ class RollPolyregMixin:
 
                 dy = dp1(x_mid[i])      # derivetive values corresponding to x
                 if(self._direct_cumulative):
-                    print(f'{self._name} use direct CUM for Roll. Poly. Reg.')
                     q.iat[i] = dy / (vcc.iat[i] + vcc.iat[i+1])*2
                 else:
                     q.iat[i] = dy / (vcc.iat[i] * v.iat[i]+vcc.iat[i+1] * v.iat[i+1])*2 * 1000
 
         self._rollpolyreg_sp_rate = q   # Polynomial Fit SP. rate
 
-    # Getters
-    def get_rollpolyreg_sp_rate(self):
-        return self._rollpolyreg_sp_rate

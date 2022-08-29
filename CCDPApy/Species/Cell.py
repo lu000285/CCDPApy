@@ -11,71 +11,29 @@ from ..post_process.rolling_regression.LogisticGrowthMixin import LogisticGrowth
 ###########################################################################
 class Cell(Species, CellMixin, CellMixnTwoPt, CellMixinPolyReg, LogisticGrowthMixin):
     '''
-    
     '''
     # Constructor
-    def __init__(self, experiment_info, raw_data, name):
+    def __init__(self, experiment_info, raw_data, feed_name, name):
 
         # Constructor for Spcies Class
-        super().__init__(experiment_info, raw_data, name)
+        super().__init__(experiment_info, raw_data, feed_name, name)
 
         # Members
         self._idx = self._xv[self._xv.notnull()].index
 
-    # Getters
-    def get_xv(self):
-        """
-        Get Viable Cell Concentration (x106 cells/mL)
-        
-        Parameters
-        ----------
+        # Calculate run time middle
+        self.runtime_mid_calc()
 
-        Returns
-        -------
-        self._xv :
-            Viable Cell Concentration (x106 cells/mL)
-        """
-        return self._xv
+    # Mid-point calculation of conc. and run time
+    def runtime_mid_calc(self):
+        idx = self._idx # Measurement index
+        t = self._run_time_hour[idx] # original run time (hour)
+        t_mid = pd.Series(data=[pd.NA] * (len(t)-1),
+                            name='RUN TIME MID (HOURS)')
+        # Calculate Mid Time from Original Run time
+        for i in range(len(t_mid)):
+            t_mid.iat[i] = (t.iat[i] + t.iat[i+1])/2
 
-    def get_xd(self):
-        """
-        Get Dead Cell Concentration (x106 cells/mL)
-        
-        Parameters
-        ----------
+        self._run_time_mid = t_mid
 
-        Returns
-        -------
-        self._xd :
-            Dead Cell Concentration (x106 cells/mL)
-        """
-        return self._xd
-
-    def get_xt(self):
-        """
-        Get Total Cell Concentration (x106 cells/mL)
-        
-        Parameters
-        ----------
-
-        Returns
-        -------
-        self._xt :
-            Total Cell Concentration (x106 cells/mL)
-        """
-        return self._xt
-
-    def get_viability(self):
-        """
-        Get Viability (%)
-        
-        Parameters
-        ----------
-
-        Returns
-        -------
-        self._viability :
-            Viability (%)
-        """
-        return self._viability
 ###########################################################################

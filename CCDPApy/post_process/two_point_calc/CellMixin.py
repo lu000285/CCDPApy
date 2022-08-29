@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 ###########################################################################
 # Cell Two Point Calc Mixin Class
 
@@ -25,7 +25,7 @@ class CellMixnTwoPt:
         v2 = self._v_after_sampling     # Culture Volume After Sampling (mL)
 
         # Initialize
-        rate = pd.Series(data=[pd.NA] * len(t), name='SP. GROWTH RATE, m (hr-1) [mv-kd]') # Initialize
+        rate = pd.Series(data=[np.nan] * len(t), name='SP. GROWTH RATE, m (hr-1) [mv-kd]') # Initialize
         
         for i in range(1, len(t)):
             x = s.iat[i] - s.iat[i-1]
@@ -34,6 +34,7 @@ class CellMixnTwoPt:
 
         # SP. Rate
         self._sp_growth_rate = rate
+        self._sp_rate = rate
 
     # Calculates kd value
     def kd(self):
@@ -43,7 +44,7 @@ class CellMixnTwoPt:
         v2 = self._v_after_sampling     # Culture Volume After Sampling (mL)
 
         # Initialize
-        kd = pd.Series(data=[pd.NA] * len(t), name='kd')
+        kd = pd.Series(data=[np.nan] * len(t), name='kd')
 
         for i in range(1, len(t)):
             x = xd.iat[i]*v1.iat[i] - xd.iat[i-1]*v2.iat[i-1]

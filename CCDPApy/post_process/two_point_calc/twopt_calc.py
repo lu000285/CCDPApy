@@ -4,14 +4,17 @@ import pandas as pd
 def twopt_calc(bio_process):
     # Cell
     cell = bio_process.get_cell()
+    cell.set_method_flag(method='twopt', flag=True)
     cell.post_process_twopt()
 
     # Oxygen
     oxygen = bio_process.get_oxygen()
+    oxygen.set_method_flag(method='twopt', flag=True)
     oxygen.post_process_twopt()
 
     # IgG
     igg = bio_process.get_igg()
+    igg.set_method_flag(method='twopt', flag=True)
     igg.post_process_twopt()
 
     # AA
@@ -20,13 +23,15 @@ def twopt_calc(bio_process):
     spc_rate_twopt_df = pd.DataFrame()   # Initialize
 
     for aa_name in spc_list:
-        spc_dict[aa_name].sp_rate_twopt()
+        spc = spc_dict[aa_name.upper()]
+        spc.sp_rate_twopt()
+        spc.set_method_flag(method='twopt', flag=True)
+        
         title = f'Two-Pt. Calc. q{aa_name.capitalize()} (mmol/109 cell/hr)'
-
-        spc_rate_twopt_df[title] = spc_dict[aa_name].get_sp_rate()
+        spc_rate_twopt_df[title] = spc_dict[aa_name.upper()].get_sp_rate(method='twopt')
 
     # Add to bp
-    bio_process.set_post_twopt(spc_rate_twopt_df)
+    bio_process.set_twopt_df(spc_rate_twopt_df)
 
     # Nitrogen and AA Carbon
     if(sorted(spc_list) == sorted(bio_process.get_original_spc_list())):
@@ -35,35 +40,40 @@ def twopt_calc(bio_process):
     # Ratio Calc
     ratio_calc(bio_process)
 
-    return bio_process
+    # Set twopt flag true
+    bio_process.set_process_flag(process='twopt', flag=True)
+
+
 ###########################################################################
 
 ###########################################################################
 # Calculate Specific Rate for Nitrogne and AA carbon
 def sp_rate_others(bio_process):
     aa_dict = bio_process.get_spc_dict()
+    special_spc_dict = bio_process.get_special_spc_dict()
+    method = 'twopt'
 
-    qAla = aa_dict['Alanine'.upper()].get_sp_rate()
-    qArg = aa_dict['Arginine'.upper()].get_sp_rate()
-    qAsn = aa_dict['Asparagine'.upper()].get_sp_rate()
-    qAsp = aa_dict['Aspartate'.upper()].get_sp_rate()
-    qCys = aa_dict['Cystine'.upper()].get_sp_rate()
-    qGln = aa_dict['Glutamine'.upper()].get_sp_rate()
-    qGlu = aa_dict['Glutamate'.upper()].get_sp_rate()
-    qGly = aa_dict['Glycine'.upper()].get_sp_rate()
-    qHis = aa_dict['Histidine'.upper()].get_sp_rate()
-    qIso = aa_dict['Isoleucine'.upper()].get_sp_rate()
-    qLeu = aa_dict['Leucine'.upper()].get_sp_rate()
-    qLys = aa_dict['Lysine'.upper()].get_sp_rate()
-    qMet = aa_dict['Methionine'.upper()].get_sp_rate()
-    qNh3 = aa_dict['Nh3'.upper()].get_sp_rate()
-    qPhe = aa_dict['Phenylalanine'.upper()].get_sp_rate()
-    qPro = aa_dict['Proline'.upper()].get_sp_rate()
-    qSer = aa_dict['Serine'.upper()].get_sp_rate()
-    qThr = aa_dict['Threonine'.upper()].get_sp_rate()
-    qTry = aa_dict['Tryptophan'.upper()].get_sp_rate()
-    qTyr = aa_dict['Tyrosine'.upper()].get_sp_rate()
-    qVal = aa_dict['Valine'.upper()].get_sp_rate()
+    qAla = aa_dict['Alanine'.upper()].get_sp_rate(method=method)
+    qArg = aa_dict['Arginine'.upper()].get_sp_rate(method=method)
+    qAsn = aa_dict['Asparagine'.upper()].get_sp_rate(method=method)
+    qAsp = aa_dict['Aspartate'.upper()].get_sp_rate(method=method)
+    qCys = aa_dict['Cystine'.upper()].get_sp_rate(method=method)
+    qGln = aa_dict['Glutamine'.upper()].get_sp_rate(method=method)
+    qGlu = aa_dict['Glutamate'.upper()].get_sp_rate(method=method)
+    qGly = aa_dict['Glycine'.upper()].get_sp_rate(method=method)
+    qHis = aa_dict['Histidine'.upper()].get_sp_rate(method=method)
+    qIso = aa_dict['Isoleucine'.upper()].get_sp_rate(method=method)
+    qLeu = aa_dict['Leucine'.upper()].get_sp_rate(method=method)
+    qLys = aa_dict['Lysine'.upper()].get_sp_rate(method=method)
+    qMet = aa_dict['Methionine'.upper()].get_sp_rate(method=method)
+    qNh3 = aa_dict['Nh3'.upper()].get_sp_rate(method=method)
+    qPhe = aa_dict['Phenylalanine'.upper()].get_sp_rate(method=method)
+    qPro = aa_dict['Proline'.upper()].get_sp_rate(method=method)
+    qSer = aa_dict['Serine'.upper()].get_sp_rate(method=method)
+    qThr = aa_dict['Threonine'.upper()].get_sp_rate(method=method)
+    qTry = aa_dict['Tryptophan'.upper()].get_sp_rate(method=method)
+    qTyr = aa_dict['Tyrosine'.upper()].get_sp_rate(method=method)
+    qVal = aa_dict['Valine'.upper()].get_sp_rate(method=method)
 
     # Nitrogen
     x = qAla*1 + qArg*4 + qAsn*2 + qAsp*1 + qCys*1
@@ -94,30 +104,30 @@ def sp_rate_others(bio_process):
     qaac_cons = qaac_cons.rename('qaaC (consumption only) (mmol/109 cells/hr)')
 
     # Add to obj
-    aa_dict['NITROGEN'].set_sp_rate(qNitrogen)
-    aa_dict['NITROGEN (W/O NH3, ALA)'].set_sp_rate(qNitrogen_w_o_NH3_Ala)
-    aa_dict['AA CARBON'].set_sp_rate(pd.concat([qaac, qaac_cons], axis=1))
+    special_spc_dict['NITROGEN'].set_sp_rate(qNitrogen)
+    special_spc_dict['NITROGEN (W/O NH3, ALA)'].set_sp_rate(qNitrogen_w_o_NH3_Ala)
+    special_spc_dict['AA CARBON'].set_sp_rate(pd.concat([qaac, qaac_cons], axis=1))
 
     # Add to DF
-    df = bio_process.get_post_twopt()
+    df = bio_process.get_twopt_df()
     df['Two-Pt. Calc. qNitrogen (mmol/109 cells/hr)'] = qNitrogen
     df['Two-Pt. Calc. qNitrogen (w/o NH3, Ala) (mmol/109 cells/hr)'] = qNitrogen_w_o_NH3_Ala
     df['Two-Pt. Calc. qaaC (mmol/109 cells/hr)'] = qaac
     df['Two-Pt. Calc. qaaC (consumption only) (mmol/109 cells/hr)'] = qaac_cons
-    bio_process.set_post_twopt(df)
+    bio_process.set_twopt_df(df)
 ###########################################################################
 
 ###########################################################################
 # Ratio Caluculaions
 def ratio_calc(bio_process):
     aa_dict = bio_process.get_spc_dict()
-    df = bio_process.get_post_twopt()
+    df = bio_process.get_twopt_df()
 
     if ('Glucose'.upper() in aa_dict.keys()):
-        dG = aa_dict['Glucose'.upper()].get_sp_rate()
+        dG = aa_dict['Glucose'.upper()].get_sp_rate(method='twopt')
         # DL/DG
         if ('Lactate'.upper() in aa_dict.keys()):
-            dL = aa_dict['Lactate'.upper()].get_sp_rate()
+            dL = aa_dict['Lactate'.upper()].get_sp_rate(method='twopt')
             df['Two-Pt. Calc. DL/DG (mmol/mmol)'] = dL / dG
 
         # qO2/qGlc
@@ -128,12 +138,12 @@ def ratio_calc(bio_process):
 
         if ('Glutamine'.upper() in aa_dict.keys()):
             # qGln/qGlc
-            qGln = aa_dict['Glutamine'.upper()].get_sp_rate()
+            qGln = aa_dict['Glutamine'.upper()].get_sp_rate(method='twopt')
             df['Two-Pt. Calc. qGln/qGlc (mmol/mmol)'] = qGln / qGlc
 
     # qNH3/qGln
     if ('NH3'.upper() in aa_dict.keys() and 'Glutamine'.upper() in aa_dict.keys()):
-        qNH3 = aa_dict['NH3'].get_sp_rate()
-        qGln = aa_dict['Glutamine'.upper()].get_sp_rate()
+        qNH3 = aa_dict['NH3'].get_sp_rate(method='twopt')
+        qGln = aa_dict['Glutamine'.upper()].get_sp_rate(method='twopt')
         df['Two-Pt. Calc. qNH3/qGln (mmol/mmol)'] = qNH3 / qGln
 ###########################################################################

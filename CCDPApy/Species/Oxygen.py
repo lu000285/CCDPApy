@@ -10,10 +10,10 @@ class Oxygen(Species, OxygenMixin, OxygenTwoPtMixin, OxygenPolyRegMixin):
     '''
     '''
     # Constructor
-    def __init__(self, experiment_info, raw_data, name):
+    def __init__(self, experiment_info, raw_data, feed_name, name):
 
         # Constructor for Species Class
-        super().__init__(experiment_info, raw_data, name)
+        super().__init__(experiment_info, raw_data, feed_name, name)
 
         # Measurement Index
         self._idx = self._oxygen_consumption_rate[self._oxygen_consumption_rate.notnull()].index

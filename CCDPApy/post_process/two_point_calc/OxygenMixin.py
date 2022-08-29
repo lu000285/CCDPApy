@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 ###########################################################################
 class OxygenTwoPtMixin:
@@ -23,7 +24,7 @@ class OxygenTwoPtMixin:
         rate = self._oxygen_consumption_rate    # rate: oxygen consumption rate in Measured Data
         c = self._oxygen_consumed               # c: oxyge consumed in Measured Data
 
-        r = pd.Series(data=[pd.NA]*len(t), name='SP. OXYGEN CONSUMPTION RATE (mmol/109cell/hr)')
+        r = pd.Series(data=[np.nan]*len(t), name='SP. OXYGEN CONSUMPTION RATE (mmol/109cell/hr)')
         for i in range(1, len(t)):
             if rate.iat[i] < 0:
                 x = c.iat[i]*v1.iat[i] - c.iat[i-1]*v2.iat[i-1]
@@ -36,9 +37,6 @@ class OxygenTwoPtMixin:
     # getters
     def get_sp_OUR(self):
         return self._sp_our
-
-    def get_sp_rate(self):
-        return self._sp_rate
 
     def get_oxy_post_data(self):
         return self._post_data_twopt

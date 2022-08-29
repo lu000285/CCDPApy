@@ -9,24 +9,40 @@ from ..Species.Metabolite import Metabolite
 from ..Species.Metabolite import Metabolite2
 
 ###########################################################################
-def cumulative_calc(bio_process, use_feed_conc=True, use_conc_after_feed=False):
+def cumulative_calc(bio_process,
+                    feed_name,
+                    use_feed_conc=True,
+                    use_conc_after_feed=False):
+
     exp_info = bio_process.get_exp_info()               # Get Experiment Info
     measured_data = bio_process.get_measured_data()     # Get Measured Data
 
     # Cell
-    cell = Cell(experiment_info=exp_info, raw_data=measured_data, name='Cell')
+    cell = Cell(experiment_info=exp_info,
+                raw_data=measured_data,
+                feed_name=feed_name,
+                name='Cell')
     cell.in_process()
-    bio_process.set_cell(cell)  # Add
+    cell.set_method_flag(method='cumulative', flag=True)
+    bio_process.set_cell(cell)
 
     # Oxygen
-    oxygen = Oxygen(experiment_info=exp_info, raw_data=measured_data, name='Oxygen')
+    oxygen = Oxygen(experiment_info=exp_info,
+                    raw_data=measured_data,
+                    feed_name=feed_name,
+                    name='Oxygen')
     oxygen.in_process()
-    bio_process.set_oxygen(oxygen)  # Add
+    oxygen.set_method_flag(method='cumulative', flag=True)
+    bio_process.set_oxygen(oxygen)
 
     # Product/IgG
-    igg = Product(experiment_info=exp_info, raw_data=measured_data, name='IgG',)
+    igg = Product(experiment_info=exp_info,
+                  raw_data=measured_data,
+                  feed_name=feed_name,
+                  name='IgG',)
     igg.in_process()
-    bio_process.set_igg(igg)    # Add
+    igg.set_method_flag(method='cumulative', flag=True)
+    bio_process.set_igg(igg)
 
     # AA Cumulative
     spc_lst = bio_process.get_spc_list()  # Get AA List to Analyze
@@ -37,9 +53,9 @@ def cumulative_calc(bio_process, use_feed_conc=True, use_conc_after_feed=False):
 
     for s in spc_lst:
         s = s.upper()   # Name
-        conc_before = check_key(measured_data, f'{s} CONC. (mM)')           # Concentration Before Feeding
-        conc_after = check_key(measured_data, f'{s} CONC. (mM).1')          # Concentration After Feeding
-        feed = check_key(measured_data, f'FEED {s} CONC. (mM)')             # Feed Concentration
+        conc_before = check_key(measured_data, f'{s} CONC. (mM)')   # Concentration Before Feeding
+        conc_after = check_key(measured_data, f'{s} CONC. (mM).1')  # Concentration After Feeding
+        feed = check_key(measured_data, f'FEED {s} CONC. (mM)')     # Feed Concentration
 
         # Check Calculated Cumulative Concentration
         cumulative = check_key(measured_data, f'CUM {s} CONS. (mM)')
@@ -49,14 +65,17 @@ def cumulative_calc(bio_process, use_feed_conc=True, use_conc_after_feed=False):
         # Metabolite Object
         spc = Metabolite(experiment_info=exp_info,
                          raw_data=measured_data,
+                         feed_name=feed_name,
                          name=s,
                          conc_before_feed=conc_before,
                          conc_after_feed=conc_after,
                          feed_conc=feed,
                          cumulative=cumulative,
                          production=True if (s=='LACTATE' or s=='NH3') else False)
+        
         # Calculate Cumulative Consumption/Production
         spc.in_process(use_feed_conc=use_feed_conc, use_conc_after_feed=use_conc_after_feed)
+        spc.set_method_flag(method='cumulative', flag=True)
         unit = spc.get_cumulative_unit()    # Unit
         
         spc_cumulative_df['CUM '+s+' '+unit] = spc.get_cumulative()  # Add to DF
@@ -72,9 +91,11 @@ def cumulative_calc(bio_process, use_feed_conc=True, use_conc_after_feed=False):
 
     # Other Spc Cumulative Nitrogen, and AA Carbon
     if(sorted(spc_lst) == sorted(bio_process.get_original_spc_list())):
-        cumulative_others(bio_process)
+        cumulative_others(bio_process, feed_name=feed_name)
 
-    return bio_process
+    # Set in process flag True
+    bio_process.set_process_flag(process='in', flag=True)
+
 ###########################################################################
 
 
@@ -82,10 +103,11 @@ def cumulative_calc(bio_process, use_feed_conc=True, use_conc_after_feed=False):
 #####################################################################################################################
 # Calculate Cumulative for Nitrogen and AA Carbon
 #####################################################################################################################
-def cumulative_others(bio_process):
+def cumulative_others(bio_process, feed_name):
     exp_info = bio_process.get_exp_info()
     measured_data = bio_process.get_measured_data()
     spc_dict = bio_process.get_spc_dict()
+    special_spc_dict = bio_process.get_special_spc_dict()
 
     ala = spc_dict['Alanine'.upper()].get_cumulative()
     arg = spc_dict['Arginine'.upper()].get_cumulative()
@@ -126,23 +148,29 @@ def cumulative_others(bio_process):
     # Metabolite2 obj
     nitrogen = Metabolite2(experiment_info=exp_info,
                            raw_data=measured_data,
+                           feed_name=feed_name,
                            name='Nitrogen',
                            cumulative=nitrogen_cum)
+    nitrogen.set_method_flag(method='cumulative', flag=True)
 
     nitrogen_w_o_NH3_Ala = Metabolite2(experiment_info=exp_info,
                                        raw_data=measured_data,
+                                       feed_name=feed_name,
                                        name='Nitrogen (w/o NH3, Ala)',
                                        cumulative=nitrogen_w_o_NH3_Ala_cum)
+    nitrogen_w_o_NH3_Ala.set_method_flag(method='cumulative', flag=True)
 
     aa_carbon = Metabolite2(experiment_info=exp_info,
                             raw_data=measured_data,
+                            feed_name=feed_name,
                             name='AA Carbon',
                             cumulative=aa_carbon_cum)
+    aa_carbon.set_method_flag(method='cumulative', flag=True)
 
     # Add obj to aa dict
-    spc_dict['NITROGEN'] = nitrogen
-    spc_dict['NITROGEN (W/O NH3, ALA)'] = nitrogen_w_o_NH3_Ala
-    spc_dict['AA CARBON'] = aa_carbon
+    special_spc_dict['NITROGEN'] = nitrogen
+    special_spc_dict['NITROGEN (W/O NH3, ALA)'] = nitrogen_w_o_NH3_Ala
+    special_spc_dict['AA CARBON'] = aa_carbon
 
     spc_df = bio_process.get_spc_df()
     # Add cumulative consumption to DF
@@ -150,5 +178,5 @@ def cumulative_others(bio_process):
     spc_df['CUM. Nitrogen (w/o NH3, Ala) (mmol)'] = nitrogen_w_o_NH3_Ala_cum
     spc_df['CUM. AA Carbon (mmol)'] = aa_carbon_cum
     
-    bio_process.set_spc_df(spc_df)
-    bio_process.set_spc_dict(spc_dict=spc_dict)
+    #bio_process.set_spc_df(spc_df)
+    bio_process.set_spcial_spc_dict(spc_dict=special_spc_dict)

@@ -1,10 +1,11 @@
 import pandas as pd
-
+import numpy as np
 ###########################################################################
 # IgG Two Point Calc Mixin Class
 ###########################################################################
 class ProductTwoptMixn:
-
+    '''
+    '''
     # Call methods
     def post_process_twopt(self):
         self.igg_sp_rate_twopt()
@@ -23,7 +24,7 @@ class ProductTwoptMixn:
         xv = self._xv[idx]                  # Viable Cell Concentration (10e6 cells/mL)
 
         title = f'Two-Pt. Calc. q{self._name} (mmol/109 cell/hr)'
-        rate = pd.Series(data=[pd.NA] * len(self._sample_num),
+        rate = pd.Series(data=[np.nan] * len(self._sample_num),
                          name=title)
 
         for i in range(1, len(idx)):
@@ -33,10 +34,6 @@ class ProductTwoptMixn:
             rate.iat[idx[i]] = x / (y*0.5*(t.iat[i]-t.iat[i-1]))
 
         self._sp_rate = rate
-
-    # Getter
-    def get_sp_rate(self):
-        return self._sp_rate
 
     def disp_post_data_twopt(self):
         print('\n************ IgG Post Process Data -Two Point Calc. ************')

@@ -36,3 +36,4 @@ def LogisticGrowth_fun(t,N0,K,r):
 # Specific rate calculation: mu = dx_t/dt/x_t
 def sp_rate_calc(t,N0,K,r):
     return (K-N0)*r*np.exp(-r*t)/(N0+(K-N0)*np.exp(-r*t))
+

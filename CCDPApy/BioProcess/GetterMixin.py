@@ -46,7 +46,7 @@ class GetterMixin:
                                       self._cell.get_cumulative(),
                                       self._oxygen.get_cumulative(),
                                       self._igg.get_cumulative(),
-                                      self._aa_df,
+                                      self._spc_df,
                                       self._conc_after_feed_df],
                                       axis=1)
         return self._in_process
@@ -62,10 +62,12 @@ class GetterMixin:
     def get_original_spc_list(self):
         return self._original_spc_list
 
-
     # Get Metabolite dictionary
     def get_spc_dict(self):
         return self._spc_dict
+
+    def get_special_spc_dict(self):
+        return self._special_spc_dict
 
     # Get Metabolite Concentration DF
     def get_spc_conc(self):
@@ -73,15 +75,18 @@ class GetterMixin:
 
     # Get Metabolite Cumulative DF
     def get_spc_df(self):
-        return self._aa_df
+        return self._spc_df
 
     # Get Post Process DF
-    def get_post_twopt(self):
+    def get_twopt_df(self):
         return self._post_twopt
 
     # Get Post Process DF
-    def get_post_polyreg(self):
+    def get_polyreg_df(self):
         return self._post_polyreg
+
+    def get_rollreg_df(self):
+        return self._post_rollpolyreg
 
     # Get BioProcess DF
     def get_bioprocess_df(self):
@@ -95,11 +100,11 @@ class GetterMixin:
                           blank,
                           self._oxygen.get_oxy_post_data(),
                           self._cell.get_post_data_twopt(),
-                          self._igg.get_sp_rate(),
+                          self._igg.get_sp_rate(method='twopt'),
                           self._post_twopt,
                           blank,
-                          self._oxygen.get_polyreg_sp_rate(),
-                          self._igg.get_polyreg_sp_rate(),
+                          self._oxygen.get_sp_rate(method='polyreg'),
+                          self._igg.get_sp_rate(method='polyreg'),
                           self._post_polyreg],
                           axis = 1)
 

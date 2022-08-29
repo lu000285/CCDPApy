@@ -4,7 +4,8 @@ import pandas as pd
 # Cell Mixin
 ###########################################################################
 class CellMixin:
-
+    '''
+    '''
     # Call methods
     def in_process(self):
         self.integral_viable_cell()
@@ -49,8 +50,10 @@ class CellMixin:
 
     # Display
     def disp_inpro_data(self):
-        self._inpro_data = pd.concat([self._ixv,
-                                      self._cumulative],
-                                      axis=1)
-        print('\n************ Cell In Process Data ************')
-        print(self._inpro_data)
+        if self._in_process_flag:
+            self._inpro_data = pd.concat([self._ixv, self._cumulative],
+                                        axis=1)
+            print('\n************ Cell In Process Data ************')
+            print(self._inpro_data)
+        else:
+            print('In Process Not Yet Done.')

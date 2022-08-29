@@ -4,6 +4,8 @@ import pandas as pd
 ###########################################################################
 # Polynomial Regression Mixin Class
 class PolyRegMixin:
+    '''
+    '''
     # Call Function
     def polyreg(self, polyorder=3):
         # Fitting
@@ -75,19 +77,6 @@ class PolyRegMixin:
 
         # Polynomial Fit SP. rate
         self._polyreg_sp_rate = q
-
-    # Getters
-    def get_polyorder(self):
-        return self._polyorder
-
-    def get_polyfit_cumulative(self):
-        return self._polyfit
-
-    def get_polyreg_cumulative(self):
-        return self._polyreg_cumulative, 
-
-    def get_polyreg_sp_rate(self):
-        return self._polyreg_sp_rate
 
     def disp_polyreg(self):
         df = pd.concat([self._polyreg_cumulative,

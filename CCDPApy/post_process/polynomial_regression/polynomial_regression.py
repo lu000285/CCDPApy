@@ -15,6 +15,7 @@ def polyreg_calc(bio_process, polyorder_file):
         order = 3
     cell = bio_process.get_cell()
     cell.polyreg(polyorder=order)
+    cell.set_method_flag(method='polyreg', flag=True)
 
     # Oxygen
     try: 
@@ -23,6 +24,7 @@ def polyreg_calc(bio_process, polyorder_file):
         order = 3
     oxygen = bio_process.get_oxygen()
     oxygen.polyreg(polyorder=order)
+    oxygen.set_method_flag(method='polyreg', flag=True)
 
     # IgG
     try:
@@ -31,7 +33,7 @@ def polyreg_calc(bio_process, polyorder_file):
         order = 3
     igg = bio_process.get_igg()
     igg.polyreg(polyorder=order)
-
+    igg.set_method_flag(method='polyreg', flag=True)
     
     # AA
     spc_dict = bio_process.get_spc_dict()
@@ -43,31 +45,33 @@ def polyreg_calc(bio_process, polyorder_file):
         except:
             order = 3
         aa_obj.polyreg(polyorder=order)
+        aa_obj.set_method_flag(method='polyreg', flag=True)
 
         title = f'Poly. Reg. Order: {order} q{spc_name.capitalize()} (mmol/109 cell/hr)'
-
-        polyreg_df[title] = aa_obj.get_polyreg_sp_rate()
+        polyreg_df[title] = aa_obj.get_sp_rate(method='polyreg')
 
     # Add
-    bio_process.set_post_polyreg(polyreg_df)
+    bio_process.set_polyreg_df(polyreg_df)
 
     # Ratio Calc
     polyreg_ratio_calc(bio_process)
 
-    return bio_process
+    # Set polyreg flag True
+    bio_process.set_process_flag(process='polyreg', flag=True)
+
 ###########################################################################
 
 ###########################################################################
 # Ratio Caluculaions
 def polyreg_ratio_calc(bio_process):
     aa_dict = bio_process.get_spc_dict()
-    df = bio_process.get_post_polyreg()
+    df = bio_process.get_polyreg_df()
 
     if ('Glucose'.upper() in aa_dict.keys()):
-        dG = aa_dict['Glucose'.upper()].get_polyreg_sp_rate()
+        dG = aa_dict['Glucose'.upper()].get_sp_rate(method='polyreg')
         # DL/DG
         if ('Lactate'.upper() in aa_dict.keys()):
-            dL = aa_dict['Lactate'.upper()].get_polyreg_sp_rate()
+            dL = aa_dict['Lactate'.upper()].get_sp_rate(method='polyreg')
             df['Poly. Reg. DL/DG (mmol/mmol)'] = dL / dG
 
         # qO2/qGlc
@@ -78,12 +82,12 @@ def polyreg_ratio_calc(bio_process):
 
         if ('Glutamine'.upper() in aa_dict.keys()):
             # qGln/qGlc
-            qGln = aa_dict['Glutamine'.upper()].get_polyreg_sp_rate()
+            qGln = aa_dict['Glutamine'.upper()].get_sp_rate(method='polyreg')
             df['Poly. Reg. qGln/qGlc (mmol/mmol)'] = qGln / qGlc
 
     # qNH3/qGln
     if ('NH3'.upper() in aa_dict.keys() and 'Glutamine'.upper() in aa_dict.keys()):
-        qGln = aa_dict['Glutamine'.upper()].get_polyreg_sp_rate()
-        qNH3 = aa_dict['NH3'].get_polyreg_sp_rate()
+        qGln = aa_dict['Glutamine'.upper()].get_sp_rate(method='polyreg')
+        qNH3 = aa_dict['NH3'].get_sp_rate(method='polyreg')
         df['Poly. Reg. qNH3/qGln (mmol/mmol)'] = qNH3 / qGln
 ###########################################################################

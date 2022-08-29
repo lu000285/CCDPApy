@@ -8,11 +8,13 @@ from ..helper_func.helper_func import input_path
 from .GetterMixin import GetterMixin
 from .SetterMixin import SetterMixin
 from .DispMixin import DispMixin
+from .BioProcessMixin import BioProcessMixin
+from ..plotting.PlotMixin import PlotMixin
 
 ###########################################################################
 # Cell Bioprocess Class
 ###########################################################################
-class BioProcess(GetterMixin, SetterMixin, DispMixin):
+class BioProcess(BioProcessMixin, GetterMixin, SetterMixin, DispMixin, PlotMixin):
     '''
     Store bioprocess information.
 
@@ -37,6 +39,7 @@ class BioProcess(GetterMixin, SetterMixin, DispMixin):
         # Experiment DF
         self._exp_info = experiment_info        # experiment info
         self._measured_data = measured_data     # measured data
+        self._feed_added = None                 # spc feed added                      
         self._polyorder_df = None               # Poly. Reg. Order
 
         # Experoment Infomation Members
@@ -54,14 +57,18 @@ class BioProcess(GetterMixin, SetterMixin, DispMixin):
         self._oxygen = None     # Oxygen
         self._procut = None     # Product/IgG
 
-        self._original_spc_list = ['ALANINE', 'ARGININE', 'ASPARAGINE', 'ASPARTATE', 'CYSTINE',
-                                  'GLUCOSE', 'GLUTAMINE', 'GLUTAMATE', 'GLYCINE', 'HISTIDINE',
-                                  'ISOLEUCINE', 'LACTATE', 'LEUCINE','LYSINE', 'METHIONINE',
-                                  'NH3', 'PHENYLALANINE', 'PROLINE', 'SERINE',
-                                  'THREONINE','TRYPTOPHAN', 'TYROSINE', 'VALINE', 'ETHANOLAMINE']
+        self._original_spc_list = ['Alanine', 'Arginine', 'Asparagine',
+                                   'Aspartate', 'Cystine', 'Glucose',
+                                   'Glutamine', 'Glutamate', 'Glycine',
+                                   'Histidine', 'Isoleucine', 'Lactate',
+                                   'Leucine','Lysine', 'Methionine',
+                                   'NH3', 'Phenylalanine', 'Proline',
+                                   'Serine', 'Threonine', 'Tryptophan',
+                                   'Tyrosine', 'Valine', 'Ethanolamine']
                                   
         self._spc_list = None            # Species List
-        self._spc_dict = None            # Species Dictionary = {'name': Metabolite obj}
+        self._spc_dict = {}              # Species Dictionary = {'name': Metabolite obj}
+        self._special_spc_dict = {}      # Special Species Dictionary; Nitrogen, AA carbon
         self._spc_df = None              # Species Cumulative DF
         self._spc_conc_df = None         # Species Conc DF
         self._conc_after_feed_df = None  # Species Conc After Feed DF
@@ -70,9 +77,14 @@ class BioProcess(GetterMixin, SetterMixin, DispMixin):
         self._in_process = None         # In Process DF
         self._post_twopt = None         # Post Process-Two Point Calc. DF
         self._post_polyreg = None       # Post Process-Polynomial Regression DF
+        self._post_rollpolyreg = None   # Post Process-Rolling Polynomial Regression DF
 
-        # Other Post Process DF
-        self._post_rollpolyreg = None   # Rolling Polynomial Regression
+        # Flags
+        self._pre_process_flag = False
+        self._in_process_flag = False
+        self._twopt_flag = False
+        self._polyreg_flag = False
+        self._rollreg_flag = False
 
 
     # Class Methods
@@ -130,25 +142,39 @@ class BioProcess(GetterMixin, SetterMixin, DispMixin):
     
     # Plotting Method
     def plot_profile(self,
-                     aa_list=None,
-                     polyreg=True,
-                     rolling=False,
+                     spc_list,
+                     method,
+                     combined=False,
                      save_file_name=None):
 
         print('Making a plot......')
-        if (not aa_list):
-            aa_list = self._aa_list
-        n = len(aa_list)
 
+        twopt = False
+        polyreg = False
+        rollreg = False
+
+        # Check Regression Method to Plot
+        if ('all' in method):
+            twopt = True
+            polyreg = True
+            rollreg = True
+        if ('twopt' in method):
+            twopt = True
+        if ('polyreg' in method):
+            polyreg = True
+        if ('rollreg' in method):
+            rollreg = True
+        
+        n = len(spc_list)
         fig = plt.figure(figsize=(8*3, 6*n))
 
-        for i, x in enumerate(aa_list):
-            x = x.upper()
-            fig = self._aa_dict[x].plot(polyreg=polyreg,
-                                        rolling=rolling,
-                                        fig=fig,
-                                        column=n,
-                                        ax_idx=1+i*3,)
+        for i, name in enumerate(spc_list):
+            fig = self._spc_dict[name.upper()].plot(twopt=twopt,
+                                                    polyreg=polyreg,
+                                                    rollreg=rollreg,
+                                                    fig=fig,
+                                                    column=n,
+                                                    ax_idx=1+i*3)
 
         fig.suptitle(f'Profils for {self._experiment_id}', fontsize='xx-large')
         print('Done')

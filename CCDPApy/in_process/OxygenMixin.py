@@ -25,13 +25,14 @@ class OxygenMixin:
         # Cumulative Consumption
         self._cumulative = s
 
-
-    # Getters
-
     # Display
     def disp_inpro_data(self):
-        self._inpro_data = pd.concat([self._cumulative],
+        if self._in_process_flag:
+            self._inpro_data = pd.concat([self._cumulative],
                                         axis=1)
-        print('\n************ Oxygen In Process Data ************')
-        print(self._inpro_data)
+            print('\n************ Oxygen In Process Data ************')
+            print(self._inpro_data)
+        else:
+            print('In Process Not Yet Done.')
+
 

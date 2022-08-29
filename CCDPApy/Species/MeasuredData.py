@@ -19,10 +19,11 @@ class MeasuredData(PreProcessMixn):
         The information of the experiment.
     raw_data : DataFrame
         The measured data of the experiment.
+    sheet_name : str
     '''
 
     # Constructor
-    def __init__(self, experiment_info, raw_data):
+    def __init__(self, experiment_info, raw_data, feed_name):
         '''
         Parameters
         ----------
@@ -30,6 +31,7 @@ class MeasuredData(PreProcessMixn):
             The information of the experiment.
         raw_data : str : DataFrame
             The measured data of the experiment.
+        feed_name : str
         '''
 
         # Experoment Infomation Members
@@ -39,21 +41,24 @@ class MeasuredData(PreProcessMixn):
         self._initial_volume = float(experiment_info.loc['Initial Volume (mL)'].get(1))
 
         # Experimental Variables
+        # Sample Number
         self._sample_num = check_key(raw_data, 'SAMPLE #')
-        #
+
+        # Time
         self._date = check_key(raw_data, 'DATE')
         self._time = check_key(raw_data, 'TIME')
         self._run_time_day = check_key(raw_data, 'Day')
         self._run_time_hour = check_key(raw_data, 'RUN TIME (HOURS)')
-        #
+        self._run_time_mid = None
+
+        # Culture, Added Feed, and Feed Media Volume
+        self._feed_name = feed_name.upper()
+        self._feed_added = check_key(raw_data, f'{self._feed_name} FEED ADDED (mL)').fillna(0)
+        self._base_added = check_key(raw_data, 'BASE ADDED (mL)').fillna(0)
         self._sample_volume = check_key(raw_data, 'SAMPLE VOLUME (mL)').fillna(0)
         self._feed_media_added = check_key(raw_data, 'FEED MEDIA ADDED (mL)').fillna(0)
-        #
-        self._glucose_feed_added = check_key(raw_data, 'GLUCOSE ADDED (mL)').fillna(0)
-        self._glutamine_feed_added = check_key(raw_data, 'GLUTAMINE FEED ADDED (mL)').fillna(0)
-        #
-        self._base_added = check_key(raw_data, 'BASE ADDED (mL)').fillna(0)
 
+        # Experimental Cell and Oxygen Variables
         self._xv = check_key(raw_data, 'VIABLE CELL CONC. XV (x106 cells/mL)').fillna(0)  # xv: Viable Cell Concentration
         self._xd = check_key(raw_data, 'DEAD CELL CONC. Xd (x106 cells/mL)').fillna(0)    # xd: Dead Cell Concentraion
         self._xt = check_key(raw_data, 'TOTAL CELL CONC. Xt (x106 cells/mL)').fillna(0)   # xt: Total Cell Concentraion
@@ -64,10 +69,11 @@ class MeasuredData(PreProcessMixn):
         self._oxygen_consumption_rate = check_key(raw_data, 'SP. OXYGEN CONSUMPTION RATE (mmol/109cell/hr)').fillna(0)
         self._oxygen_consumed = check_key(raw_data, 'OXYGEN CONSUMED (mmol/L)').fillna(0)
         self._optical_density = check_key(raw_data, 'OPTICAL DENSITY')
-        self._osmolaliry = check_key(raw_data, 'OSMOLALITY (mmol/kg)')
+        self._osmolality = check_key(raw_data, 'OSMOLALITY (mmol/kg)')
+        #
         self._product_conc = check_key(raw_data, 'IgG CONC. (mg/L)').fillna(0)
 
-        # Have Calculated Cumulative Consumption/Production ?
+        # Used to check if measured data has calculated cumulative consumption/production.
         self._direct_cumulative = False
 
         # Variables Used in In Process
@@ -82,9 +88,6 @@ class MeasuredData(PreProcessMixn):
         if (not self._run_time_hour.any() and not self._run_time_day.any()):
             self.run_time()
 
-        # Calc Run Time Mid
-        self.mid_calc_runtime()
-
         # Calculate Culture Volume
         self.culture_volume()
 
@@ -97,7 +100,7 @@ class MeasuredData(PreProcessMixn):
             self._v_after_feeding = pd.Series(data=x, name='VOLUME AFTER FEEDING (mL)')
         ########################################################################
 
-
+        # Pre Process Data DF
         self._pre_data = pd.concat([self._run_time_day,
                                     self._run_time_hour,
                                     self._v_before_sampling,
@@ -106,123 +109,56 @@ class MeasuredData(PreProcessMixn):
                                     # self._feed_status,
                                     ], axis=1)
     # End Constructor
-
-
-    def get_exp_id(self):
+    def get_xv(self):
         """
-        Get Experimant ID
-        
-        Parameters
-        ----------
-
-        Returns
-        -------
-        self._experiment_id : str
-            Expeirment ID
+        Get Viable Cell Concentration (x106 cells/mL)
         """
-        return self._experiment_id
+        return self._xv
 
-    def get_cl_name(self):
+    def get_xd(self):
         """
-        Get Cell Line Name
-        
-        Parameters
-        ----------
-
-        Returns
-        -------
-        self._cell_line_name : str
-            Cell Line Name
+        Get Dead Cell Concentration (x106 cells/mL)
         """
-        return self._cell_line_name
+        return self._xd
 
-    def get_init_v(self):
+    def get_xt(self):
         """
-        Get Initial Culture Volume
-        
-        Parameters
-        ----------
-
-        Returns
-        -------
-        self._initial_volume : float
-            Initial Culture Volume
+        Get Total Cell Concentration (x106 cells/mL)
         """
-        return self._initial_volume
+        return self._xt
 
-
-    def get_experimenter(self):
+    def get_viability(self):
         """
-        Get the Name of Experimenter
-        
-        Parameters
-        ----------
-
-        Returns
-        -------
-        self._experimenter_name : str
-            Name of Experimenter
+        Get Viability (%)
         """
-        return self._experimenter_name
+        return self._viability
+    
+    def get_osmolality(self):
+        '''
+        Get osmolality.
+        '''
+        return self._osmolality
 
+    def get_oxygen_consumed(self):
+        '''
+        Get oxygen consumed.
+        '''
+        return self._oxygen_consumed
+
+    def get_product_conc(self):
+        """
+        Get Product Concentration (mg/L)
+        """
+        return self._product_conc
 
     def get_pre_data(self):
         """
-        Get Pre Process Data
-        
-        Parameters
-        ----------
-
-        Returns
-        -------
-        self._pre_data :
-            Pre Process Data
+        Get pre process data.
         """
         return self._pre_data
 
-
-    def get_v_before_samp(self):
-        """
-        Get Culture Volume Before Sampling
-        
-        Parameters
-        ----------
-
-        Returns
-        -------
-        self._v_before_sampling :
-            Culture Volume Before Sampling
-        """
-        return self._v_before_sampling
-
-
-    def get_v_after_samp(self):
-        """
-        Get Culture Volume After Sampling
-        
-        Parameters
-        ----------
-
-        Returns
-        -------
-        self._v_after_sampling :
-            Culture Volume After Sampling
-        """
-        return self._v_after_sampling
-
-
-    def get_v_after_feed(self):
-        """
-        Get Culture Volume After Feeding.
-        
-        Parameters
-        ----------
-
-        Returns
-        -------
-        self._v_after_feeding :
-            Culture Volume After Feeding
-        """
-        return self._v_after_feeding
-
-###########################################################################
+    def get_feed_added(self):
+        '''
+        Get species feed added.
+        '''
+        return self._feed_added
