@@ -1,6 +1,8 @@
 import pandas as pd
 
 class GetterMixin:
+    '''
+    '''
     # Get Cell Obj
     def get_cell(self):
         return self._cell
@@ -10,24 +12,30 @@ class GetterMixin:
         return self._oxygen
 
     # Get IgG obj
-    def get_igg(self):
-        return self._igg
+    def get_product(self):
+        return self._product
 
     # Get Cell Line Name
     def get_cell_line(self):
-        return self._cell_line_name
+        return self._md.cell_line_name
 
     # Get Experiment ID
     def get_exp_id(self):
-        return self._experiment_id
+        return self._md.exp_id
 
     # Get Experiment Infomation DF
     def get_exp_info(self):
         return self._exp_info
 
-    # Get Measured Data DF
-    def get_measured_data(self):
-        return self._measured_data
+    def get_measured_data_dict(self):
+        '''Return measured data dictionary.
+        '''
+        return self._measured_data_dict
+
+    def get_measured_data_df(self):
+        '''Return measured data DataFrame.
+        '''
+        return self._measured_data_df
 
     # Get Poly. Reg. Order DF
     def get_polyreg_order_df(self):
@@ -40,53 +48,55 @@ class GetterMixin:
     # Get In Process DF
     def get_in_process(self):
         blank = pd.Series(data=pd.NA, name='*********')
-        self._in_process = pd.concat([self._pre_process,
+        self._in_process = pd.concat([self._process_data_dict['prepro'],
                                       blank,
                                       self._cell.get_ivcc(),
                                       self._cell.get_cumulative(),
                                       self._oxygen.get_cumulative(),
-                                      self._igg.get_cumulative(),
-                                      self._spc_df,
+                                      self._product.get_cumulative(),
+                                      self._process_data_dict['inpro'],
                                       self._conc_after_feed_df],
                                       axis=1)
         return self._in_process
 
     # Get Metabolite List
     def get_spc_list(self):
-        if (self._spc_list):
-            return self._spc_list
-        else:
-            return self._original_spc_list
+        return self._spc_list
 
     # Get Original Metabolite List
-    def get_original_spc_list(self):
-        return self._original_spc_list
+    def get_default_spc_list(self):
+        return self._default_spc_list
 
     # Get Metabolite dictionary
     def get_spc_dict(self):
         return self._spc_dict
 
-    def get_special_spc_dict(self):
-        return self._special_spc_dict
-
     # Get Metabolite Concentration DF
     def get_spc_conc(self):
         return self._spc_conc_df
 
-    # Get Metabolite Cumulative DF
+    '''# Get Metabolite Cumulative DF
     def get_spc_df(self):
-        return self._spc_df
+        return self._spc_df'''
 
-    # Get Post Process DF
-    def get_twopt_df(self):
-        return self._post_twopt
+    def get_process_data(self, method):
+        '''
+        Get processed data.
 
-    # Get Post Process DF
-    def get_polyreg_df(self):
-        return self._post_polyreg
-
-    def get_rollreg_df(self):
-        return self._post_rollpolyreg
+        Parameters
+        ---------
+            method : str
+                name of the method of post process.
+                'prepro'
+                'inpro'
+                'twopt',
+                'polyreg', 
+                'rollreg'.
+        Returns
+        -------
+            pandas.DataFrame
+        '''
+        return self._process_data_dict[method]
 
     # Get BioProcess DF
     def get_bioprocess_df(self):
@@ -94,20 +104,16 @@ class GetterMixin:
         blank = pd.Series(data=pd.NA, name='*********')
         return pd.concat([self._cl_col,
                           self._expID_col,
-                          self._measured_data,
+                          self._md.data_df,
                           blank,
                           in_pro,
                           blank,
                           self._oxygen.get_oxy_post_data(),
                           self._cell.get_post_data_twopt(),
-                          self._igg.get_sp_rate(method='twopt'),
-                          self._post_twopt,
+                          self._product.get_sp_rate(method='twopt'),
+                          self._process_data_dict['twopt'],
                           blank,
                           self._oxygen.get_sp_rate(method='polyreg'),
-                          self._igg.get_sp_rate(method='polyreg'),
-                          self._post_polyreg],
+                          self._product.get_sp_rate(method='polyreg'),
+                          self._process_data_dict['polyreg']],
                           axis = 1)
-
-    # Get Rolling Polynomial Regression DF
-    def get_post_rollpolyreg(self):
-        return self._post_rollpolyreg

@@ -1,11 +1,25 @@
 import pandas as pd
 
+from ...helper_func.helper_func import input_path
+
 ###########################################################################
 def polyreg_calc(bio_process, polyorder_file):
+    '''
+    Calculate SP. rate for species using polynomial regression.
+
+    Parameters
+    ----------
+        bio_process : BioProcess object
+        polyorder_file : str
+            name of a Excel file for polynomial regression order.
+    '''
+    method = 'polyreg'
+
+    # Check polynomial file
     if (polyorder_file):
-        input_path = bio_process.get_input_dir(file_name=polyorder_file)
-        polyorder = pd.read_excel(io=input_path, index_col=0)
-        # polyorder = bio_process.get_polyorder_df()
+        path = input_path(file_name=polyorder_file)
+        # polyorder df
+        polyorder = pd.read_excel(io=path, index_col=0)
         polyorder.index = [name.upper() for name in polyorder.index]
 
     # Cell
@@ -15,7 +29,7 @@ def polyreg_calc(bio_process, polyorder_file):
         order = 3
     cell = bio_process.get_cell()
     cell.polyreg(polyorder=order)
-    cell.set_method_flag(method='polyreg', flag=True)
+    cell.set_method_flag(method=method, flag=True)
 
     # Oxygen
     try: 
@@ -24,70 +38,44 @@ def polyreg_calc(bio_process, polyorder_file):
         order = 3
     oxygen = bio_process.get_oxygen()
     oxygen.polyreg(polyorder=order)
-    oxygen.set_method_flag(method='polyreg', flag=True)
+    oxygen.set_method_flag(method=method, flag=True)
 
     # IgG
     try:
         order = polyorder.loc['IGG'].iat[0]
     except:
         order = 3
-    igg = bio_process.get_igg()
+    igg = bio_process.get_product()
     igg.polyreg(polyorder=order)
-    igg.set_method_flag(method='polyreg', flag=True)
+    igg.set_method_flag(method=method, flag=True)
     
-    # AA
+    # Metabolites
     spc_dict = bio_process.get_spc_dict()
+    spc_list = bio_process.get_spc_list()
     polyreg_df = pd.DataFrame()     # Initialize
 
-    for spc_name, aa_obj in spc_dict.items():
+    for spc_name in spc_list:
+        spc = spc_dict[spc_name.upper()]    # species object
         try:
             order = polyorder.loc[spc_name].iat[0]
         except:
             order = 3
-        aa_obj.polyreg(polyorder=order)
-        aa_obj.set_method_flag(method='polyreg', flag=True)
+        
+        spc.polyreg(polyorder=order)
+        spc.set_method_flag(method=method, flag=True)
 
         title = f'Poly. Reg. Order: {order} q{spc_name.capitalize()} (mmol/109 cell/hr)'
-        polyreg_df[title] = aa_obj.get_sp_rate(method='polyreg')
+        polyreg_df[title] = spc.get_sp_rate(method=method)
 
     # Add
-    bio_process.set_polyreg_df(polyreg_df)
+    bio_process.set_process_data(process=method, data=polyreg_df)
+    # SP. rate for Nitrogen and AA Carbon
+    bio_process.sp_rate_others(method=method)
 
     # Ratio Calc
-    polyreg_ratio_calc(bio_process)
+    bio_process.ratio_calc(method=method)
 
     # Set polyreg flag True
-    bio_process.set_process_flag(process='polyreg', flag=True)
+    bio_process.set_process_flag(process=method, flag=True)
 
-###########################################################################
-
-###########################################################################
-# Ratio Caluculaions
-def polyreg_ratio_calc(bio_process):
-    aa_dict = bio_process.get_spc_dict()
-    df = bio_process.get_polyreg_df()
-
-    if ('Glucose'.upper() in aa_dict.keys()):
-        dG = aa_dict['Glucose'.upper()].get_sp_rate(method='polyreg')
-        # DL/DG
-        if ('Lactate'.upper() in aa_dict.keys()):
-            dL = aa_dict['Lactate'.upper()].get_sp_rate(method='polyreg')
-            df['Poly. Reg. DL/DG (mmol/mmol)'] = dL / dG
-
-        # qO2/qGlc
-        oxygen = bio_process.get_oxygen()
-        qO2 = oxygen.get_sp_rate_md()
-        qGlc = dG
-        df['Poly. Reg. qO2/qGlc (mmol/mmol)'] = qO2 / qGlc
-
-        if ('Glutamine'.upper() in aa_dict.keys()):
-            # qGln/qGlc
-            qGln = aa_dict['Glutamine'.upper()].get_sp_rate(method='polyreg')
-            df['Poly. Reg. qGln/qGlc (mmol/mmol)'] = qGln / qGlc
-
-    # qNH3/qGln
-    if ('NH3'.upper() in aa_dict.keys() and 'Glutamine'.upper() in aa_dict.keys()):
-        qGln = aa_dict['Glutamine'.upper()].get_sp_rate(method='polyreg')
-        qNH3 = aa_dict['NH3'].get_sp_rate(method='polyreg')
-        df['Poly. Reg. qNH3/qGln (mmol/mmol)'] = qNH3 / qGln
-###########################################################################
+# End polyreg_calc

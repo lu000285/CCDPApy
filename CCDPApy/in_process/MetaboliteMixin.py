@@ -55,7 +55,7 @@ class MetaboliteMixin:
         sf = self._feed_conc[idx]           # Substrate Feed Concentration (mM)
         f = self._feed_media_added[idx]     # Feed Flowrate (ml/hr)
         v = self._v_after_sampling[idx]     # Culture Volume After Sampling (ml)
-        g = self._feed_added[idx]           # Feed Added (E.g. glutamine, glucose, etc.)
+        g = self._feed_data.sum(axis=1)[idx]# Feed Added (E.g. glutamine, glucose, etc.)
 
         # Concentration After Feeding
         self._conc_after_feed = ((s*v + sf*f) / (v + f + g)).rename(f'{self._name} CONC. AFTER FEED (mM)')
@@ -68,10 +68,12 @@ class MetaboliteMixin:
         f = self._feed_media_added[idx]     # Feed Flowrate (ml/hr)
         v1 = self._v_before_sampling[idx]   # Culture Volume Before Sampling (ml)
         v2 = self._v_after_sampling[idx]    # Culture Volume After Sampling (ml)
+        separate_feed = self._feed_data        # Separate Feed data
+        separate_feed_list = self._feed_list    # Separate Feed list
 
-        # Check Species name and feed added
-        if self._name.upper() == self._feed_name.upper():
-            f = self._feed_added[idx]
+        # Check Species name and separate feed added
+        if self._name.upper() in separate_feed_list:
+            f = separate_feed[f'{self._name.upper()} ADDED (mL)'][idx]
 
         # Initialize
         se = pd.Series(data=[na] * len(self._sample_num),
@@ -148,16 +150,16 @@ class MetaboliteMixin:
         t = self._run_time_hour[idx]         # run time hour
 
         c_mid = pd.Series(data=[na] * (len(idx)-1),
-                            name=f'{self._name} CONC. MID. (mM)')
+                            name=f'{self._name} CONC. MID. (mM)', dtype='float')
         t_mid = pd.Series(data=[na] * (len(idx)-1),
-                            name='RUN TIME MID (HOURS)')
+                            name='RUN TIME MID (HOURS)', dtype='float')
 
         for i in range(len(idx)-1):
             c_mid.iat[i] = (c1.iat[i]+c2.iat[i+1])/2
             t_mid.iat[i] = (t.iat[i]+t.iat[i+1])/2
 
-        self._conc_mid = c_mid.astype('float')
-        self._run_time_mid = t_mid.astype('float')
+        self._conc_mid = c_mid
+        self._run_time_mid = t_mid
 
 
     # Getters
@@ -183,6 +185,4 @@ class MetaboliteMixin:
             data = pd.concat([self._run_time_hour, self._cumulative],
                             axis=1)
             print(data)
-        else:
-            print('In Process Not Yet Done.')
         

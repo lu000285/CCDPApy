@@ -32,7 +32,5 @@ class OxygenMixin:
                                         axis=1)
             print('\n************ Oxygen In Process Data ************')
             print(self._inpro_data)
-        else:
-            print('In Process Not Yet Done.')
 
 

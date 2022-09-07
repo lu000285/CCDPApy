@@ -13,6 +13,26 @@ class PlotMixin:
     def plot_exps(self, cell_line, spc_list, method='all',
                   exp_list=None, legend=True, file_name=None):
         '''
+        Plot different experiments in a cell line on the same figure.
+
+        Parameters
+        ----------
+            cell_line : str
+                Cell line name to plot experiments.
+            spc_list :  llist of str
+                Spcies name list to plot the profiles.
+            method :default='all', optional
+                Method to plot specific rates for species.
+                'all' for all methods, 
+                'towpt' for two-point calcuations, 
+                'polyreg' for polynomial regression,
+                'rollreg' for rolling polynomial regression.
+            exp_list : default=None, optional
+                List Experience ID to plot. 
+            legend : default=True, optional
+                When True, legends are plotted on the figure.
+            file_name : default=None, optional
+                File name to save the plot.
         '''
         # Initialize methods as True
         twopt = False
@@ -123,6 +143,28 @@ class PlotMixin:
     def plot_cell_lines(self, spc_list, compare_cell_line, method='all',
                         cell_line_list=None, estimator=None,
                         file_name=None, legend=True):
+        '''
+        Plot different cell lines and experiments on the same figure.
+
+        Parameters
+        ----------
+            spc_list :  llist of str
+                Spcies name list to plot the profiles.
+            compare_cell_line : bool
+                When True, experiments of the same cell line are colored in the same color.
+            method : list of str default='all', optional
+                Method to plot specific rates for species.
+                'all' for all methods, 
+                'towpt' for two-point calcuations, 
+                'polyreg' for polynomial regression,
+                'rollreg' for rolling polynomial regression.
+            cell_line_list : list of str, default=None, optional
+            estimator : str default=None, optional
+            legend : default=True, optional
+                When True, legends are plotted on the figure.
+            file_name : default=None, optional
+                File name to save the plot.
+        '''
 
         # Initialize methods as false
         twopt=False

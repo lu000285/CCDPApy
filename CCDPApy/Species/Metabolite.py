@@ -11,23 +11,60 @@ from ..plotting.PlotMixin import PlotMixin
 ###########################################################################
 # Metabolite Class
 ###########################################################################
-class Metabolite(Species, MetaboliteMixin, MetaboliteMixinTwoPt, PolyRegMixin,
-                 RollPolyregMixin, PlotMixin):
+class Metabolite(Species,
+                 MetaboliteMixin,
+                 MetaboliteMixinTwoPt,
+                 PolyRegMixin,
+                 RollPolyregMixin,
+                 PlotMixin):
     '''
+    Metabolite class.
+
+    Attributes
+    ---------
+        name : str
+                name of species.
+        measured_data : python object
+                MeasuredData object.
+        conc_before_feed : pandas.DataFrame
+            species concentration before feeding.
+        conc_after_feed : pandas.DataFrame
+            species concentration after feeding.
+        feed_conc : pandas.DataFrame
+            feed concentration.
+        cumulative : pandas.DataFrame
+            calculated cumulative consumption/production for species.
+        production : bool, default=False, optional
+            True if species is produced by bioprocess.
     '''             
     def __init__(self,
-                 experiment_info,
-                 raw_data,
-                 feed_name,
                  name,
+                 measured_data,
                  conc_before_feed,
                  conc_after_feed,
                  feed_conc,
                  cumulative,
                  production=False):
-        
+        '''
+        Parameters
+        ---------
+            name : str
+                name of species.
+            measured_data : python object
+                MeasuredData object.
+            conc_before_feed : pandas.DataFrame
+                species concentration before feeding.
+            conc_after_feed : pandas.DataFrame
+                species concentration after feeding.
+            feed_conc : pandas.DataFrame
+                feed concentration.
+            cumulative : pandas.DataFrame
+                calculated cumulative consumption/production for species.
+            production : bool, default=False, optional
+                True if species is produced by bioprocess.
+        '''
         # Constructor for MeasuredDate Class
-        super().__init__(experiment_info, raw_data, feed_name, name)
+        super().__init__(name=name, measured_data=measured_data)
         
         # Members
         self._conc_before_feed = conc_before_feed
@@ -37,13 +74,13 @@ class Metabolite(Species, MetaboliteMixin, MetaboliteMixinTwoPt, PolyRegMixin,
         self._idx = self._conc_before_feed[self._conc_before_feed.notnull()].index
         self._cumulative = cumulative
 
-        self._use_feed_conc =  None
-        self._use_conc_after_feed = None
+        self._use_feed_conc =  False
+        self._use_conc_after_feed = False
     
     # Getters
     def get_info_df(self, t):
         n = len(t)
-        id = pd.Series(data=[self._experiment_id]*n,
+        id = pd.Series(data=[self._exp_id]*n,
                         name='Experiment ID')
         cl = pd.Series(data=[self._cell_line_name]*n,
                         name='Cell Line')
@@ -111,18 +148,32 @@ class Metabolite(Species, MetaboliteMixin, MetaboliteMixinTwoPt, PolyRegMixin,
 ###########################################################################
 class Metabolite2(Species, PolyRegMixin):
     '''
-    '''
-    def __init__(self,
-                 experiment_info,
-                 raw_data,
-                 feed_name,
-                 name, 
-                 cumulative):
+    Store information for Nitrogen and AA carbon.
 
+    Attributes
+    ---------
+        name : str
+            name of species.
+        measured_data : python object
+                MeasuredData object.
+        cumulative : pandas.DataFrame
+            calculated cumulative consumption/production.
+    '''
+    def __init__(self, name, measured_data, cumulative):
+        '''
+        Parameters
+        ----------
+            name : str
+                name of species.
+            measured_data : python object
+                MeasuredData object.
+            cumulative : pandas.DataFrame
+                calculated cumulative consumption/production.
+        '''
         # Constructor for MeasuredDate Class
-        super().__init__(experiment_info, raw_data, feed_name, name)
+        super().__init__(name=name, measured_data=measured_data)
 
         self._cumulative = cumulative
-        self._sp_rate = None
+        self._sp_rate = pd.DataFrame()
         self._idx = self._cumulative[self._cumulative.notnull()].index
         

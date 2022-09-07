@@ -8,11 +8,19 @@ from ..plotting.PlotCellLineMixin import PlotMixin
 ###########################################################################
 class CellLine(PlotMixin):
     def __init__(self):
-        self._cell_line_list = []        # List of cell lines
+        self._cell_line_list = []   # List of cell lines
         self._cell_line_dict = {}   # Dict of cell lines
 
     # Add Experiment
     def add_bio_process(self, bio_process):
+        '''
+        Add BioProcess object to CellLine object.
+
+        Parameters
+        ----------
+            bio_process : python object
+                BioProcess object
+        '''
         cl_name = bio_process.get_cell_line() # cell line name
         exp_id = bio_process.get_exp_id()     # experiment id
 
@@ -30,24 +38,49 @@ class CellLine(PlotMixin):
 
     # Get Cell Line list
     def get_cell_line_list(self):
+        '''Retuern list of cell line names stored in CellLine class.
+        '''
         return self._cell_line_list
         
     # Get Cell Line Dict
     def get_cell_line(self, cl_name):
+        '''
+        Return dictionary of BioProcess object stored in CellLine class.
+
+        Returns
+        -------
+            python dictionary
+                {'cell line name': BioProcess object}
+        '''
         return self._cell_line_dict[cl_name]
 
     # Display
     def disp_cell_lines(self):
+        '''Display Cell Line Name and Experiment ID stored in CellLine Class.
+        '''
         for cell_line, bio_process in self._cell_line_dict.items():
             print(f'Cell Line: {cell_line}')
 
             for i, exp_id in enumerate(bio_process.keys()):
                 print(f'Experiment {i+1}: {exp_id}')
-            print('\n')
 
 
     # Save Excell
     def save_excel(self, cell_line, file_name):
+        '''
+        Save each bioprocess data in the same cell line as an Excel file.
+        Please include '.xlsx'.
+        Do not include rolling regression data. To save the rolling regression data,
+        use save_excel_rollreg method. 
+
+        Parameters
+        ----------
+        cell_line : str
+            Cell Line name.
+        file_name : str
+            File name.
+            Please include '.xlsx'.
+        '''
         if '.xlsx' not in file_name:
             file_name += '.xlsx'
         file_path = output_path(file_name=file_name)
@@ -62,6 +95,20 @@ class CellLine(PlotMixin):
 
     # Save Excell for Rolling Regression
     def save_excel_rollreg(self, cell_line, file_name):
+        '''
+        Save each rolling regression data in the same cell line as an Excel file.
+        Please include '.xlsx'.
+        Do not include other bioprocess data. To save other data,
+        use save_excel method.
+
+        Parameters
+        ----------
+        cell_line : str
+            Cell Line name.
+        file_name : str
+            File name.
+            Please include '.xlsx'.
+        '''
         if '.xlsx' not in file_name:
             file_name += '.xlsx'
         file_path = output_path(file_name=file_name)
@@ -69,7 +116,5 @@ class CellLine(PlotMixin):
         with pd.ExcelWriter(file_path) as writer:
             for cl in self._cell_line_dict[cell_line].values():
                 sheet = cl.get_exp_id()
-                cl.get_post_rollpolyreg().to_excel(writer, sheet_name=sheet, index=False)
+                cl.get_process_data('rollreg').to_excel(writer, sheet_name=sheet, index=False)
             print(file_name + ' saved')
-
-###########################################################################

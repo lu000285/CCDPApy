@@ -1,23 +1,33 @@
-from concurrent.futures import process
-from CCDPApy.Species.MeasuredData import MeasuredData
-###########################################################################
+from CCDPApy.MeasuredData.MeasuredData import MeasuredData
 
 ###########################################################################
-def pre_process(bio_process, feed_name):
+# Pre Process Class
+###########################################################################
+def pre_process(bio_process, exp_data, measured_data, feed_data):
     '''
+    Execute pre process.
+
+    Parameters
+    ----------
+        bio_process : python object
+            BioProcess object
+        exp_data : pands.DataFrame
+            experiment information.
+        measured_data : pands.DataFrame
+            measured data.
+        feed_data : pands.DataFrame
+            separeata feed infomation.
     '''
-    exp_info = bio_process.get_exp_info()           # Experiment Info DF
-    measured_data = bio_process.get_measured_data() # Measured Data Info DF
+    # MeausredData class
+    md = MeasuredData(experiment_info=exp_data,
+                      measured_data=measured_data,
+                      feed_data=feed_data)
 
-    md = MeasuredData(experiment_info=exp_info,
-                      raw_data=measured_data,
-                      feed_name=feed_name)
+    # Calculate run time
+    md.run_time()
 
-    pre_data = md.get_pre_data()
-    feed_added = md.get_feed_added()
+    # Calculate culture volume before/after sampling and after feeding
+    md.culture_volume()
 
-    bio_process.set_process_flag(process='pre', flag=True) # Set pre process flag True
-    bio_process.set_pre_process_df(pre_data)
-    bio_process.set_feed_added(feed_added)
 
-###########################################################################
+#*** End pre_process ***#

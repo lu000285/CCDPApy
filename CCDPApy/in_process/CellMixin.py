@@ -55,5 +55,3 @@ class CellMixin:
                                         axis=1)
             print('\n************ Cell In Process Data ************')
             print(self._inpro_data)
-        else:
-            print('In Process Not Yet Done.')

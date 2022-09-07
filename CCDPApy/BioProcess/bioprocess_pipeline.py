@@ -1,19 +1,15 @@
 import pandas as pd
 
 from .BioProcess import BioProcess
-from ..pre_process.pre_process import pre_process
-from ..in_process.in_process import cumulative_calc
-from ..post_process.two_point_calc.twopt_calc import twopt_calc
-from ..post_process.polynomial_regression.polynomial_regression import polyreg_calc
-from ..post_process.rolling_regression.rolling_regression import rolling_regression
-from ..helper_func.helper_func import input_path
 
 ###########################################################################
-
-###########################################################################
-def bio_process(input_file, measurement_sheet, **kwargs):
+def bioprocess_pipeline(input_file_name,
+                        measurement_sheet='Measuerd Data',
+                        feed_sheet='Separate Feed Info',
+                        **kwargs):
     '''
-    Execute the bioprocess.
+    Execute the bioprocess; 
+    in-process, two-point calculations, polynomial regression, rolling polynomial regression.
 
     Parameters
     ----------
@@ -23,6 +19,9 @@ def bio_process(input_file, measurement_sheet, **kwargs):
 
     measurement_sheet : str
         Sheet name of the measured data in the Excel file.
+
+    feed_sheet : str
+        Sheet name of the separate feed infomation in the Excel file.
     
     Returns
     -------
@@ -38,7 +37,7 @@ def bio_process(input_file, measurement_sheet, **kwargs):
             Upper, lower, or capitalized case can be uesd. If this is not specified,
             original species list is to be used.
 
-        add_spc:  list of str.
+        new_spc:  list of str.
             List of new species name to be analuzed, which is not listed in the original species list.
 
         use_feed_conc: bool, default=False
@@ -66,57 +65,40 @@ def bio_process(input_file, measurement_sheet, **kwargs):
         rollreg_window: int, default=6
             The window size for the regression.
     '''
-
-    # Get File Path
-    file_path = input_path(file_name=input_file)
-    # Read Measured Data
-    measured_data = pd.read_excel(io=file_path, sheet_name=measurement_sheet, header=5)
-    # Read Experiment Info
-    exp_info = pd.read_excel(io=file_path, sheet_name=measurement_sheet, nrows=4, usecols=[0, 1], header=None, index_col=0)
-    print(f'{input_file} imported.')
     
-    # Bio Process Class
-    bioprocess = BioProcess(experiment_info=exp_info,
-                            measured_data=measured_data,
-                            )
-
-    # Check Spcies list to analze
-    if (kwargs.get('spc_list')):
-        spc_list = [name.upper() for name in kwargs.get('spc_list')] # Set AA List
-        bioprocess.set_spc_list(spc_list=spc_list)
-
-    # Check New Species List to Add
-    if (kwargs.get('add_spc')):
-        bioprocess.set_new_spc(new_spc_list=kwargs.get('add_spc')) # add new species to spc_list
-
-    feed_name = measurement_sheet
-    #****** Pre Process ******
-    pre_process(bio_process=bioprocess, feed_name=feed_name)
-    print('Done Pre-Process.')
+    # Check spcies list
+    spc_list = kwargs.get('spc_list') if kwargs.get('spc_list') else []
+    new_spc_list = kwargs.get('new_spc') if kwargs.get('new_spc') else []
+    
+    # BioProcess Class
+    bio_process = BioProcess(file_name=input_file_name,
+                             measurement_sheet=measurement_sheet,
+                             feed_sheet=feed_sheet,
+                             spc_list=spc_list,
+                             new_spc_list=new_spc_list)
 
     #****** In Process -Cumulative Cons/Prod ******
-    cumulative_calc(bio_process=bioprocess,
-                    feed_name=feed_name,
-                    use_feed_conc=True if (kwargs.get('use_feed_conc')) else False,
-                    use_conc_after_feed=True if (kwargs.get('use_conc_after_feed')) else False)
-    print('Done In-Process.')
+    bio_process.inprocess(use_feed_conc=True if (kwargs.get('use_feed_conc')) else False,
+                          use_conc_after_feed=True if (kwargs.get('use_conc_after_feed')) else False)
+    print('In-Process Done.')
 
     #***** Post Process -SP. Rate Two Point Calc ******
-    twopt_calc(bio_process=bioprocess)
-    print('Done Two-Point Calculations.')
+    bio_process.two_pt_calc()
+    print('Two-Point Calculations. Done.')
 
     #***** Post Process -SP. Rate Poly. Regression *****
     if (kwargs.get('polyreg') or kwargs.get('all_method')):
-        polyreg_calc(bio_process=bioprocess,
-                     polyorder_file=kwargs.get('polyorder_file'))
-        print('Done Polynomial Regression.')
+        bio_process.poly_regression(polyorder_file=kwargs.get('polyorder_file'))
+        print('Polynomial Regression. Done')
 
     #***** Post Process -SP. Rate Rolling Poly. Regression *****
     if (kwargs.get('rollreg') or kwargs.get('all_method')):
         order = kwargs.get('rollreg_order') if kwargs.get('rollreg_order') else 3
         window = kwargs.get('rollreg_window') if kwargs.get('rollreg_window') else 6
 
-        rolling_regression(bio_process=bioprocess, order=order, windows=window)
-        print('Done Rolling Regression.')
+        bio_process.roll_regression(order=order, windows=window)
+        print('Rolling Regression. Done.')
 
-    return bioprocess
+    return bio_process
+
+#*** End bio_process ***#

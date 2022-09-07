@@ -1,16 +1,26 @@
-from curses import window
 import pandas as pd
 
 #############################################################################################
-############################## Rolling Polynomial Regression Functions ##############################
 def rolling_regression(bio_process, order=3, windows=6):
+    '''
+    Calculate SP. rate for species using rolling polynomial regression.
+
+    Parameters
+    ----------
+        bio_process : BioProcess object
+        order : int, defalut=3, optional
+            polynomial order for rolling polynomial regression.
+        windows : int, default=6, optional
+            data point size used for rolling polynomial regression.
+    '''
+    method = 'rollreg'
 
     # Cell Logistic Growth
     cell = bio_process.get_cell()
     mu_calc_df = pd.concat([cell.get_time_mid().rename('CELL RUN TIME (HOURS)'),
                             cell.midcalc_growth_rate_calc()],
                             axis=1)
-    cell.set_method_flag(method='rollreg', flag=True)
+    cell.set_method_flag(method=method, flag=True)
 
     # Cell
     '''order = polyorder.loc['CELL'].iat[0]
@@ -27,65 +37,49 @@ def rolling_regression(bio_process, order=3, windows=6):
     igg = bio_process.get_igg()
     igg.rolling_poly_regression(polyreg_order=3, windows = 4)'''
 
-    # AA
+    # Metabolite
     spc_dict = bio_process.get_spc_dict()
-    '''df_conc = pd.DataFrame() # Initialize
-    df_q = pd.DataFrame() # Initialize
-    df_r = pd.DataFrame() # Initialize'''
-
+    spc_list = bio_process.get_spc_list()
     data_list = []  # df list to append data for each species
-    for spc_name, spc_obj in spc_dict.items():
-        # order = polyorder.loc[aa_name].iat[0]
+
+    for spc_name in spc_list:
         data = pd.DataFrame()
-        spc_obj.rolling_poly_regression(polyreg_order=order, windows=windows)
-        spc_obj.set_method_flag(method='rollreg', flag=True)
+        spc = spc_dict[spc_name.upper()]    # species object
+        # calculate sp. rate
+        spc.rolling_poly_regression(polyreg_order=order, windows=windows)
+        # Set flag true
+        spc.set_method_flag(method=method, flag=True)
         
+        q = spc.get_sp_rate(method=method)
         pre = f'Roll. Poly. Reg. Order: {order} Window: {windows}'
         title = f'{pre} q{spc_name.capitalize()} (mmol/109 cell/hr)'
+        data[f'{spc_name[:3]} RUN TIME (HOURS)'] = spc.get_time_mid() # run time 
+        data[f'Conc. {spc_name[:3]} MID. (mM)'] = spc.get_conc_mid() # concentraion
+        data[title] = q # SP. rate
+        data[f'r{spc_name[:3].capitalize()}']= q / 0.0016 # Residual
 
-        q, order, window = spc_obj.get_sp_rate(method='rollreg')
-        '''df_q[title] = q
-        df_conc[f'Conc. {spc_name} MID. (mM)'] = spc_obj.get_conc_mid()
-        df_r[f'r{spc_name[:3].capitalize()}'] = q / 0.0016'''
-
-        data[f'{spc_name[:3]} RUN TIME (HOURS)'] = spc_obj.get_time_mid()
-        data[f'Conc. {spc_name[:3]} MID. (mM)'] = spc_obj.get_conc_mid()
-        data[title] = q
-        data[f'r{spc_name[:3].capitalize()}']= q / 0.0016
+        # add data to data list
         data_list.append(data)
 
+    # Add data for cell to data_list
     data_list.append(mu_calc_df)
-    # Add to bp
+    # Concat data_list
     rollreg_df = pd.concat(data_list, axis=1)
-    bio_process.set_rollreg_df(rollreg_df)
+    # Add to bp
+    bio_process.set_process_data(process=method, data=rollreg_df)
+
+######################################################
+    # SP. rate for Nitrogen and AA Carbon
+    # bio_process.sp_rate_others(method=method)
 
     # Ratio Calc
-    # ratio_calc_rollpolyreg(bio_process)
+    # bio_process.ratio_calc(method=method)
+######################################################
 
-    bio_process.set_process_flag(process='rollreg', flag=True)
+    # Ratio Calc
+    bio_process.ratio_calc(method=method)
 
+    # Set flag true
+    bio_process.set_process_flag(process=method, flag=True)
 
-'''# Ratio Caluculaions
-def ratio_calc_rollpolyreg(bio_process):
-    aa_dict = bio_process.get_spc_dict()
-    df = bio_process.get_post_rollpolyreg()
-    
-    # DL/DG
-    dL = aa_dict['Lactate'.upper()].get_rollpolyreg_sp_rate()
-    dG = aa_dict['Glucose'.upper()].get_rollpolyreg_sp_rate()
-    df['DL/DG (mmol/mmol)'] = dL / dG
-
-    # qO2/qGlc
-    qO2 = aa_dict['Oxygen'.upper()].get_rollpolyreg_sp_rate()
-    qGlc = dG
-    df['qO2/qGlc (mmol/mmol)'] = qO2 / qGlc
-
-    # qGln/qGlc
-    qGln = aa_dict.upper()['Glutamine'].get_rollpolyreg_sp_rate()
-    qGlc = dG
-    df['qGln/qGlc (mmol/mmol)'] = qGln / qGlc
-
-    # qNH3/qGln
-    qNH3 = aa_dict['NH3'.upper()].get_rollpolyreg_sp_rate()
-    qGln = qGln 
-    df['qNH3/qGln (mmol/mmol)'] = qNH3 / qGln'''
+# End rolling_regression

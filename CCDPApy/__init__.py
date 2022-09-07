@@ -1,2 +1,3 @@
-from CCDPApy.BioProcess.bio_process import bio_process
+from CCDPApy.BioProcess.bioprocess_pipeline import bioprocess_pipeline
+from CCDPApy.BioProcess.BioProcess import BioProcess
 from CCDPApy.BioProcess.CellLine import CellLine

@@ -91,10 +91,16 @@ class GetterMixin:
         elif (method=='polyreg'):
             return self._polyreg_sp_rate
         elif (method=='rollreg'):
-            return (self._rollpolyreg_sp_rate, self._rollpolyreg_order, self._rollpolyreg_window)
+            return self._rollpolyreg_sp_rate
         else:
             print('wrong method parameter.')
             return None
+
+    def get_rollreg_order(self):
+        return  self._rollpolyreg_order
+    
+    def get_rollreg_window(self):
+        return  self._rollpolyreg_window
 
     def get_polyorder(self):
         '''

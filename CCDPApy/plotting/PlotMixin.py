@@ -1,6 +1,3 @@
-
-from cProfile import label
-from turtle import color, title
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -8,8 +5,7 @@ from ..helper_func.helper_func import output_path
 
 ###########################################################################
 class PlotMixin:
-    '''
-    Plot species profiles.
+    '''Plot species profiles.
     '''
     def plot(self, spc_list, profile, method=None,
              viability=False, osmolality=False, 
@@ -44,50 +40,53 @@ class PlotMixin:
         method_dict = check_method(method=method)
         print(method_dict)
 
-        # ax key; (row, column, index)
+        # ax_key; (row, column, index)
         row = len(spc_list) if not combined else 1
         column = sum(profile_dict.values())
-        index = 1
+        index = 1   # start position
         ax_key = (row, column, index)
         # print(ax_key)
 
         # Cleate Fig
         fig = plt.figure(figsize=(8*column, 6*row)) # (col, row)
-        #fig, axes = plt.subplots(row, column)
-        plt.subplots_adjust(wspace=0.8, hspace=0.2)
-        #fig.tight_layout(rect=[0,0,1,0.96])
+        #plt.subplots_adjust(wspace=0.8, hspace=0.2)
+        fig.tight_layout(rect=[0,0,1,0.96])
 
         # Concentration curve
-        if profile_dict['concentration'] and self._in_process_flag:
-            fig = self._plot_conc(fig=fig, spc_list=spc_list, ax_key=ax_key,
-                                  viability=viability, osmolality=osmolality,
-                                  combined=combined, two_yaxis=two_yaxis)
+        if profile_dict['concentration'] and self._process_flag_dict['inpro']:
+            fig = self.__plot_conc(fig=fig, spc_list=spc_list, ax_key=ax_key,
+                                   viability=viability, osmolality=osmolality,
+                                   combined=combined, two_yaxis=two_yaxis)
             index += 1
             ax_key = (row, column, index)
 
         # Cumulative curve
-        if profile_dict['cumulative'] and self._in_process_flag:
-            fig = self._plot_cumulative(fig=fig, spc_list=spc_list, ax_key=ax_key,
-                                        combined=combined, two_yaxis=two_yaxis)
+        if profile_dict['cumulative'] and self._process_flag_dict['inpro']:
+            fig = self.__plot_cumulative(fig=fig, spc_list=spc_list, ax_key=ax_key,
+                                         combined=combined, two_yaxis=two_yaxis)
             index += 1
             ax_key = (row, column, index)
 
         # SP. Rate curve
         if profile_dict['sp_rate']:
             if sum(method_dict.values()):
-                fig = self._plot_sp_rate(fig=fig, spc_list=spc_list, ax_key=ax_key,
-                                         method_dict=method_dict,
-                                         combined=combined, two_yaxis=two_yaxis)
+                fig = self.__plot_sp_rate(fig=fig, spc_list=spc_list, ax_key=ax_key,
+                                          method_dict=method_dict,
+                                          combined=combined, two_yaxis=two_yaxis)
             else:
-                print('Please pass at least one method argument.')
+                print('Please pass at least one method argument to plot SP. rate profile.')
+        
+        # Saving a plot as an image.
+        if file_name:
+            self.__save_plot()
 
         return fig
 
 
-
-    def _plot_conc(self, fig, spc_list, ax_key,
-                   viability=False, osmolality=False, 
-                   combined=False, two_yaxis=False):
+    # *** Private Methods *** #
+    def __plot_conc(self, fig, spc_list, ax_key,
+                    viability=False, osmolality=False, 
+                    combined=False, two_yaxis=False):
         '''
         Plot the concentration profile for species.
 
@@ -105,28 +104,26 @@ class PlotMixin:
         for spc_name in spc_list:
             title_name = ''
             if spc_name=='CELL':
-                spc = self.get_cell()
-                y = spc.get_xv()    # y: viable cell 
+                y = self._md.xv    # y: viable cell
+                y2 = self._md.xt
                 unit = '(x106 cells/mL)'
                 label = 'Viable Cell'
+                label2 = 'Total Cell'
             elif spc_name=='OXYGEN':
-                spc = self.get_oxygen()
-                y = spc.get_oxygen_consumed()   # y: oxygen consumed'''
+                y = self._md.oxygen_consumed   # y: oxygen consumed'''
                 label = 'Oxygen'
             elif  spc_name=='IGG' or spc_name=='PRODUCT':
-                spc = self.get_igg()
-                y = spc.get_product_conc()  # y: concentration
+                y = self._md.product_conc  # y: concentration
                 label = 'IgG'
                 unit = '(mg/L)'
             else:
                 spc_dict = self.get_spc_dict()
-                #spc_dict.update(self.get_special_spc_dict())
                 spc = spc_dict[spc_name]
                 y = spc.get_conc_before_feed() # y: concentration
                 unit = '(mM)'
                 label = f'{spc_name.capitalize()}'
         
-            x = spc.get_time_hour() # x: time
+            x = self._md.run_time_hour # x: time
 
             # Add ax
             if not combined:
@@ -139,34 +136,41 @@ class PlotMixin:
             ax.scatter(x, y, label=label)
             ax.plot(x, y)
 
-            ax.set_title(f'{title_name}Kinetic Curve', loc='left')
+            if spc_name == 'CELL':
+                ax.scatter(x, y2, label=label2)
+                ax.plot(x, y2)
+
+            ax.set_title(f'{title_name}Concentration Profile', loc='left')
             ax.set_ylabel(f'Concentration {unit}')
             ax.set_xlabel('Time (hrs)')
             anc = 1.1 if viability else 1.05
             ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
+            ax.legend()
 
             if spc_name=='CELL' and viability:
                 color = 'tab:red'
                 ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
-                y_via = spc.get_viability()
+                y_via = self._md.viability
                 label = 'Viability'
                 ax2.scatter(x, y_via, label=label, color=color, marker='*')
                 ax2.plot(x, y_via, color=color)
                 ax2.set_ylim([0, 100])
                 ax2.set_ylabel(f'Viability (%)', color=color)
-                ax2.legend(bbox_to_anchor=(1.1, 0.5), loc='upper left', borderaxespad=0)
+                ax2.legend(loc='lower right')
+                #ax2.legend(bbox_to_anchor=(0.95, 0.05), loc='upper left', borderaxespad=0)
 
             if osmolality:
                 osm = spc.get_oscmolality()
 
             if combined:
-                ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+                ax.legend()
+                #ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
 
         return fig
 
 
 
-    def _plot_cumulative(self, fig, spc_list, ax_key,
+    def __plot_cumulative(self, fig, spc_list, ax_key,
                          combined=False, two_yaxis=False):
         '''
         Plot the cumulative consumption/production profile for species.
@@ -185,17 +189,16 @@ class PlotMixin:
         for spc_name in spc_list:
             title_name = spc_name.capitalize() + ' '
             if spc_name=='CELL':
-                spc = self.get_cell()
+                spc = self._cell
                 unit = '(x106 cells/mL)'
             elif spc_name=='OXYGEN':
-                spc = self.get_oxygen()
+                spc = self._oxygen
                 unit = '(mmol)'
             elif  spc_name=='IGG' or spc_name=='PRODUCT':
-                spc = self.get_igg()
+                spc = self._product
                 unit = '(mg)'
             else:
-                spc_dict = self.get_spc_dict()
-                #spc_dict.update(self.get_special_spc_dict())
+                spc_dict = self._spc_dict
                 spc = spc_dict[spc_name]
                 unit = '(mmol)'
             
@@ -214,7 +217,7 @@ class PlotMixin:
             ax.scatter(x, y, label=label)
 
             # Poly. Reg
-            if self._polyreg_flag:
+            if self._process_flag_dict['polyreg']:
                 order = spc.get_polyorder()
                 label = f'{title_name}Poly. Reg. Fit.\nOrder: {order}'
                 data_num = 100
@@ -223,21 +226,22 @@ class PlotMixin:
                 ax.plot(x2, y2, label=label)
             
             if combined:
-                title = 'Cumulative Curve'
+                title = 'Cumulative Profile'
             else:
-                title = f'{spc_name.capitalize()} Cumulative Curve'
+                title = f'{spc_name.capitalize()} Cumulative Profile'
             ax.set_title(title, loc='left')
             ax.set_ylabel(f'Cumulative {unit}')
             ax.set_xlabel('Time (hrs)')
             ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
             if combined:
-                ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+                ax.legend()
+                # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
 
         return fig
         
 
 
-    def _plot_sp_rate(self, fig, spc_list, ax_key, method_dict,
+    def __plot_sp_rate(self, fig, spc_list, ax_key, method_dict,
                       combined=False, two_yaxis=False):
         '''
         Plot SP. rate profile for species.
@@ -257,18 +261,17 @@ class PlotMixin:
         for spc_name in spc_list:
             title_name = spc_name.capitalize() + ' '
             if spc_name=='CELL':
-                spc = self.get_cell()
+                spc = self._cell
                 unit = 'mu (hr^-1) [mv-kd]'
             elif spc_name=='OXYGEN':
-                spc = self.get_oxygen()
+                spc = self._oxygen
                 unit = '(mmol/10^9cell/hr)'
             elif  spc_name=='IGG' or spc_name=='PRODUCT':
-                spc = self.get_igg()
+                spc = self._product
                 spc_name = 'Antibody'
                 unit = '(mg/10^9cell/hr)'
             else:
-                spc_dict = self.get_spc_dict()
-                #spc_dict.update(self.get_special_spc_dict())
+                spc_dict = self._spc_dict
                 spc = spc_dict[spc_name]
                 unit = '(mmol/10^9cell/hr)'
             # Add ax
@@ -282,14 +285,14 @@ class PlotMixin:
             x = spc.get_time_hour()  # x: time
 
             # two-pt. calc.
-            if method_dict['twopt'] and self._twopt_flag:
+            if method_dict['twopt'] and self._process_flag_dict['twopt']:
                 label = f'{title_name}Two-Point Calc.'
                 y = spc.get_sp_rate(method='twopt') # y: SP. rate
                 ax.scatter(x, y)
                 ax.plot(x, y, label=label)
 
             # Poly. Reg.
-            if method_dict['polyreg'] and self._polyreg_flag:
+            if method_dict['polyreg'] and self._process_flag_dict['polyreg']:
                 order = spc.get_polyorder()
                 label = f'{title_name}Poly. Reg. Fit.\nOrder: {order}'
                 y = spc.get_sp_rate(method='polyreg') # y: SP. rate
@@ -297,26 +300,33 @@ class PlotMixin:
                 ax.plot(x, y, label=label)
 
             # Roll. Reg.
-            if method_dict['rollreg'] and self._rollreg_flag:
-                y, order, window = spc.get_sp_rate(method='rollreg') # y: SP. rate
+            if method_dict['rollreg'] and self._process_flag_dict['rollreg']:
+                y = spc.get_sp_rate(method='rollreg') # y: SP. rate
+                order = spc.get_rollreg_order()
+                window = spc.get_rollreg_window()
+
                 x2 = spc.get_time_mid()
                 label = f'{title_name}Roll. Reg. Fit.\nOrder: {order} Window: {window}'
                 ax.scatter(x2, y)
                 ax.plot(x2, y, label=label)
 
             if combined:
-                title = 'SP. Rate'
+                title = 'SP. Rate Profile'
             else:
-                title = f'{spc_name.capitalize()} SP. Rate'
+                title = f'{spc_name.capitalize()} specific-rate Profile'
             ax.set_title(title, loc='left')
-            ax.set_ylabel(f'SP. rate {unit}')
+            ax.set_ylabel(f'SP. Rate {unit}')
             ax.set_xlabel('Time (hrs)')
-            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+            ax.legend()
+            #ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
             ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
 
-        return fig
+        return 
+    
+    def __save_plot(self):
+        pass
 
-
+# *** Other Helper Functions *** #
 def check_profile(profile):
     '''
     Check profiles to plot.
@@ -383,6 +393,8 @@ def check_method(method):
             method_dict['rollreg'] = True
     return method_dict
     
+
+
 
     '''def plot_1(self, spc_list, method=['twopt'], combined=False, save_file_name=None):
         # Initialize
