@@ -89,6 +89,4 @@ class RollRegMixin(SPRateMixin, RatioCalcMixin):
         # Set flag true
         self.set_process_flag(process=method, flag=True)
 
-        print(self._process_data_dict[method])
-
     #*** End rolling_regression ***#
