@@ -82,4 +82,11 @@ def rolling_regression(bio_process, order=3, windows=6):
     # Set flag true
     bio_process.set_process_flag(process=method, flag=True)
 
+<<<<<<< HEAD
 # End rolling_regression
+=======
+    # qNH3/qGln
+    qNH3 = aa_dict['NH3'.upper()].get_rollpolyreg_sp_rate()
+    qGln = qGln 
+    df['qNH3/qGln (mmol/mmol)'] = qNH3 / qGln'''
+>>>>>>> a9dab1f50394347fd12051a460a78bafdba045d3
