@@ -53,12 +53,18 @@ class MetaboliteMixin:
         idx = self._idx                     # Measurement Index
         s = self._conc_before_feed[idx]     # Substrate Concentration (mM)
         sf = self._feed_conc[idx]           # Substrate Feed Concentration (mM)
-        f = self._feed_media_added[idx]     # Feed Flowrate (ml/hr)
+        f_media = self._feed_media_added[idx]     # Feed Flowrate (ml/hr)
         v = self._v_after_sampling[idx]     # Culture Volume After Sampling (ml)
-        g = self._feed_data.sum(axis=1)[idx]# Feed Added (E.g. glutamine, glucose, etc.)
+        separate_f = self._feed_data     # Separate Feed DataFrame
+        separate_f_added = self._feed_data.sum(axis=1)[idx]# Separate Feed Sum Added (E.g. glutamine, glucose, etc.)
+
+        f = f_media
+        if self._name in self._feed_list:
+            f = separate_f[f'{self._name.upper()} ADDED (mL)'][idx]
 
         # Concentration After Feeding
-        self._conc_after_feed = ((s*v + sf*f) / (v + f + g)).rename(f'{self._name} CONC. AFTER FEED (mM)')
+        self._conc_after_feed = ((s*v + sf*f) / (v + f_media + separate_f_added)).rename(f'{self._name} CONC. AFTER FEED (mM)')
+
 
     # Calculate Cumulative Consumption/Production With Feed Concentration
     def cumulative_cons_from_feed(self, initial_conc=0):

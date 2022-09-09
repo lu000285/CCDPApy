@@ -313,7 +313,7 @@ class PlotMixin:
             if combined:
                 title = 'SP. Rate Profile'
             else:
-                title = f'{spc_name.capitalize()} specific-rate Profile'
+                title = f'{spc_name.capitalize()} Specific-Rate Profile'
             ax.set_title(title, loc='left')
             ax.set_ylabel(f'SP. Rate {unit}')
             ax.set_xlabel('Time (hrs)')

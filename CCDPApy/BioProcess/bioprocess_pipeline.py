@@ -4,7 +4,7 @@ from .BioProcess import BioProcess
 
 ###########################################################################
 def bioprocess_pipeline(input_file_name,
-                        measurement_sheet='Measuerd Data',
+                        measurement_sheet='Measured Data',
                         feed_sheet='Separate Feed Info',
                         **kwargs):
     '''

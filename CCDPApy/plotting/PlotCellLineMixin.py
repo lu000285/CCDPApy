@@ -96,7 +96,7 @@ class PlotMixin:
             sns.lineplot(ax=set_ax, data=inpro, x='RUN TIME (HOURS)', y=f'{s.upper()} CONC. (mM)',
                             hue="Experiment ID", hue_order=exp_list,
                             legend=legend)
-            set_ax.set_title(f'{s.upper()} Kinetic Curve', loc='center')
+            set_ax.set_title(f'{s.upper()} Concentration Profile', loc='center')
             set_ax.set_ylabel('Concentration (mM)')
             set_ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
 
@@ -110,7 +110,7 @@ class PlotMixin:
                             hue="Experiment ID", hue_order=exp_list,
                             style='Method',
                             legend=legend)
-            set_ax.set_title(f'{s.upper()} Cumulative Curve', loc='center')
+            set_ax.set_title(f'{s.upper()} Cumulative Profile', loc='center')
             set_ax.set_ylabel('Cumulative (mmol)')
             set_ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
 
@@ -121,7 +121,7 @@ class PlotMixin:
                             style='Method',
                             legend=legend)
             sns.set_theme(style="whitegrid")
-            set_ax.set_title(f'{s.upper()} SP. Rate', loc='center')
+            set_ax.set_title(f'{s.upper()} Specific-Rate Profile', loc='center')
             set_ax.set_ylabel('SP. rate (mmol/109 cell/hr)')
             set_ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
 
@@ -232,7 +232,7 @@ class PlotMixin:
                             hue=hue, hue_order=cl_list,
                             style=style,
                             legend=legend)
-            set_ax.set_title(f'{s.upper()} Kinetic Curve', loc='center')
+            set_ax.set_title(f'{s.upper()} Concentration Profile', loc='center')
             set_ax.set_ylabel('Concentration (mM)')
             set_ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
 
@@ -247,7 +247,7 @@ class PlotMixin:
                             hue=hue, hue_order=cl_list,
                             style=style,
                             legend=legend)
-            set_ax.set_title(f'{s.upper()} Cumulative Curve', loc='center')
+            set_ax.set_title(f'{s.upper()} Cumulative Profile', loc='center')
             set_ax.set_ylabel('Cumulative (mmol)')
             set_ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
 
@@ -260,7 +260,7 @@ class PlotMixin:
                             estimator=estimator,
                             legend=legend)
             sns.set_theme(style="whitegrid")
-            set_ax.set_title(f'{s.upper()} SP. Rate', loc='center')
+            set_ax.set_title(f'{s.upper()} Specific-Rate Profile', loc='center')
             set_ax.set_ylabel('SP. rate (mmol/109 cell/hr)')
             set_ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
 

@@ -1,9 +1,8 @@
 import pandas as pd
 
-from .SPRateMixin import SPRateMixin
 from .RatioCalcMixin import RatioCalcMixin
 
-class RollRegMixin(SPRateMixin, RatioCalcMixin):
+class RollRegMixin(RatioCalcMixin):
     '''
     Mixin class for BioProcess to calcuarate specific rates for species using rolling polynomial regression.
 
@@ -70,6 +69,25 @@ class RollRegMixin(SPRateMixin, RatioCalcMixin):
 
             # add data to data list
             data_list.append(data)
+        
+        # SP. rate for Nitrogen and AA Carbon
+        for s in self._spc_list_2:
+            spc = self._spc_dict[s.upper()]    # species object
+            # calculate sp. rate
+            spc.rolling_poly_regression(polyreg_order=order, windows=windows)
+            # Set Flag True
+            spc.set_method_flag(method=method, flag=True)
+            
+            q = spc.get_sp_rate(method=method)
+            pre = f'Roll. Poly. Reg. Order: {order} Window: {windows}'
+            title = f'{pre} q{s.capitalize()} (mmol/109 cell/hr)'
+
+            data[f'{s} RUN TIME (HOURS)'] = spc.get_time_mid() # run time 
+            data[title] = q # SP. rate
+            data[f'r{s}']= q / 0.0016 # Residual
+
+            # add data to data list
+            data_list.append(data)
 
         # Add data for cell to data_list
         data_list.append(mu_calc_df)
@@ -79,9 +97,6 @@ class RollRegMixin(SPRateMixin, RatioCalcMixin):
 
         # Set df to BioProcess
         self.set_process_data(process=method, data=rollreg_df)
-
-        # SP. rate for Nitrogen and AA Carbon
-        self.sp_rate_Nit_AAC(method=method)
 
         # Ratio Calc
         self.ratio_calc(method=method)

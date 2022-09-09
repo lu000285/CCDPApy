@@ -146,7 +146,7 @@ class Metabolite(Species,
 ###########################################################################
 # Metabolite Class for Nitrogen, and AA Carbon
 ###########################################################################
-class Metabolite2(Species, PolyRegMixin):
+class Metabolite2(Species, PolyRegMixin, RollPolyregMixin):
     '''
     Store information for Nitrogen and AA carbon.
 
@@ -176,4 +176,19 @@ class Metabolite2(Species, PolyRegMixin):
         self._cumulative = cumulative
         self._sp_rate = pd.DataFrame()
         self._idx = self._cumulative[self._cumulative.notnull()].index
+        self._run_time_mid = self.__mid_calc_runtime()
+
+
+    #*** Praivete Methods ***#
+    def __mid_calc_runtime(self):
+        idx = self._idx                 # Measurement index
+        t = self._run_time_hour[idx]         # run time hour
+
+        t_mid = pd.Series(data=[np.nan] * (len(idx)-1),
+                            name='RUN TIME MID (HOURS)', dtype='float')
+
+        for i in range(len(idx)-1):
+            t_mid.iat[i] = (t.iat[i]+t.iat[i+1])/2
+
+        return t_mid
         

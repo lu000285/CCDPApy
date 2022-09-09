@@ -116,6 +116,9 @@ class BioProcess(InProcessMixin,
         # Create Metabolite object from spcies list and add to spcies dictionary
         self._spc_dict = metabolite(spc_list=self._spc_list, measured_data=self._md)
         
+        # List for Nitrogen, AA carbon
+        self._spc_list_2 = []
+        
         #self._spc_cum_df = pd.DataFrame()          # Species Cumulative DF
         self._spc_conc_df = pd.DataFrame()         # Species Concenrtation DF
         self._conc_after_feed_df = pd.DataFrame()  # Species Concentration After Feeding DF
@@ -196,9 +199,7 @@ def metabolite(spc_list, measured_data):
         feed = check_key(df=df, key=f'FEED {spc_name} CONC. (mM)')     # Feed Concentration
 
         # Check Calculated Cumulative Concentration
-        cumulative = check_key(df=df, key=f'CUM {spc_name} CONS. (mM)')
-        if (not cumulative.any()):
-            cumulative = check_key(df=df, key=f'CUM {spc_name} PROD. (mM)')
+        cumulative = check_key(df=df, key=f'CUM {spc_name} (mM)')
 
         # Metabolite Object
         spc = Metabolite(name=spc_name,
@@ -207,7 +208,7 @@ def metabolite(spc_list, measured_data):
                          conc_after_feed=conc_after,
                          feed_conc=feed,
                          cumulative=cumulative,
-                         production=True if (spc_name=='LACTATE' or spc_name=='NH3') else False)
+                         production=True if (spc_name=='LACTATE') else False)
 
         spc_dict[spc_name] = spc
     

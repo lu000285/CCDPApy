@@ -44,7 +44,7 @@ class RatioCalcMixin:
 
         # qNH3/qGln
         if ('NH3' in self._spc_list and 'Glutamine'.upper() in self._spc_list):
-            qNH3 = self._spc_dict['NH3'].get_sp_rate(method='twopt')
+            qNH3 = self._spc_dict['NH3'].get_sp_rate(method=method)
             qGln = self._spc_dict['Glutamine'.upper()].get_sp_rate(method=method)
             if len(qNH3) == len(qGln):
                 df[f'{title} qNH3/qGln (mmol/mmol)'] = qNH3 / qGln

@@ -62,9 +62,10 @@ class DispMixin:
             print('Separate Feed List:')
             print(self._md.feed_list)
             print('Metabolite List:')
-            if (self._spc_list):
-                
-                print(self._spc_list)
+            print(self._spc_list)
+            if self._spc_list_2:
+                print('Other Metabolite List:')
+                print(self._spc_list_2)
 
     def __disp_pre_process(self):
         '''Display pre-processed data.

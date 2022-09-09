@@ -70,7 +70,7 @@ class PolyRegMixin:
         for i in range(1, len(t)):
             # If has direct calculation of cumulative consumption/production
             if (self._direct_cumulative):
-                # print(f'{self._name} use direct CUM for Poly. Reg.')
+                #print(f'{self._name} use direct CUM for Poly. Reg.')
                 q.iat[i] = y[i] / xv.iat[i]
             else:
                 q.iat[i] = y[i] / (xv.iat[i] * v.iat[i]) * 1000

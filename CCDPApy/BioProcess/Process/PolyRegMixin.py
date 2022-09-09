@@ -1,10 +1,9 @@
 import pandas as pd
 
-from .SPRateMixin import SPRateMixin
 from .RatioCalcMixin import RatioCalcMixin
 from ...helper_func.helper_func import input_path
 
-class PolyRegMixin(SPRateMixin, RatioCalcMixin):
+class PolyRegMixin(RatioCalcMixin):
     '''
     Mixin class for BioProcess class to calculate specific rates for species using polynomial regression.
     '''
@@ -56,7 +55,7 @@ class PolyRegMixin(SPRateMixin, RatioCalcMixin):
         # Metabolites
         data = self.get_process_data(method=method)
 
-        for s in self._spc_list:
+        for s in (self._spc_list + self._spc_list_2):
             s = s.upper() # Name
             spc = self._spc_dict[s]    # species object
             try:
@@ -69,13 +68,8 @@ class PolyRegMixin(SPRateMixin, RatioCalcMixin):
             title = f'Poly. Reg. Order: {order} q{s.capitalize()} (mmol/109 cell/hr)'
             data[title] = spc.get_sp_rate(method=method)
 
-        # SP. rate for Nitrogen and AA Carbon
-        self.sp_rate_Nit_AAC(method=method)
-
         # Ratio Calc
         self.ratio_calc(method=method)
 
         # Set polyreg flag True
         self.set_process_flag(process=method, flag=True)
-
-    #*** End poly_regression ***#
