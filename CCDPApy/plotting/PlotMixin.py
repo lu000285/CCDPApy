@@ -153,7 +153,7 @@ class PlotMixin:
             ax.set_xlabel('Time (hrs)')
             anc = 1.1 if viability else 1.05
             ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
-            #ax.legend()
+            ax.legend()
 
             if spc_name=='CELL' and viability:
                 color = 'tab:red'
@@ -223,7 +223,6 @@ class PlotMixin:
             label = f'{title_name}'
 
             ax.scatter(x, y, label=label)
-            print(label)
 
             # Poly. Reg
             if self._process_flag_dict['polyreg']:
@@ -233,7 +232,6 @@ class PlotMixin:
                 x2 = np.linspace(x.iat[0], x.iat[-1], data_num)
                 y2 = spc.get_polyfit_cumulative()(x2)
                 ax.plot(x2, y2, label=label)
-                print(label)
             
             if combined:
                 title = 'Cumulative Profile'
