@@ -95,6 +95,16 @@ class Metabolite(Species,
                           self._cumulative,
                           ], axis=1)
 
+    def get_conc_df(self):
+        t = self.get_info_df(self._run_time_hour)
+        conc = self._conc_before_feed
+        conc_before = pd.concat([t, conc.rename('CONC.')], axis=1)
+        
+        conc = self._conc_after_feed
+        conc_after = pd.concat([t, conc.rename('CONC.')], axis=1)
+        return pd.concat([conc_before, conc_after])
+        
+
     def get_cumulative_df(self):
         t = self._run_time_hour       
         x = np.linspace(t.iat[0], t.iat[-1], 100)

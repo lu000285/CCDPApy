@@ -71,11 +71,13 @@ class PlotMixin:
         print(f'Makeing a plot for {exp_list}')
         for i, s in enumerate(spc_list):
             inpro_df_lst = []   # In process list for different experiments
+            conc_df_lst = []    # Concentration list for different experiments
             cumulative_lst = [] # Cumulative list for different experiments
             sp_rate_df_lst = [] # SP. rate list for different experiments
             for exp in exp_list:
                 spc = bp_dict[exp].get_spc_dict()[s.upper()] # spc object
-                inpro_df = spc.get_inpro_df() # in process df for spceis
+                inpro_df = spc.get_inpro_df()   # inpro df
+                conc_df = spc.get_conc_df() # concenration df for spceis
                 cumulative_df = spc.get_cumulative_df() # cumulative df for species
                 sp_rate_df = spc.get_sp_rate_df(twopt=twopt,
                                                 polyreg=polyreg,
@@ -83,19 +85,23 @@ class PlotMixin:
                 
                 # Append each df to each list
                 inpro_df_lst.append(inpro_df)
+                conc_df_lst.append(conc_df)
                 cumulative_lst.append(cumulative_df)
                 sp_rate_df_lst.append(sp_rate_df)
 
             # Concatnating each df list to make a df for different experiments
-            inpro = pd.concat(inpro_df_lst, axis=0, ignore_index=True)#.sort_values('RUN TIME (HOURS)')
+            inpro = pd.concat(inpro_df_lst, axis=0, ignore_index=True)
+            conc = pd.concat(conc_df_lst, axis=0, ignore_index=True)#.sort_values('RUN TIME (HOURS)')
             cumulative = pd.concat(cumulative_lst, axis=0, ignore_index=True)#.sort_values('RUN TIME (HOURS)')
             sp_rate = pd.concat(sp_rate_df_lst, axis=0, ignore_index=True)#.sort_values('RUN TIME (HOURS)')
 
             # Plot Conentration
+            print(conc['CONC.'])
             set_ax = ax[i, 0] if len(spc_list) != 1 else ax[0]
-            sns.lineplot(ax=set_ax, data=inpro, x='RUN TIME (HOURS)', y=f'{s.upper()} CONC. (mM)',
-                            hue="Experiment ID", hue_order=exp_list,
-                            legend=legend)
+            sns.lineplot(ax=set_ax, data=conc, x='RUN TIME (HOURS)', y=f'CONC.',
+                         hue="Experiment ID", hue_order=exp_list,
+                         legend=legend,
+                         estimator=None)
             set_ax.set_title(f'{s.upper()} Concentration Profile', loc='center')
             set_ax.set_ylabel('Concentration (mM)')
             set_ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
@@ -209,29 +215,34 @@ class PlotMixin:
         style = 'Experiment ID'
 
         for i, s in enumerate(spc_list):
-            inpro_df_lst = []
+            inpro_df_lst = []   # In process list for different experiments
+            conc_df_lst = []
             cumulative_lst = []
             sp_rate_df_lst = []
             for exp in exp_list:
                 aa = bp_dict[exp].get_spc_dict()[s.upper()]
-                inpro_df = aa.get_inpro_df()
+                inpro_df = aa.get_inpro_df()   # inpro df
+                conc_df = aa.get_conc_df()
                 cumulative_df = aa.get_cumulative_df()
                 sp_rate_df = aa.get_sp_rate_df(twopt, polyreg, rollreg)
-                
+
                 inpro_df_lst.append(inpro_df)
+                conc_df_lst.append(conc_df)
                 cumulative_lst.append(cumulative_df)
                 sp_rate_df_lst.append(sp_rate_df)
-                            
+
             inpro = pd.concat(inpro_df_lst, axis=0, ignore_index=True)
+            conc = pd.concat(conc_df_lst, axis=0, ignore_index=True)
             cumulative = pd.concat(cumulative_lst, axis=0, ignore_index=True)
             sp_rate = pd.concat(sp_rate_df_lst, axis=0, ignore_index=True)
 
             # Conentration
             set_ax = ax[i, 0] if len(spc_list) != 1 else ax[0]
-            sns.lineplot(ax=set_ax, data=inpro, x='RUN TIME (HOURS)', y=f'{s.upper()} CONC. (mM)',
-                            hue=hue, hue_order=cl_list,
-                            style=style,
-                            legend=legend)
+            sns.lineplot(ax=set_ax, data=conc, x='RUN TIME (HOURS)', y=f'CONC.',
+                         hue=hue, hue_order=cl_list,
+                         style=style,
+                         legend=legend,
+                         estimator=None)
             set_ax.set_title(f'{s.upper()} Concentration Profile', loc='center')
             set_ax.set_ylabel('Concentration (mM)')
             set_ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)

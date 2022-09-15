@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from ..helper_func.helper_func import output_path
 
@@ -98,10 +99,13 @@ class PlotMixin:
             ax_key : tupple
                 (column, row, index)
         '''
+
         # Get ax_key; (column, row, index)
         row, col, idx = ax_key
         ax = None
         for spc_name in spc_list:
+            x = self._md.run_time_hour # x: time
+
             title_name = ''
             if spc_name=='CELL':
                 y = self._md.xv    # y: viable cell
@@ -119,11 +123,15 @@ class PlotMixin:
             else:
                 spc_dict = self.get_spc_dict()
                 spc = spc_dict[spc_name]
-                y = spc.get_conc_before_feed() # y: concentration
+                conc_befor = spc.get_conc_before_feed().rename('CONC.') # y1: concentration before feeding
+                conc_after = spc.get_conc_after_feed().rename('CONC.')  # y2: concentration after feeding
+                conc_befor = pd.concat([x, conc_befor], axis=1)
+                conc_after = pd.concat([x, conc_after], axis=1)
+                conc = pd.concat([conc_befor, conc_after], axis=0).sort_index(kind='stable')
+                y = conc['CONC.']
+                x = conc['RUN TIME (HOURS)']
                 unit = '(mM)'
                 label = f'{spc_name.capitalize()}'
-        
-            x = self._md.run_time_hour # x: time
 
             # Add ax
             if not combined:
@@ -145,7 +153,7 @@ class PlotMixin:
             ax.set_xlabel('Time (hrs)')
             anc = 1.1 if viability else 1.05
             ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
-            ax.legend()
+            #ax.legend()
 
             if spc_name=='CELL' and viability:
                 color = 'tab:red'
@@ -171,7 +179,7 @@ class PlotMixin:
 
 
     def __plot_cumulative(self, fig, spc_list, ax_key,
-                         combined=False, two_yaxis=False):
+                          combined=False, two_yaxis=False):
         '''
         Plot the cumulative consumption/production profile for species.
 
@@ -215,6 +223,7 @@ class PlotMixin:
             label = f'{title_name}'
 
             ax.scatter(x, y, label=label)
+            print(label)
 
             # Poly. Reg
             if self._process_flag_dict['polyreg']:
@@ -224,6 +233,7 @@ class PlotMixin:
                 x2 = np.linspace(x.iat[0], x.iat[-1], data_num)
                 y2 = spc.get_polyfit_cumulative()(x2)
                 ax.plot(x2, y2, label=label)
+                print(label)
             
             if combined:
                 title = 'Cumulative Profile'
@@ -233,6 +243,7 @@ class PlotMixin:
             ax.set_ylabel(f'Cumulative {unit}')
             ax.set_xlabel('Time (hrs)')
             ax.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
+            ax.legend()
             if combined:
                 ax.legend()
                 # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
@@ -324,7 +335,15 @@ class PlotMixin:
         return 
     
     def __save_plot(self):
-        pass
+        # Saving
+        if (file_name):
+            if '.png' not in file_name:
+                file_name += '.png'
+            # Get output file path
+            file_path = output_path(file_name=file_name)
+
+            plt.savefig(file_path)
+            print(f'{file_name} Saved')
 
 # *** Other Helper Functions *** #
 def check_profile(profile):

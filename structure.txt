@@ -1,0 +1,18 @@
+MeasuredData folder
+
+BioProcess folder
+
+Species folder
+
+pre_process folder
+
+in_process folder
+
+post_process folder
+
+plotting folder
+
+helper_func folder
+
+
+
