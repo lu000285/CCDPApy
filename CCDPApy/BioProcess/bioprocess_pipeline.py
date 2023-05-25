@@ -69,7 +69,7 @@ def bioprocess_pipeline(input_file_name,
     # Check spcies list
     spc_list = kwargs.get('spc_list') if kwargs.get('spc_list') else []
     new_spc_list = kwargs.get('new_spc') if kwargs.get('new_spc') else []
-    
+
     # BioProcess Class
     bio_process = BioProcess(file_name=input_file_name,
                              measurement_sheet=measurement_sheet,

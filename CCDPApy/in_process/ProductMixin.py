@@ -12,17 +12,18 @@ class ProductMixin:
     # Calculate Cumulative IgG Produced
     def cumulative_igg_prod(self, initial_conc=0):
         # IgG produced = xv(i) * v(i) - xv(i-1) * v(i-1)
-        igg = self._product_conc            # IgG concentration (10e6 cells/ml)
-        v1 = self._v_before_sampling    # Culture Volume Bfore sampling (ml)
-        v2 = self._v_after_sampling     # Culture Volume After feeding (ml)
+        idx = self._idx
+        igg = self._product_conc[idx]            # IgG concentration (10e6 cells/ml)
+        v1 = self._v_before_sampling[idx]    # Culture Volume Bfore sampling (ml)
+        v2 = self._v_after_sampling[idx]     # Culture Volume After feeding (ml)
 
         # Initialize
-        s = pd.Series(data=[initial_conc] * len(igg),
+        s = pd.Series(data=[initial_conc] * len(self._sample_num),
                       name='CUM IgG PROD. (mg)')
 
-        for i in range(1, len(igg)):
+        for i in range(1, len(idx)):
             si = igg.iat[i] * v1.iat[i] - igg.iat[i-1] * v2.iat[i-1]
-            s.iat[i] = s.iat[i-1] + si
+            s.iat[idx[i]] = s.iat[idx[i-1]] + si
         
         # Cumulative IgG Production
         self._cumulative = s / 1000 # Adjust unit to (mg)

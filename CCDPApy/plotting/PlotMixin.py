@@ -79,7 +79,7 @@ class PlotMixin:
         
         # Saving a plot as an image.
         if file_name:
-            self.__save_plot()
+            self.__save_plot(file_name=file_name)
 
         return fig
 
@@ -332,7 +332,7 @@ class PlotMixin:
 
         return 
     
-    def __save_plot(self):
+    def __save_plot(self, file_name):
         # Saving
         if (file_name):
             if '.png' not in file_name:

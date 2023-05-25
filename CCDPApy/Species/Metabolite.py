@@ -102,7 +102,10 @@ class Metabolite(Species,
         
         conc = self._conc_after_feed
         conc_after = pd.concat([t, conc.rename('CONC.')], axis=1)
-        return pd.concat([conc_before, conc_after])
+        conc = pd.concat([conc_before, conc_after]).reset_index(drop=True)
+        conc['Species'] = self._name.capitalize()
+
+        return conc.sort_values(by=['RUN TIME (HOURS)'], kind='stable').reset_index(drop=True)
         
 
     def get_cumulative_df(self):
@@ -110,8 +113,10 @@ class Metabolite(Species,
         x = np.linspace(t.iat[0], t.iat[-1], 100)
         x = pd.Series(data=x, name=t.name)
         cum = self.get_info_df(x)
-        cum[f'CUM {self._name} (mmol)'] = pd.Series(data=self._polyfit(x))
+        # cum[f'CUM {self._name} (mmol)'] = pd.Series(data=self._polyfit(x))
+        cum[f'Cumulative Prod./Cons.'] = pd.Series(data=self._polyfit(x))
         cum['Method'] = f'Poly. Reg. Order: {self._polyorder}'
+        cum['Species'] = self._name.capitalize()
         return cum
 
     def get_sp_rate_df(self, twopt=False, polyreg=False, rollreg=False):
@@ -130,26 +135,35 @@ class Metabolite(Species,
 
     def get_twopt_sp_rate_df(self):
         info_df = self.get_info_df(self._run_time_hour)
-        name = f'q{self._name} (mmol/109 cell/hr)'
+        # name = f'q{self._name} (mmol/109 cell/hr)'
+        name = f'Sp. rate'
         q = self._sp_rate.rename(name)
         q = pd.concat([info_df, q], axis=1)
+        q['Species'] = self._name
         q['Method'] = 'Two-Pt. Calc.'
         return q
     
     def get_polyreg_sp_rate_df(self):
         info_df = self.get_info_df(self._run_time_hour)
-        name = f'q{self._name} (mmol/109 cell/hr)'
+        # name = f'q{self._name} (mmol/109 cell/hr)'
+        name = f'Sp. rate'
         q = self._polyreg_sp_rate.rename(name)
         q = pd.concat([info_df, q], axis=1)
-        q['Method'] = f'Poly. Reg. Order: {self._polyorder}'
+        q['Species'] = self._name
+        q['Method'] = f'Poly. Reg.'
+        q['Order'] = self._polyorder
         return q
 
     def get_rollreg_sp_rate_df(self):
         info_df = self.get_info_df(self._run_time_mid.rename('RUN TIME (HOURS)'))
-        name = f'q{self._name} (mmol/109 cell/hr)'
+        # name = f'q{self._name} (mmol/109 cell/hr)'
+        name = f'Sp. rate'
         q = self._rollpolyreg_sp_rate.rename(name)
         q = pd.concat([info_df, q], axis=1)
-        q['Method'] = f'Roll. Reg. Order: {self._rollpolyreg_order} Window: {self._rollpolyreg_window}'
+        q['Species'] = self._name
+        q['Method'] = f'Roll. Reg.'
+        q['Order'] = self._rollpolyreg_order
+        q['Window'] = self._rollpolyreg_window
         return q
         
 

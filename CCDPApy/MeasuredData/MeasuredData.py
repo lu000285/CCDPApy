@@ -75,7 +75,7 @@ class MeasuredData(GetterMixin, PreProcessMixn):
         self.oxygen_consumed = check_key(measured_data, 'OXYGEN CONSUMED (mmol/L)').fillna(0)
         self.optical_density = check_key(measured_data, 'OPTICAL DENSITY')
         self.osmolality = check_key(measured_data, 'OSMOLALITY (mmol/kg)')
-        self.product_conc = check_key(measured_data, 'IgG CONC. (mg/L)').fillna(0)
+        self.product_conc = check_key(measured_data, 'IgG CONC. (mg/L)')
 
         # Separate feed
         self.feed_list, self.feed_data = separate_feed(feed_data=feed_info)
@@ -123,7 +123,7 @@ def separate_feed(feed_data):
     except:
         feed_data = feed_data.drop(['SAMPLE #', 'Day', 'RUN TIME (HOURS)'], axis=1)
     feed_list = [f.upper().replace(' ADDED (ML)', '') for f in feed_data.columns]
-    return (feed_list, feed_data)
+    return (feed_list, feed_data.fillna(0))
 
 def read_excel(file_name, measurement_sheet, feed_sheet):
     '''

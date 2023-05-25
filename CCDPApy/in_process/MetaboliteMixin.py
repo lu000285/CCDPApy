@@ -88,7 +88,7 @@ class MetaboliteMixin:
 
         # Consumed Substrate = sf*f + s[i-1]*v[i-1] - s[i]*v[i]
         for i in range(1, len(idx)):
-            si = (sf.iat[i] * f.iat[i-1] - s.iat[i] * v1[i] + s.iat[i-1] * v2[i-1]) / 1000
+            si = (sf.iat[i] * f.iat[i-1] - s.iat[i] * v1.iat[i] + s.iat[i-1] * v2.iat[i-1]) / 1000
             se.iat[idx[i]] = se.iat[idx[i-1]] + si
 
         # The Case that Species is Produced but Not Consumed.

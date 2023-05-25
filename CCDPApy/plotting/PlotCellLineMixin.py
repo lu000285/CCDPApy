@@ -96,7 +96,6 @@ class PlotMixin:
             sp_rate = pd.concat(sp_rate_df_lst, axis=0, ignore_index=True)#.sort_values('RUN TIME (HOURS)')
 
             # Plot Conentration
-            print(conc['CONC.'])
             set_ax = ax[i, 0] if len(spc_list) != 1 else ax[0]
             sns.lineplot(ax=set_ax, data=conc, x='RUN TIME (HOURS)', y=f'CONC.',
                          hue="Experiment ID", hue_order=exp_list,

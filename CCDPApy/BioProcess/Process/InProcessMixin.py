@@ -33,6 +33,8 @@ class InProcessMixin:
         self._product.in_process()    # Calc. cumulative
         self._product.set_method_flag(method='cumulative', flag=True) # Set cumulative flag true
 
+        
+
         # Metabolites
         data = self._process_data_dict['inpro']
         for s in self._spc_list:

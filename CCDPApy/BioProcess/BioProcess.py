@@ -9,6 +9,7 @@ from .SetterMixin import SetterMixin
 from .DispMixin import DispMixin
 from .BioProcessMixin import BioProcessMixin
 from ..plotting.PlotMixin import PlotMixin
+from ..plotting.SRatioMixin import SRatioMixin
 from CCDPApy.MeasuredData.MeasuredData import MeasuredData
 from ..Species.Cell import Cell
 from ..Species.Oxygen import Oxygen
@@ -30,7 +31,8 @@ class BioProcess(InProcessMixin,
                  GetterMixin,
                  SetterMixin,
                  DispMixin,
-                 PlotMixin):
+                 PlotMixin,
+                 SRatioMixin):
     '''
     Store cellular bioprocess information.
 
