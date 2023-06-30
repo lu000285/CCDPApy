@@ -12,12 +12,13 @@ class OxygenTwoPtMixin:
                                            axis=1)
 
     # SP. Oxygen Uptake Rate
-    def sp_our(self):
+    '''def sp_our(self):
         # our: OUR in Measured Data
         self._sp_our = (self._our / self._xv).rename('SP. OUR (mmol/109 cells/hr)')
+    '''
 
     # SP. Oxygen Consumption Rate
-    def sp_oxy_cons_rate(self):
+    '''def sp_oxy_cons_rate(self):
         t = self._run_time_hour                 # t: run time (hrs)
         v1 = self._v_before_sampling            # v1: culture volume before sampling (mL)
         v2 = self._v_after_sampling             # v2: culture volume after sampling (mL)
@@ -32,7 +33,7 @@ class OxygenTwoPtMixin:
                 r.iat[i] = x / 1000 / y *1000000000
             else:
                 r.iat[i] = rate.iat[i]
-        self._sp_rate = r
+        self._sp_rate = r'''
 
     # getters
     def get_sp_OUR(self):

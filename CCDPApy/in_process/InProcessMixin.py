@@ -1,57 +1,48 @@
 import pandas as pd
 
-from ...Species.Metabolite import Metabolite2
+from ..Species.Metabolite import Metabolite2
 
 class InProcessMixin:
     '''
     Mixin class for BioProcess class to do in-processing.
-
     Methods
     -------
 
     '''
-    def inprocess(self, use_feed_conc, use_conc_after_feed):
+    def in_process(self, feed_concentration, concentration_after_feed):
         '''
         Calculate cumulative consumptions/productions for species.
 
         Parameters
         ----------
-            use_feed_conc : bool
+            feed_concentration : bool
                 Set True if measured data has measurements of feed concentrations for species.
-            use_conc_after_feed : bool
+            concentration_after_feed : bool
                 Set Treu if measured data has masurements of concentraions after feeding for species.
         '''
-        # Celll
-        self._cell.in_process()   # Calc. cumulative
-        self._cell.set_method_flag(method='cumulative', flag=True)    # Set cumulative flag true
+        species = self._spc_dict
+        species_list = self._spc_list
 
-        # Oxygen
-        self._oxygen.in_process() # Calc. cumulative
-        self._oxygen.set_method_flag(method='cumulative', flag=True)  # Set cumulative flag true
+        for s in ["cell", "oxygen", "product"]:
+             species[s.upper()].in_process()
+             species[s.upper()].set_method_flag(method='cumulative', flag=True)
 
-        # Product/IgG
-        self._product.in_process()    # Calc. cumulative
-        self._product.set_method_flag(method='cumulative', flag=True) # Set cumulative flag true
-
-        
-
-        # Metabolites
-        data = self._process_data_dict['inpro']
-        for s in self._spc_list:
-            s = s.upper()   # Name
-            spc = self._spc_dict[s] # Species object
-            
-            # Calculate Cumulative Consumption/Production
-            spc.in_process(use_feed_conc=use_feed_conc, use_conc_after_feed=use_conc_after_feed)
+        # data = self._process_data_dict['inpro']
+        for s in species_list:
+            spc = species[s.upper()] # Species object
+            spc.in_process(feed_concentration=feed_concentration, 
+                           concentration_after_feed=concentration_after_feed)
             spc.set_method_flag(method='cumulative', flag=True) # Set Flag True
-            unit = spc.get_cumulative_unit()    # Unit
+            # unit = spc.get_cumulative_unit    # Unit
             
-            data['CUM '+s+' '+unit] = spc.get_cumulative()
-            self._spc_conc_df[s+' (mM) (before Feed)'] = spc.get_conc_before_feed()
-            self._conc_after_feed_df[s+' (mM) (After Feed)'] = spc.get_conc_after_feed()
+            '''
+            data['CUM '+s+' '+unit] = spc.get_cumulative
+            self._spc_conc_df[s+' (mM) (before Feed)'] = spc.get_concentration_before_feed()
+            self._conc_after_feed_df[s+' (mM) (After Feed)'] = spc.get_concentration_after_feed()
+            '''
 
         # Cumulative for Nitrogen, and AA Carbon
-        self.__cumulative_others()
+        # self.__cumulative_others()
 
         # Set in process flag True
         self.set_process_flag(process='inpro', flag=True)
@@ -69,27 +60,27 @@ class InProcessMixin:
 
             df = self.get_process_data(method='inpro')
             
-            ala = self._spc_dict['Alanine'.upper()].get_cumulative()
-            arg = self._spc_dict['Arginine'.upper()].get_cumulative()
-            asn = self._spc_dict['Asparagine'.upper()].get_cumulative()
-            asp = self._spc_dict['Aspartate'.upper()].get_cumulative()
-            cyt = self._spc_dict['Cystine'.upper()].get_cumulative()
-            gln = self._spc_dict['Glutamine'.upper()].get_cumulative()
-            glu = self._spc_dict['Glutamate'.upper()].get_cumulative()
-            gly = self._spc_dict['Glycine'.upper()].get_cumulative()
-            his = self._spc_dict['Histidine'.upper()].get_cumulative()
-            iso = self._spc_dict['Isoleucine'.upper()].get_cumulative()
-            leu = self._spc_dict['Leucine'.upper()].get_cumulative()
-            lys = self._spc_dict['Lysine'.upper()].get_cumulative()
-            met = self._spc_dict['Methionine'.upper()].get_cumulative()
-            nh3 = self._spc_dict['NH3'.upper()].get_cumulative()
-            phe = self._spc_dict['Phenylalanine'.upper()].get_cumulative()
-            pro = self._spc_dict['Proline'.upper()].get_cumulative()
-            ser = self._spc_dict['Serine'.upper()].get_cumulative()
-            thr = self._spc_dict['Threonine'.upper()].get_cumulative()
-            tryp = self._spc_dict['Tryptophan'.upper()].get_cumulative()
-            tyr = self._spc_dict['Tyrosine'.upper()].get_cumulative()
-            val = self._spc_dict['Valine'.upper()].get_cumulative()
+            ala = self._spc_dict['Alanine'.upper()].get_cumulative
+            arg = self._spc_dict['Arginine'.upper()].get_cumulative
+            asn = self._spc_dict['Asparagine'.upper()].get_cumulative
+            asp = self._spc_dict['Aspartate'.upper()].get_cumulative
+            cyt = self._spc_dict['Cystine'.upper()].get_cumulative
+            gln = self._spc_dict['Glutamine'.upper()].get_cumulative
+            glu = self._spc_dict['Glutamate'.upper()].get_cumulative
+            gly = self._spc_dict['Glycine'.upper()].get_cumulative
+            his = self._spc_dict['Histidine'.upper()].get_cumulative
+            iso = self._spc_dict['Isoleucine'.upper()].get_cumulative
+            leu = self._spc_dict['Leucine'.upper()].get_cumulative
+            lys = self._spc_dict['Lysine'.upper()].get_cumulative
+            met = self._spc_dict['Methionine'.upper()].get_cumulative
+            nh3 = self._spc_dict['NH3'.upper()].get_cumulative
+            phe = self._spc_dict['Phenylalanine'.upper()].get_cumulative
+            pro = self._spc_dict['Proline'.upper()].get_cumulative
+            ser = self._spc_dict['Serine'.upper()].get_cumulative
+            thr = self._spc_dict['Threonine'.upper()].get_cumulative
+            tryp = self._spc_dict['Tryptophan'.upper()].get_cumulative
+            tyr = self._spc_dict['Tyrosine'.upper()].get_cumulative
+            val = self._spc_dict['Valine'.upper()].get_cumulative
 
             # Check the length for data
             x = len(ala) + len(arg) + len(asn) + len(asp) + len(cyt)

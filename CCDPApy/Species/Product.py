@@ -1,15 +1,17 @@
+import numpy as np
+
 from .Species import Species
 from ..in_process.ProductMixin import ProductMixin
-from ..post_process.two_point_calc.ProductMixin import ProductTwoptMixn
-from ..post_process.polynomial_regression.PolyRegMixin import PolyRegMixin
+from ..post_process.polynomial.ProductMixin import ProductMixin as Polynomial
+from ..post_process.rolling_window_polynomial.ProductMixin import ProductMixin as Rolling
 
 ###########################################################################
 # Product Mixin Class
 ###########################################################################
 class Product(Species,
               ProductMixin,
-              ProductTwoptMixn,
-              PolyRegMixin):
+              Polynomial,
+              Rolling):
     '''
     Product/IgG class.
 
@@ -33,6 +35,18 @@ class Product(Species,
         # Constructor for Species
         super().__init__(name=name, measured_data=measured_data)
 
+        # Work with parameters
+        df = measured_data.param_df
+        conc = df['IgG_(mg/L)']
+        idx = conc[conc.notnull()].index  # Measurent Index
+        t = df['run_time_(hrs)'].values[idx]    # original run time (hour)
+
+        # Calculate Mid Time from Original Run time
+        time_mid = np.array([0.5 * (t[i] + t[i+1]) for i in range(len(t)-1)])
+
         # Class Members
-        # Measurent Index
-        self._idx = self._product_conc[self._product_conc.notnull()].index
+        self._idx = idx
+        self._run_time_mid = time_mid
+        self._conc = conc
+        
+

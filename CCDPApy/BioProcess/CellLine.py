@@ -2,11 +2,12 @@ import pandas as pd
 
 from ..helper_func.helper_func import output_path
 from ..plotting.PlotCellLineMixin import PlotMixin
+from ..plotting.InteractivePlot import InteractivePlotMixin
 
 ###########################################################################
 # Cell Line Class
 ###########################################################################
-class CellLine(PlotMixin):
+class CellLine(PlotMixin, InteractivePlotMixin):
     def __init__(self):
         self._cell_line_list = []   # List of cell lines
         self._cell_line_dict = {}   # Dict of cell lines
@@ -36,13 +37,11 @@ class CellLine(PlotMixin):
         exp_dict[exp_id] = bio_process
         self._cell_line_dict[cl_name] = exp_dict
 
-    # Get Cell Line list
     def get_cell_line_list(self):
         '''Retuern list of cell line names stored in CellLine class.
         '''
         return self._cell_line_list
         
-    # Get Cell Line Dict
     def get_cell_line(self, cl_name):
         '''
         Return dictionary of BioProcess object stored in CellLine class.
@@ -54,7 +53,6 @@ class CellLine(PlotMixin):
         '''
         return self._cell_line_dict[cl_name]
 
-    # Display
     def disp_cell_lines(self):
         '''Display Cell Line Name and Experiment ID stored in CellLine Class.
         '''
@@ -65,7 +63,6 @@ class CellLine(PlotMixin):
                 print(f'Experiment {i+1}: {exp_id}')
 
 
-    # Save Excell
     def save_excel(self, cell_line, file_name):
         '''
         Save each bioprocess data in the same cell line as an Excel file.
@@ -90,7 +87,6 @@ class CellLine(PlotMixin):
                 sheet = cl.get_exp_id()
                 cl.get_bioprocess_df().to_excel(writer, sheet_name=sheet, index=False)
             print(file_name + ' saved')
-
 
 
     # Save Excell for Rolling Regression
@@ -118,3 +114,18 @@ class CellLine(PlotMixin):
                 sheet = cl.get_exp_id()
                 cl.get_process_data('rollreg').to_excel(writer, sheet_name=sheet, index=False)
             print(file_name + ' saved')
+
+    def get_plot_data(self):
+        '''Return In-Process and Post-Process data for a plot.'''
+        df_list = []
+        cell_line_lst = self._cell_line_list
+        cell_line = self._cell_line_dict
+
+        for cl_name in cell_line_lst:
+            cl = cell_line[cl_name]
+            for bio_process in cl.values():
+                df1 = bio_process.get_in_process_data()
+                df2 = bio_process.get_post_process_data()
+                df_list.append(df1)
+                df_list.append(df2)
+        return pd.concat(df_list, axis=0).reset_index(drop=True)

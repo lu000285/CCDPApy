@@ -8,17 +8,17 @@ class CellMixnTwoPt:
     '''
     # Call methods
     def post_process_twopt(self):
-        self.sp_growth_rate()
-        self.kd()
-        self.mv()
+        # self.sp_growth_rate()
+        #self.kd()
+        #self.mv()
 
-        self._post_data_twopt = pd.concat([self._sp_growth_rate,
+        '''self._post_data_twopt = pd.concat([self._sp_growth_rate,
                                            self._mv,
                                            self._kd],
-                                           axis=1)
+                                           axis=1)'''
     
     # Calculates Specific growth rate
-    def sp_growth_rate(self):
+    '''def sp_growth_rate(self):
         t = self._run_time_hour         # run time (hrs)
         s = self._cumulative            # Cumulative Cell Concentraion (10e6 cells/mL)
         v1 = self._v_before_sampling    # Culture Volume Before Sampling (mL)
@@ -34,10 +34,10 @@ class CellMixnTwoPt:
 
         # SP. Rate
         self._sp_growth_rate = rate
-        self._sp_rate = rate
+        self._sp_rate = rate'''
 
     # Calculates kd value
-    def kd(self):
+    '''def kd(self):
         xd = self._xd                   # Dead Cell Concentration (10e6 cells/mL)
         t = self._run_time_hour         # Run Time (hrs)
         v1 = self._v_before_sampling    # Culture Volume Before Sampling (mL)
@@ -54,10 +54,10 @@ class CellMixnTwoPt:
 
     # Calculate mv
     def mv(self):
-        self._mv = (self._sp_growth_rate + self._kd).rename('mv')
+        self._mv = (self._sp_growth_rate + self._kd).rename('mv')'''
 
     # getters
-    def get_kd(self):
+    '''def get_kd(self):
         return self._kd
 
     def get_sp_growth_rate(self):
@@ -71,6 +71,6 @@ class CellMixnTwoPt:
 
     def disp_post_data_twopt(self):
         print('\n************ Cell Post Process Data -Two Point Calc. ************')
-        print(self._post_data_twopt)
+        print(self._post_data_twopt)'''
 
 ###########################################################################

@@ -1,7 +1,22 @@
 import pandas as pd
 import numpy as np
-import os
+import os, re
 from pathlib import Path
+
+###########################################################################
+def get_unit(string):
+    pattern = r"\((.*?)\)"  # Matches the content within parentheses. E.g. (mL)
+
+    match = re.search(pattern, string)
+    if match:
+        content_within_parentheses = match.group(1)
+        # Remove parentheses and their contents from the original string
+        # string_without_parentheses = re.sub(pattern, "", string).strip()
+    else:
+        content_within_parentheses = ''
+        # string_without_parentheses = string
+
+    return content_within_parentheses
 
 ###########################################################################
 # Check Error for Pandas

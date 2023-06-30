@@ -1,5 +1,3 @@
-import pandas as pd
-
 from .BioProcess import BioProcess
 
 ###########################################################################
@@ -78,18 +76,18 @@ def bioprocess_pipeline(input_file_name,
                              new_spc_list=new_spc_list)
 
     #****** In Process -Cumulative Cons/Prod ******
-    bio_process.inprocess(use_feed_conc=True if (kwargs.get('use_feed_conc')) else False,
-                          use_conc_after_feed=True if (kwargs.get('use_conc_after_feed')) else False)
-    print('In-Process Done.')
+    bio_process.inprocess(feed_concentraion=True if (kwargs.get('use_feed_conc')) else False,
+                          concentration_after_feed=True if (kwargs.get('use_conc_after_feed')) else False)
+    #print('In-Process Done.')
 
     #***** Post Process -SP. Rate Two Point Calc ******
     bio_process.two_pt_calc()
-    print('Two-Point Calculations. Done.')
+    #print('Two-Point Calculations. Done.')
 
     #***** Post Process -SP. Rate Poly. Regression *****
     if (kwargs.get('polyreg') or kwargs.get('all_method')):
         bio_process.poly_regression(polyorder_file=kwargs.get('polyorder_file'))
-        print('Polynomial Regression. Done')
+        #print('Polynomial Regression. Done')
 
     #***** Post Process -SP. Rate Rolling Poly. Regression *****
     if (kwargs.get('rollreg') or kwargs.get('all_method')):
@@ -97,7 +95,7 @@ def bioprocess_pipeline(input_file_name,
         window = kwargs.get('rollreg_window') if kwargs.get('rollreg_window') else 6
 
         bio_process.roll_regression(order=order, windows=window)
-        print('Rolling Regression. Done.')
+        #print('Rolling Regression. Done.')
 
     return bio_process
 

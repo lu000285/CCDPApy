@@ -1,18 +1,17 @@
 import pandas as pd
+import numpy as np
 
 from .Species import Species
 from ..in_process.CellMixin import CellMixin
-from ..post_process.two_point_calc.CellMixin import CellMixnTwoPt
-from ..post_process.polynomial_regression.CellMixin import CellMixinPolyReg
-from ..post_process.rolling_regression.LogisticGrowthMixin import LogisticGrowthMixin
+from ..post_process.polynomial.CellMixin import CellMixin as Polynomial
+from ..post_process.rolling_window_polynomial.LogisticGrowthMixin import LogisticGrowthMixin
 
 ###########################################################################
 # Cell
 ###########################################################################
 class Cell(Species,
            CellMixin,
-           CellMixnTwoPt,
-           CellMixinPolyReg, 
+           Polynomial, 
            LogisticGrowthMixin):
     '''
     Cell class.
@@ -41,33 +40,22 @@ class Cell(Species,
         # Constructor for Spcies Class
         super().__init__(name=name, measured_data=measured_data)
 
-        # Members
-        self._idx = self._xv[self._xv.notnull()].index
+        # Work with parameters
+        df = measured_data.param_df
+        xd = df['dead_cell_conc_(10^6_cells/mL)']
+        xt = df['total_cell_conc_(10^6_cells/mL)']
+        viab = df['viability_(%)']
+        
+        xv = self._xv
+        idx = xv[xv.notnull()].index  # Indices of measurements
+        t = df['run_time_(hrs)'].values[idx]    # original run time (hour)
 
-        # Calculate run time middle
-        self._runtime_mid_calc()
-
-    
-    # Private method
-    def _runtime_mid_calc(self):
-        '''
-        Mid-point calculation of conc. and run time
-
-        Parameters
-        ----------
-            idx : 
-                measurements index.
-            t : 
-                run time (hrs).
-            t_mid :
-                midpoints run time (hrs).
-        '''
-        idx = self._idx # Measurement index
-        t = self._run_time_hour[idx] # original run time (hour)
-        t_mid = pd.Series(data=[pd.NA] * (len(t)-1),
-                            name='RUN TIME MID (HOURS)')
         # Calculate Mid Time from Original Run time
-        for i in range(len(t_mid)):
-            t_mid.iat[i] = (t.iat[i] + t.iat[i+1])/2
+        time_mid = np.array([0.5 * (t[i] + t[i+1]) for i in range(len(t)-1)])
 
-        self._run_time_mid = t_mid
+        # Class Members
+        self._idx = idx
+        self._run_time_mid = time_mid
+        self._xd = xd
+        self._xt = xt
+        self._viability = viab

@@ -4,7 +4,7 @@ import numpy as np
 
 # My Libraries
 from ..helper_func.helper_func import check_key
-from ..helper_func.helper_func import input_path
+from ..helper_func.helper_func import input_path, get_unit
 from .GetterMixin import GetterMixin
 from ..pre_process.PreProcessMixin import PreProcessMixn
 
@@ -37,64 +37,26 @@ class MeasuredData(GetterMixin, PreProcessMixn):
         feed_data : pandas.DataFrame
             Separate feed information.
         '''
-        # Read adn get DataFrame for measured data, and experimtent and separate feed information.
-        measured_data, exp_info, feed_info = read_excel(file_name=file_name,
+        # Read and get DataFrame for measured data, and experimtent and separate feed information.
+        data_df, exp_info, feed_info = read_excel(file_name=file_name,
                                                         measurement_sheet=measurement_sheet,
                                                         feed_sheet=feed_sheet)
-        self.data_df = measured_data # measured data DataFrame
+        self.exp_info = exp_info
+        
+        # Experiment information
+        self._initial_volume = exp_info['initial_volume'].to_numpy()[0]
+        self._unit = exp_info['unit'].to_string(index=False)
 
-        # Experoment Infomation Members
-        self.exp_id = exp_info.loc['Experiment ID'].get(1)
-        self.exp_name = exp_info.loc['Name'].get(1)
-        self.cell_line_name = exp_info.loc['Cell Line'].get(1)
-        self.initial_v = float(exp_info.loc['Initial Volume (mL)'].get(1))
-
-        # Experimental Data
-        self.sample_num = check_key(measured_data, 'SAMPLE #')  # Sample Number
-
-        # Time
-        self.date = check_key(measured_data, 'DATE')
-        self.time = check_key(measured_data, 'TIME')
-        self.run_time_day = check_key(measured_data, 'Day')
-        self.run_time_hour = check_key(measured_data, 'RUN TIME (HOURS)')
-
-        # Culture and Feed Media Volume
-        self.base_added = check_key(measured_data, 'BASE ADDED (mL)').fillna(0)
-        self.sample_volume = check_key(measured_data, 'SAMPLE VOLUME (mL)').fillna(0)
-        self.feed_media_added = check_key(measured_data, 'FEED MEDIA ADDED (mL)').fillna(0)
-
-        # Experimental Cell, Oxygen, and IgG/Product Data
-        self.xv = check_key(measured_data, 'VIABLE CELL CONC. XV (x106 cells/mL)').fillna(0)  # xv: Viable Cell Concentration
-        self.xd = check_key(measured_data, 'DEAD CELL CONC. Xd (x106 cells/mL)').fillna(0)    # xd: Dead Cell Concentraion
-        self.xt = check_key(measured_data, 'TOTAL CELL CONC. Xt (x106 cells/mL)').fillna(0)   # xt: Total Cell Concentraion
-        self.viability = check_key(measured_data, 'VIABILITY (%)')
-        self.pH = check_key(measured_data, 'pH')
-        self.do = check_key(measured_data, 'DO (%)')
-        self.our = check_key(measured_data, 'OUR (mmol/L/hr)').fillna(0)
-        self.oxygen_consumption_rate = check_key(measured_data, 'SP. OXYGEN CONSUMPTION RATE (mmol/109cell/hr)').fillna(0)
-        self.oxygen_consumed = check_key(measured_data, 'OXYGEN CONSUMED (mmol/L)').fillna(0)
-        self.optical_density = check_key(measured_data, 'OPTICAL DENSITY')
-        self.osmolality = check_key(measured_data, 'OSMOLALITY (mmol/kg)')
-        self.product_conc = check_key(measured_data, 'IgG CONC. (mg/L)')
+        # Measurement information
+        c_before_feed_df, c_after_feed_df, feed_c_df, cum_c_df, param_df = data_df
+        self.c_before_feed_df = c_before_feed_df
+        self.c_after_feed_df = c_after_feed_df
+        self.feed_c_df = feed_c_df
+        self.cum_c_df = cum_c_df
+        self.param_df = param_df
 
         # Separate feed
         self.feed_list, self.feed_data = separate_feed(feed_data=feed_info)
-
-        # Variables Used in In Process
-        n = len(self.sample_num) # Number of Samples        
-        self.v_before_sampling = pd.Series(data=[0.0] * n, name='VOLUME BEFORE SAMPLING (mL)')
-        self.v_after_sampling = pd.Series(data=[0.0] * n, name='VOLUME AFTER SAMPLING (mL)')
-        self.v_after_feeding = pd.Series(data=[0.0] * n, name='VOLUME AFTER FEEDING (mL)')
-        #self.feed_status = pd.Series(data=np.nan * n, name='Feed Status')
-
-        # For CL3
-        ########################################################################
-        if self.cell_line_name=='Merck':
-            x = [1935.00, 1920.00, 1905.00, 1876.00, 1861.00, 1872.48, 1883.78, 1895.81, 1920.96, 1918.81, 1862.81, 1853.06, 1808.22, 1802.39, 1800.22]
-            self.v_before_sampling = pd.Series(data=x, name='VOLUME BEFORE SAMPLING (mL)')
-            self.v_after_sampling = pd.Series(data=x, name='VOLUME AFTER SAMPLING (mL)')
-            self.v_after_feeding = pd.Series(data=x, name='VOLUME AFTER FEEDING (mL)')
-        ########################################################################
 
         # Pre Process Data DF
         self.pre_data = pd.DataFrame()
@@ -118,11 +80,13 @@ def separate_feed(feed_data):
         feed_data : pandas.DataFrame
         feed_list : list of str
     '''
-    try:
-        feed_data = feed_data.drop(['SAMPLE #', 'DATE', 'TIME'], axis=1)
-    except:
-        feed_data = feed_data.drop(['SAMPLE #', 'Day', 'RUN TIME (HOURS)'], axis=1)
-    feed_list = [f.upper().replace(' ADDED (ML)', '') for f in feed_data.columns]
+    if 'date' in feed_data and 'time' in feed_data:
+        feed_data = feed_data.drop(['samples', 'date', 'time'], axis=1)
+
+    if 'day' in feed_data and 'run_time_(hrs)' in feed_data:
+        feed_data = feed_data.drop(['samples', 'day', 'run_time_(hrs)'], axis=1)
+    feed_list = [f.upper().replace('_ADDED_(ML)', '') for f in feed_data.columns]
+
     return (feed_list, feed_data.fillna(0))
 
 def read_excel(file_name, measurement_sheet, feed_sheet):
@@ -137,16 +101,91 @@ def read_excel(file_name, measurement_sheet, feed_sheet):
     Returns
     -------
         (measured_data, exp_info, feed_info) : python tupple
-            DataFrame for measured data, experiment information, and separeate feed informaiton.
+            Pandas DataFrame of the measured data, experiment information, and separeate feed informaiton.
     '''
     # Get File Path to input_files directory.
     file_path = input_path(file_name=file_name)
     # Read Measured Data
     measured_data = pd.read_excel(io=file_path, sheet_name=measurement_sheet, header=5)
+    # Split parameters into concentrations and others
+    for i, col in enumerate(measured_data.columns):
+        if "IgG CONC. (mg/L)" in col:
+            split_idx = i
+            break
+        else:
+            split_idx = 18
+    param_index = measured_data.columns[:split_idx+1]
+    conc_index = measured_data.columns[split_idx+1:]
+    # Separate measured data into concetnration data and other parameter data
+    # Concentrations before feed
+    c_before_feed_indices = [idx for idx, col in enumerate(conc_index) if 'CONC' in col and not '.1' in col and not 'FEED' in col]
+    c_before_feed_df = measured_data[conc_index[c_before_feed_indices]].copy()
+    c_before_feed_df.columns = [col.replace(' CONC. ', '_') for col in c_before_feed_df.columns]
+    # Concentrations after feed
+    c_after_feed_indices = [idx for idx, col in enumerate(conc_index) if 'CONC' in col and '.1' in col]
+    c_after_feed_df = measured_data[conc_index[c_after_feed_indices]].copy()
+    c_after_feed_df.columns = [col.replace(' CONC. ', '_').replace('.1', '') for col in c_after_feed_df.columns]
+    # Feed concentrations
+    feed_c_indices = [idx for idx, col in enumerate(conc_index) if 'FEED' in col and 'CONC' in col]
+    feed_c_df = measured_data[conc_index[feed_c_indices]].copy()
+    feed_c_df.columns = [col.replace(' CONC. ', '_').replace('FEED ', '') for col in feed_c_df.columns]
+    # Cumulative concentrations
+    cum_c_indices = [idx for idx, col in enumerate(conc_index) if 'CUM' in col]
+    cum_c_df = measured_data[conc_index[cum_c_indices]].copy()
+    cum_c_df.columns = [col.replace('CUM ', '').replace(' ', '_') for col in cum_c_df.columns]
+    # Other parameter data
+    param_df = measured_data[param_index].copy()
+    param_df = param_df.rename(columns={'SAMPLE #': 'samples',
+                                        'SAMPLE VOLUME (mL)': 'sample_volume_(mL)',
+                                        'VOLUME AFTER SAMPLING (mL)': 'volume_after_sampling_(mL)',
+                                        'FEED MEDIA ADDED (mL)': 'feed_media_added_(mL)', 
+                                        'BASE ADDED (mL)': 'base_added_(mL)',
+                                        'VIABLE CELL CONC. XV (x106 cells/mL)': 'viable_cell_conc_(10^6_cells/mL)',
+                                        'DEAD CELL CONC. Xd (x106 cells/mL)': 'dead_cell_conc_(10^6_cells/mL)',
+                                        'TOTAL CELL CONC. Xt (x106 cells/mL)': 'total_cell_conc_(10^6_cells/mL)',
+                                        'VIABILITY (%)': 'viability_(%)',
+                                        'pH': 'ph',
+                                        'DO (%)': 'do_(%)',
+                                        'OUR (mmol/L/hr)': 'our_(mmol/L/hr)', 
+                                        'SP. OXYGEN CONSUMPTION RATE (mmol/109cell/hr)': 'sp_oxygen_consumption_rate_(mmol/10^9_cells/hr)',
+                                        'OXYGEN CONSUMED (mmol/L)': 'oxygen_consumed_(mmol/L)',
+                                        'OPTICAL DENSITY': 'optical_density',
+                                        'OSMOLALITY (mmol/kg)': 'osmolality_(mmol/kg)',
+                                        'IgG CONC. (mg/L)': 'IgG_(mg/L)'})
+    if 'DATE' in param_df:
+        param_df = param_df.rename(columns={'DATE': 'date'})
+    if 'TIME' in param_df:
+        param_df = param_df.rename(columns={'TIME': 'time'})
+    if 'Day' in param_df:
+        param_df = param_df.rename(columns={'Day': 'run_time_(days)'})
+    if 'RUN TIME (HOURS)' in param_df:
+        param_df = param_df.rename(columns={'RUN TIME (HOURS)': 'run_time_(hrs)'})
+    
     # Read Experiment Info
-    exp_info = pd.read_excel(io=file_path, sheet_name=measurement_sheet, nrows=4, usecols=[0, 1], header=None, index_col=0)
-    # Read Separate Feed Info
-    feed_info = pd.read_excel(io=file_path, sheet_name=feed_sheet)
-    print(f'{file_name} imported.')
+    exp_info = pd.read_excel(io=file_path, sheet_name=measurement_sheet, nrows=4, usecols=[0, 1], header=None, index_col=0).T
+    for col in exp_info.columns:
+        if "Volume" in col:
+            init_vol_org = col
+            unit = get_unit(col)
+    exp_info = exp_info.rename(columns={'Cell Line': 'cell_line', 
+                                        'Experiment ID': 'exp_id', 
+                                        'Name': 'name',
+                                        init_vol_org: 'initial_volume'})
+    exp_info['unit'] = unit
+    exp_info['initial_volume'] = exp_info['initial_volume'].astype('float64')
 
-    return (measured_data, exp_info, feed_info)
+    # Read Separate Feed Info
+    feed_info = pd.read_excel(io=file_path, sheet_name=feed_sheet).rename(columns={'SAMPLE #': 'samples'})
+    if 'DATE' in feed_info:
+        feed_info = feed_info.rename(columns={'DATE': 'date'})
+    if 'TIME' in feed_info:
+        feed_info = feed_info.rename(columns={'TIME': 'time'})
+    if 'Day' in feed_info:
+        feed_info = feed_info.rename(columns={'Day': 'run_time_(days)'})
+    if 'RUN TIME (HOURS)' in feed_info:
+        feed_info = feed_info.rename(columns={'RUN TIME (HOURS)': 'run_time_(hrs)'})
+    feed_info.columns = [col.replace(" ", "_") for col in feed_info.columns]
+
+    # print(f'{file_name} imported.')
+
+    return (c_before_feed_df, c_after_feed_df, feed_c_df, cum_c_df, param_df), exp_info, feed_info

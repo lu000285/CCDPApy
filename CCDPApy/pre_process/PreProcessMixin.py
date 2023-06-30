@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 ###########################################################################
@@ -21,49 +22,64 @@ class PreProcessMixn:
         '''
         Calculate run time (day, hour) from Meaured Data.
         '''
-        if (not self.run_time_hour.any() and not self.run_time_day.any()):
+        df = self.param_df
 
-            try: # If TIME is Timestamp('2019-08-23 13:11:00') 
-                self.run_time_hour = (self.time - self.time.iat[0]).apply(lambda x: x.total_seconds() / 3600)
-            except:
-                # Change DATE and TIME to String
-                day_str = self.date.dt.strftime('%x ')
-                time_str = self.time.apply(lambda x: x.strftime('%X'))
-                # Combine DATE and TIME Strings, then Change the DataType to datetime
-                dt = pd.to_datetime(day_str + time_str)
-                # Calculate Run Time (Hour)
-                self.run_time_hour = (dt - dt.iat[0]).apply(lambda x: x.total_seconds() / 3600)
+        if 'date' in df and 'time' in df:
+            # Check if date is datetime object
+            if pd.api.types.is_datetime64_any_dtype(df['date']):
+                df['date'] = df['date'].apply(lambda x: x.date())
+            # Check if time is datetime object
+            if pd.api.types.is_datetime64_any_dtype(df['time']):
+                df['time'] = df['time'].apply(lambda x: x.time())
 
-            # Calculate Run Time (Day)
-            self.run_time_day = self.run_time_hour / 24
-
-            # Rename
-            self.run_time_day = self.run_time_day.rename('RUN TIME (DAYS)')
-            self.run_time_hour = self.run_time_hour.rename('RUN TIME (HOURS)')
+            # Create the datetime column from date and time
+            t = pd.to_datetime(df['date'].astype(str) + ' ' + df['time'].astype(str))
+            run_time_hour = (t - t.at[0]).apply(lambda t: t.total_seconds() / 3600.0)
+            run_time_day = (run_time_hour / 24.0)
+            insert_idx = df.columns.get_loc('time') + 1
+            df.insert(insert_idx, column='run_time_(hrs)', value=run_time_hour)
+            df.insert(insert_idx, column='run_time_(days)', value=run_time_day)
 
 
     def culture_volume(self):
         '''
         Calculate culture volume before/after sampling and after feeding from Meaured Data.
         '''
-        n = len(self.sample_num) # Number of Samples
-        # Initial Volume
-        self.v_before_sampling.iat[0] = self.initial_v
+        df = self.param_df
+        samples = df['samples'].size
+        v_before_sampling = np.zeros(samples)
+        v_after_feeding = np.zeros(samples)
+        v_after_sampling = df.pop('volume_after_sampling_(mL)')
 
-        # Added Supplements Volume
-        # base + feed media + feed 
-        supplements_added = self.base_added + self.feed_media_added + self.feed_data.sum(axis=1)
+        if v_after_sampling.isna().all():
+            v_after_sampling = np.zeros(samples)
+            sample_volume = df['sample_volume_(mL)'].fillna(0).values
+            v_before_sampling[0] = self._initial_volume
 
-        for i in range(n):
-            # Volume After Sampling
-            self.v_after_sampling.iat[i] = self.v_before_sampling.iat[i] - self.sample_volume.iat[i]
-                        
-            # Volume After Feeding
-            self.v_after_feeding.iat[i] = self.v_after_sampling.iat[i] + supplements_added.iat[i]
-            
-            # Volume Before Sampling
-            if (i < n-1):
-                self.v_before_sampling.iat[i+1] = self.v_after_feeding.iat[i]
+            # Added Supplements Volume; base + feed media + feed
+            base_added = df['base_added_(mL)'].fillna(0).values
+            feed_media_added = df['feed_media_added_(mL)'].fillna(0).values
+            feed_sum = self.feed_data.fillna(0).sum(axis=1).values
+            supplements_added = base_added + feed_media_added + feed_sum
 
+            for i in range(samples):
+                # Volume After Sampling
+                v_after_sampling[i] = v_before_sampling[i] - sample_volume[i]
+                            
+                # Volume After Feeding
+                v_after_feeding[i] = v_after_sampling[i] + supplements_added[i]
+                
+                # Volume Before Sampling
+                if (i < samples-1):
+                    v_before_sampling[i+1] = v_after_feeding[i]
+
+        else:
+            x = v_after_sampling.values
+            v_before_sampling = x
+            v_after_feeding = x
+
+        df['volume_before_sampling_(mL)'] = v_before_sampling
+        df['volume_after_feeding_(mL)'] = v_after_feeding
+        df['volume_after_sampling_(mL)'] = v_after_sampling
 # End PreProcessMixin
 

@@ -7,14 +7,14 @@ class DispMixin:
     -------
         disp_data(exp_info, process=[], spc=[])
     '''
-    def disp_data(self, exp_info, process=[], spc=[]):
+    def disp_data(self, exp_info=False, process=[], spc=[]):
         '''
         Display data.
         Display the experiment information, pre-processed data, in-processed data, and post-processed data.
 
         Parameters
         ----------
-            exp_info : bool
+            exp_info : bool, default=Fasle, optional
                 pass true to display experiment information.
             process : str, list of str, default=[None], optional
                 process name.
@@ -50,21 +50,17 @@ class DispMixin:
     def __disp_experiment(self):
             '''Display experiment information.
             '''
-            cell_line = self._md.cell_line_name
-            exp_id = self._md.exp_id
-            experimenter_name = self._md.exp_name
-            initial_volume = self._md.initial_v
             print('\n************ Experiment Information ************')
-            print(f'Cell Line:              {cell_line}')
-            print(f'Experiment ID:          {exp_id}')
-            print(f'Experimenter Name:      {experimenter_name}')
-            print(f'Initial Culture Volume: {initial_volume} (mL)')
+            print(f'Cell Line:              {self._cell_line}')
+            print(f'Experiment ID:          {self._exp_id}')
+            print(f'Experimenter Name:      {self._experimenter_name}')
+            print(f'Initial Culture Volume: {self._initial_volume} ({self._unit})')
             print('Separate Feed List:')
             print(self._md.feed_list)
-            print('Metabolite List:')
+            print('Species List:')
             print(self._spc_list)
             if self._spc_list_2:
-                print('Other Metabolite List:')
+                print('Other Species List:')
                 print(self._spc_list_2)
 
     def __disp_pre_process(self):

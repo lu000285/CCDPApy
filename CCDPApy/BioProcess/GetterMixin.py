@@ -3,40 +3,93 @@ import pandas as pd
 class GetterMixin:
     '''
     '''
-    # Get Cell Obj
-    def get_cell(self):
-        return self._cell
-    
-    # Get Oxygen obj
-    def get_oxygen(self):
-        return self._oxygen
-
-    # Get IgG obj
-    def get_product(self):
-        return self._product
-
-    # Get Cell Line Name
     def get_cell_line(self):
-        return self._md.cell_line_name
+        '''Return cell line name.'''
+        return self._cell_line
 
-    # Get Experiment ID
     def get_exp_id(self):
-        return self._md.exp_id
+        '''Return experiment ID.'''
+        return self._exp_id
 
-    # Get Experiment Infomation DF
-    def get_exp_info(self):
-        return self._exp_info
-
-    def get_measured_data_dict(self):
-        '''Return measured data dictionary.
+    def get_species(self, species):
+        '''Return species object.
         '''
-        return self._measured_data_dict
+        spc = self._spc_dict
+        key = species.upper()
+        if spc=='ALL':
+            return spc
+        elif key in spc.keys():
+            return spc[key]
+        else:
+            print("Wrong species name. Please check below.")
+            print(spc.keys())
 
-    def get_measured_data_df(self):
-        '''Return measured data DataFrame.
-        '''
-        return self._measured_data_df
+    def get_in_process_data(self):
+        '''Return In-Process data.'''
+        spc = self._spc_dict
+        df_list = []
+        for name, s in spc.items():
+            df = s.get_in_process_data
+            df['species'] = name.lower()
+            df_list.append(df)
+        data = pd.concat(df_list, axis=0).reset_index(drop=True)
+        data['cellLine'] = self._cell_line
+        data['runID'] = self._exp_id
+        data = data[['cellLine', 'runID', 'runTime', 'species', 'value', 'profile', 'kind', 'method']]
+        return data
+    
+    def get_post_process_data(self):
+        '''Return Post-Process data.'''
+        spc = self._spc_dict.copy()
+        data = None
 
+        # Polynomial
+        if self._process_flag_dict['polyreg']:
+            df_list = []
+            for name, s in spc.items():
+                df = s.get_post_process_data
+                df['species'] = name.lower()
+                df_list.append(df)
+            data = pd.concat(df_list, axis=0).reset_index(drop=True)
+            data['cellLine'] = self._cell_line
+            data['runID'] = self._exp_id
+            data = data[['cellLine', 'runID', 'runTime', 'species', 'value', 'profile', 'kind', 'method']]
+
+        # Rolling polynomial
+        if self._process_flag_dict['rollreg']:
+            cell = spc.pop('cell'.upper())
+            oxygen = spc.pop('oxygen'.upper())
+            df_list = []
+            growth_rate = cell.get_post_process_logistic
+            growth_rate['species'] = 'cell'
+            df_list.append(growth_rate)
+
+            for name, s in spc.items():
+                df = s.get_post_process_roll_data
+                df['species'] = name.lower()
+                df_list.append(df)
+            data2 = pd.concat(df_list, axis=0).reset_index(drop=True)
+            data2['cellLine'] = self._cell_line
+            data2['runID'] = self._exp_id
+            data2 = data2[['cellLine', 'runID', 'runTime', 'species', 'value', 'profile', 'kind', 'method']]
+            data = pd.concat([data, data2], axis=0)
+
+        return data
+
+
+    # Get In Process DF
+    @property
+    def get_in_process(self):
+        ''''''
+        self._in_process = pd.concat([self._process_data_dict['prepro'],
+                                      self._cell.get_ivcc(),
+                                      self._cell.get_cumulative(),
+                                      self._oxygen.get_cumulative(),
+                                      self._product.get_cumulative(),
+                                      self._process_data_dict['inpro']],
+                                      axis=1)
+        return self._in_process
+    
     # Get Poly. Reg. Order DF
     def get_polyreg_order_df(self):
         return self._polyorder_df
@@ -44,40 +97,6 @@ class GetterMixin:
     # Get Pre Process DF
     def get_pre_process(self):
         return self._pre_process
-
-    # Get In Process DF
-    def get_in_process(self):
-        blank = pd.Series(data=pd.NA, name='*********')
-        self._in_process = pd.concat([self._process_data_dict['prepro'],
-                                      blank,
-                                      self._cell.get_ivcc(),
-                                      self._cell.get_cumulative(),
-                                      self._oxygen.get_cumulative(),
-                                      self._product.get_cumulative(),
-                                      self._process_data_dict['inpro'],
-                                      self._conc_after_feed_df],
-                                      axis=1)
-        return self._in_process
-
-    # Get Metabolite List
-    def get_spc_list(self):
-        return self._spc_list
-
-    # Get Original Metabolite List
-    def get_default_spc_list(self):
-        return self._default_spc_list
-
-    # Get Metabolite dictionary
-    def get_spc_dict(self):
-        return self._spc_dict
-
-    # Get Metabolite Concentration DF
-    def get_spc_conc(self):
-        return self._spc_conc_df
-
-    '''# Get Metabolite Cumulative DF
-    def get_spc_df(self):
-        return self._spc_df'''
 
     def get_process_data(self, method):
         '''

@@ -17,6 +17,7 @@ class PolyRegMixin(RatioCalcMixin):
                 name of a Excel file for polynomial regression order.
         '''
         method = 'polyreg'
+        species = self._spc_dict
 
         # Check polynomial file
         if (polyorder_file):
@@ -25,51 +26,15 @@ class PolyRegMixin(RatioCalcMixin):
             polyorder = pd.read_excel(io=path, index_col=0)
             polyorder.index = [name.upper() for name in polyorder.index]
 
-        # Cell
-        try:
-            order = polyorder.loc['CELL'].iat[0]
-        except:
-            order = 3
-        cell = self._cell
-        cell.polyreg(polyorder=order)
-        cell.set_method_flag(method=method, flag=True)
-
-        # Oxygen
-        try: 
-            order = polyorder.loc['OXYGEN'].iat[0]
-        except:
-            order = 3
-        oxygen = self._oxygen
-        oxygen.polyreg(polyorder=order)
-        oxygen.set_method_flag(method=method, flag=True)
-
-        # IgG
-        try:
-            order = polyorder.loc['IGG'].iat[0]
-        except:
-            order = 3
-        product = self._product
-        product.polyreg(polyorder=order)
-        product.set_method_flag(method=method, flag=True)
-        
-        # Metabolites
-        data = self.get_process_data(method=method)
-
-        for s in (self._spc_list + self._spc_list_2):
-            s = s.upper() # Name
-            spc = self._spc_dict[s]    # species object
+        # 
+        for spc_name, spc in species.items():
+            # Get a polynomial degree in the file, or use 3 as default
             try:
-                order = polyorder.loc[s].iat[0]
+                degree = polyorder.loc[spc_name.upper()].iat[0]
             except:
-                order = 3
-            spc.polyreg(polyorder=order)    # Calculate sp. rate
-            spc.set_method_flag(method=method, flag=True)   # Set Flag True
-
-            title = f'Poly. Reg. Order: {order} q{s.capitalize()} (mmol/109 cell/hr)'
-            data[title] = spc.get_sp_rate(method=method)
-
-        # Ratio Calc
-        self.ratio_calc(method=method)
+                degree = 3
+            # Fitting the polynomial
+            spc.polynomial(deg=degree)
 
         # Set polyreg flag True
         self.set_process_flag(process=method, flag=True)

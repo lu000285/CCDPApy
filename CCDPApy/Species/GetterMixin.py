@@ -62,20 +62,7 @@ class GetterMixin:
         """
         return self._name
 
-    def get_cumulative(self):
-        """
-        Get cumulative consumption/production.
-        """
-        return self._cumulative
-
-    def get_cumulative_unit(self):
-        """
-        Get cumulative consumption/production unit.
-        (mmol) or (mM).
-        """
-        return self._cumulative_unit
-
-    def get_sp_rate(self, method):
+    '''def get_sp_rate(self, method):
         """
         Get Get SP. Rate.
 
@@ -103,21 +90,12 @@ class GetterMixin:
         return  self._rollpolyreg_window
 
     def get_polyorder(self):
-        '''
-        Get the polynomial regression order.
-        '''
         return self._polyorder
 
     def get_polyfit_cumulative(self):
-        '''
-        Get the np.polyfit for the cumulative consumption/production.
-        '''
         return self._polyfit
 
     def get_polyreg_cumulative(self):
-        '''
-        Get 
-        '''
-        return self._polyreg_cumulative
+        return self._polyreg_cumulative'''
 
 

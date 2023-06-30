@@ -13,7 +13,7 @@ class ProductTwoptMixn:
         self._post_data_twopt = pd.concat([self._sp_rate],
                                            axis=1)
     # Calculate Specific Rate
-    def igg_sp_rate_twopt(self):
+    '''def igg_sp_rate_twopt(self):
         # Get Measurement Index
         idx = self._product_conc[self._product_conc.notnull()].index
 
@@ -33,7 +33,7 @@ class ProductTwoptMixn:
 
             rate.iat[idx[i]] = x / (y*0.5*(t.iat[i]-t.iat[i-1]))
 
-        self._sp_rate = rate
+        self._sp_rate = rate'''
 
     def disp_post_data_twopt(self):
         print('\n************ IgG Post Process Data -Two Point Calc. ************')

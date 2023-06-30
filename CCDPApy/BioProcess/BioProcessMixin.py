@@ -1,8 +1,8 @@
 import pandas as pd
 
 from ..helper_func.helper_func import output_path
-from ..post_process.polynomial_regression.polynomial_regression import polyreg_calc
-from ..post_process.rolling_regression.rolling_regression import rolling_regression
+from ..post_process.polynomial.polynomial_regression import polyreg_calc
+from ..post_process.rolling_window_polynomial.rolling_regression import rolling_regression
 
 
 class BioProcessMixin():
