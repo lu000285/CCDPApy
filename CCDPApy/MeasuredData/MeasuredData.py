@@ -24,8 +24,6 @@ class MeasuredData(GetterMixin, PreProcessMixn):
     feed_data : pandas.DataFrame
         Separate feed information.
     '''
-
-    # Constructor
     def __init__(self, file_name, measurement_sheet, feed_sheet):
         '''
         Parameters
@@ -39,8 +37,8 @@ class MeasuredData(GetterMixin, PreProcessMixn):
         '''
         # Read and get DataFrame for measured data, and experimtent and separate feed information.
         data_df, exp_info, feed_info = read_excel(file_name=file_name,
-                                                        measurement_sheet=measurement_sheet,
-                                                        feed_sheet=feed_sheet)
+                                                  measurement_sheet=measurement_sheet,
+                                                  feed_sheet=feed_sheet)
         self.exp_info = exp_info
         
         # Experiment information
@@ -60,7 +58,6 @@ class MeasuredData(GetterMixin, PreProcessMixn):
 
         # Pre Process Data DF
         self.pre_data = pd.DataFrame()
- 
     # End Constructor
 
 

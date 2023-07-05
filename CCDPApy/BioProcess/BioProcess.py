@@ -87,19 +87,12 @@ class BioProcess(InProcessMixin,
         # Pre Process (calculate run time and culture volume)
         md.run_time()
         md.culture_volume()          
-        
-        # Species Object
-        '''
-        self._cell = Cell(name='cell', measured_data=md)          # Cell
-        self._oxygen = Oxygen(name='oxygen', measured_data=md)    # Oxygen
-        self._product = Product(name='product', measured_data=md) # Product/IgG
-        '''
 
         # default species list
         global default_spc_name_dict
         global default_spc_list
         self._default_spc_name_dict = default_spc_name_dict
-        self._default_spc_list = [s.upper() for s in default_spc_list] # make name upper case
+        self._default_spc_list = [s.upper() for s in default_spc_list]
 
         # Check spcies list
         self._spc_list = check_spc_list(default=self._default_spc_list,

@@ -18,6 +18,17 @@ def get_unit(string):
 
     return content_within_parentheses
 
+def split_name_unit(string):
+    '''Split the string into the parameter name and its unit using regular expression.
+    '''
+    pattern = r"(\(.*\))"
+    match = re.search(pattern, string)
+    if match:
+        splits = re.split(pattern, string)
+        return splits[0][:-1], splits[1]
+    else:
+        return string, ''
+
 ###########################################################################
 # Check Error for Pandas
 def check_key(df, key):

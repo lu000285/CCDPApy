@@ -34,13 +34,6 @@ class Species(GetterMixin, SetterMixin):
         self._name = name
         self.measured_data = measured_data
 
-        # Measured data: Experiment Information
-        '''exp_info = measured_data.exp_info
-        self._exp_id = exp_info['exp_id'] # Experiment ID
-        self._experimenter_name = exp_info['name']    # Experimentor Name
-        self._cell_line_name = exp_info['cell_line'] # Cell Line Name
-        self._initial_volume = exp_info['initial_volume']  # Initial Culure Volume'''
-
         # Measured data: Parameters
         df = measured_data.param_df
         self._sample_num = df['samples'].size # Sample Numbers
@@ -57,25 +50,6 @@ class Species(GetterMixin, SetterMixin):
         # self._product_conc = measured_data.c_before_feed_df['IgG_(mg/L)'] # Product(IgG) Concentraion
         self._feed_data = measured_data.feed_data   # Separate Feed Data (pd.DataFrame)
         self._feed_list = measured_data.feed_list   # Separate Feed List
-
-        # Cumulative Consumption/Production
-        # self._cumulative = pd.Series(data=[np.nan]*self._sample_num)    # Cumulative Consumption/Production
-        # self._cumulative_unit = pd.Series(data=[np.nan]*self._sample_num)   # Unit of Cumulative Consumption/Production
-        # self._direct_cumulative = False # True if measured data has calculated cumulative consumption/production.
-
-        # Two-Pt. Calc.
-        # self._sp_rate = pd.Series(data=[np.nan]*self._sample_num)   # Specific-Rate
-
-        # Poly. Reg.
-        '''self._polyorder = None  # Polynomial Regression Order 
-        self._polyfit = None    # Polynomial Regression Fit for Cumulative Consumption/Production (numpy.polyfit)
-        self._polyreg_cumulative = pd.Series(data=[np.nan]*self._sample_num)    
-        self._polyreg_sp_rate = pd.Series(data=[np.nan]*self._sample_num)'''
-
-        # Rolling Poly. Reg
-        '''self._rollpolyreg_order = None
-        self._rollpolyreg_window = None
-        self._rollpolyreg_sp_rate = pd.Series(data=[np.nan]*self._sample_num)'''
 
         # Flags
         self._in_process_flag = False
