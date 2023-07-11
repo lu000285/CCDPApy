@@ -14,10 +14,18 @@ class Metabolite(Species, InProcess, Polynomial):
         self._feed_conc = feed_conc
     
     @property
-    def get_conc(self):
-        return self._conc
+    def concentration(self):
+        t = self._run_time['value'].values.copy()
+        c = self._conc.copy()
+        c['time'] = t
+        c = c[['time', 'value', 'unit']]
+        return c
     
     @property
-    def get_feed_conc(self):
-        return self._feed_conc
+    def feed_concentration(self):
+        t = self._run_time['value'].values.copy()
+        f = self._feed_conc.copy()
+        f['time'] = t
+        f = f[['time', 'value', 'unit']]
+        return f
     

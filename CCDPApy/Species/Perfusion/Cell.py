@@ -30,7 +30,7 @@ class Cell(Species, InProcess):
         return self._total_cell_conc
     
     @property
-    def get_viability(self):
+    def viability(self):
         ''''''
         t = self._run_time['value'].values.copy()
         v = self._viability.copy()
@@ -39,7 +39,7 @@ class Cell(Species, InProcess):
         return v
     
     @property
-    def get_conc(self):
+    def concentration(self):
         t = self._run_time['value'].values.copy()
         xv = self._viable_cell_conc.copy()
         xv['time'] = t

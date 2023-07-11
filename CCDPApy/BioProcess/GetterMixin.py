@@ -76,6 +76,13 @@ class GetterMixin:
 
         return data
 
+    @property
+    def get_pre_process(self):
+        ''''''
+        species = self._spc_dict.copy()
+        cell = species.pop('cell'.upper())
+        product = species.pop('product'.upper())
+        oxygen = species.pop('oxygen'.upper())
 
     # Get In Process DF
     @property

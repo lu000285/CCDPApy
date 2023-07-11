@@ -1,7 +1,9 @@
-from .BioProcess import BioProcess
+from .BioProcess import BioProcess as FedBatch
+from .Perfusion.BioProcess import BioProcess as Perfusion
 
 ###########################################################################
-def bioprocess_pipeline(input_file_name,
+def bioprocess_pipeline(cell_culture,
+                        input_file_name,
                         measurement_sheet='Measured Data',
                         feed_sheet='Separate Feed Info',
                         **kwargs):
@@ -11,6 +13,8 @@ def bioprocess_pipeline(input_file_name,
 
     Parameters
     ----------
+    cell_culture : str
+        Meethod of cell culture. 'fed-bacth', 'perfusion'.
     input_file : str
         The Excel file of the measured data.
         '.xlsx' must be included in the file name.
@@ -68,35 +72,37 @@ def bioprocess_pipeline(input_file_name,
     spc_list = kwargs.get('spc_list') if kwargs.get('spc_list') else []
     new_spc_list = kwargs.get('new_spc') if kwargs.get('new_spc') else []
 
-    # BioProcess Class
-    bio_process = BioProcess(file_name=input_file_name,
-                             measurement_sheet=measurement_sheet,
-                             feed_sheet=feed_sheet,
-                             spc_list=spc_list,
-                             new_spc_list=new_spc_list)
+    # Fed-batch Cell Culture BioProcess Class
+    if cell_culture=='fed-batch':
+        bio_process = FedBatch(file_name=input_file_name,
+                               measurement_sheet=measurement_sheet,
+                               feed_sheet=feed_sheet,
+                               spc_list=spc_list,
+                               new_spc_list=new_spc_list)
+        use_feed_conc = True if (kwargs.get('use_feed_conc')) else False
+        use_conc_after_feed = True if (kwargs.get('use_conc_after_feed')) else False
+        bio_process.in_process(feed_concentraion=use_feed_conc, concentration_after_feed=use_conc_after_feed)
+        
+    elif cell_culture=='perfusion':
+        bio_process = Perfusion(file_name=input_file_name)
+        a = kwargs.get('recycling_factor') if (kwargs.get('recycling_factor')) else 0.25
+        c = kwargs.get('concentration_factor') if (kwargs.get('concentration_factor')) else 3
+        bio_process.in_process(a=a, c=c)
+    else:
+        print('Inproper cell culture type. Please specify "fed-batch" or "perfuson".')
+        return None
 
-    #****** In Process -Cumulative Cons/Prod ******
-    bio_process.inprocess(feed_concentraion=True if (kwargs.get('use_feed_conc')) else False,
-                          concentration_after_feed=True if (kwargs.get('use_conc_after_feed')) else False)
-    #print('In-Process Done.')
-
-    #***** Post Process -SP. Rate Two Point Calc ******
-    bio_process.two_pt_calc()
-    #print('Two-Point Calculations. Done.')
-
-    #***** Post Process -SP. Rate Poly. Regression *****
+    #***** Post Process Polynomial Regression *****
     if (kwargs.get('polyreg') or kwargs.get('all_method')):
-        bio_process.poly_regression(polyorder_file=kwargs.get('polyorder_file'))
+        bio_process.polynomial(polyorder_file=kwargs.get('polyorder_file'))
         #print('Polynomial Regression. Done')
 
-    #***** Post Process -SP. Rate Rolling Poly. Regression *****
+    #***** Post Process Rolling Window Polynomial Regression *****
     if (kwargs.get('rollreg') or kwargs.get('all_method')):
         order = kwargs.get('rollreg_order') if kwargs.get('rollreg_order') else 3
         window = kwargs.get('rollreg_window') if kwargs.get('rollreg_window') else 6
-
-        bio_process.roll_regression(order=order, windows=window)
+        bio_process.roll_regression(degree=order, windows=window)
         #print('Rolling Regression. Done.')
 
     return bio_process
-
 #*** End bio_process ***#

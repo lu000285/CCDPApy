@@ -20,8 +20,14 @@ param_columns = ['time',
 class BioProcess(GetterMixin, InProcess, Polynomial):
     '''
     '''
-    def __init__(self, file_name, **kwargs) -> None:
+    def __init__(self, file_name, a=0.25, c=3) -> None:
         '''
+        Attributes
+        ----------
+            a : float
+                Recycling factor
+            c : float
+                Concentration factor
         '''
         md = MeasuredData(file_name=file_name)
         exp_df = md.get_exp_df
@@ -79,6 +85,8 @@ class BioProcess(GetterMixin, InProcess, Polynomial):
             spc_dict[name] = Metabolite(name, run_time, culture_volume, flow_rate, conc, feed, viable_cell)
 
         # Store variables
+        self._a = a
+        self._c = c
         self._cell_line = exp_df['Cell Line'].iat[0]
         self._run_id = exp_df['Experimental ID'].iat[0]
         self._experimenter = exp_df['Name'].iat[0]
@@ -89,11 +97,13 @@ class BioProcess(GetterMixin, InProcess, Polynomial):
     def __repr__(self) -> str:
         species = [s.get_abbr for s in self._species.values()]
         return "\n".join([
-            f'Cell Line:     {self._cell_line}',
-            f'Run ID:        {self._run_id}',
-            f'Experimenter   {self._experimenter}',
-            f'Species List   {species}',
-            f'Feed List      {self._feed_list}',
+            f'Cell Line:            {self._cell_line}',
+            f'Run ID:               {self._run_id}',
+            f'Experimenter:         {self._experimenter}',
+            f'Species List:         {species}',
+            f'Feed List:            {self._feed_list}',
+            f'Recycling Factor:     {self._a}',
+            f'Concentration Factor: {self._c}',
         ])
 
 

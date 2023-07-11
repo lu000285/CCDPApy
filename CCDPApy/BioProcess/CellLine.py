@@ -83,9 +83,9 @@ class CellLine(PlotMixin, InteractivePlotMixin):
         file_path = output_path(file_name=file_name)
 
         with pd.ExcelWriter(file_path) as writer:
-            for cl in self._cell_line_dict[cell_line].values():
-                sheet = cl.get_exp_id()
-                cl.get_bioprocess_df().to_excel(writer, sheet_name=sheet, index=False)
+            for bio_process in self._cell_line_dict[cell_line].values():
+                sheet = bio_process.get_exp_id()
+                bio_process.get_bioprocess_df().to_excel(writer, sheet_name=sheet, index=False)
             print(file_name + ' saved')
 
 

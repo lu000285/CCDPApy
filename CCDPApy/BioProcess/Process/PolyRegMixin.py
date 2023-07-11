@@ -7,7 +7,7 @@ class PolyRegMixin(RatioCalcMixin):
     '''
     Mixin class for BioProcess class to calculate specific rates for species using polynomial regression.
     '''
-    def poly_regression(self, polyorder_file):
+    def polynomial(self, polyorder_file):
         '''
         Calculate SP. rates for species using polynomial regression.
 
