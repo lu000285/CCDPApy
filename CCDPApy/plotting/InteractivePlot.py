@@ -4,37 +4,55 @@ from jupyter_dash import JupyterDash
 from dash import Dash, html, dcc, callback, Output, Input, State
 import plotly.express as px
 
+from .layout import CELL_CONCENTRATION_STYLE_CHILDREN, CELL_INTEGRAL_STYLE_CHILDREN, CELL_CUMULATIVE_STYLE_CHILDREN, GROWTH_RATE_STYLE_CHILDREN
+from .layout import CONCENTRATION_STYLE_CHILDREN, CUMULATIVE_STYLE_CHILDREN, SP_RATE_STYLE_CHILDREN
+
 class InteractivePlotMixin:
     '''Mixin class used in CellLine class for displaying an interactive plot.
     '''
-    def __init_options(self, df):
+    def __init_options(self, spec_list, method_list):
         '''Initialize options for the interactive plot.
         '''
         # Cell line list
-        cell_line_list = self.get_cell_line_list()
+        cell_line_list = self.get_cell_line_names()
+        cell_line_options = cell_line_list
 
-        # Cell line options; [{'label': 'Sample CL1', 'value': ['CL1-1', 'CL1-2', 'CL1-3']}]
-        cell_line_options = []
-        for cell_line in cell_line_list:
-            exp_list = list(self.get_cell_line(cell_line).keys())
-            cell_line_options.append({'label': cell_line, 'value': ', '.join(exp_list)})
-
+        # Cell line options; [{'label': 'CL1', 'value': ['CL1-1', 'CL1-2', 'CL1-3']}]
         # Experiment ID options; {'cell line': 'experiment ID'}
+        # cell_line_options = []
         exp_options = {}
+        for cell_line in cell_line_list:
+            cell_line_handler = self.get_cell_line_handles(cell_line)
+            exp_list = list(cell_line_handler.get_experiment_handle().keys())
+            exp_options[cell_line] = [exp for exp in exp_list]
+            # exp_list = [f'{cell_line}-{id}' for id in exp_list]
+            # cell_line_options.append({'label': cell_line, 'value': ', '.join(exp_list)})
+            
+        '''exp_options = {}
         for cl in cell_line_list:
             exp_lst = list(self.get_cell_line(cl).keys())
-            exp_options[cl] = [exp for exp in exp_lst]
+            exp_options[cl] = [exp for exp in exp_lst]'''
         
         # Profile options
-        profile_options = [{'label': 'Concentration', 'value': 'concentration'}, 
-                           {'label': 'Cumulative Concentration', 'value': 'cumulative'}, 
-                           {'label': 'Specific Rate', 'value': 'spRate'}]
+        profile_options = [{'label': 'Concentration', 
+                            'value': 'concentration'}, 
+                           {'label': 'Cumulative Concentration', 
+                            'value': 'cumulative'}, 
+                           {'label': 'Specific Rate', 
+                            'value': 'spRate'},
+                           {'label': 'Cell Concentration', 
+                            'value': 'cellConc'},
+                           {'label': 'Integral of Viable Cell', 
+                            'value': 'ivcc'},
+                           {'label': 'Cumulative Cell Concentration', 
+                            'value': 'cumulativeCell'},
+                           {'label': 'Growth Rate', 
+                            'value': 'growthRate'},]
         
         # Species options
-        species_options = df['species'].unique()
+        species_options = spec_list
         
         # Method options for cumulative concentration and specific rate
-        method_list = df['method'].unique()
         method_options = [{'label': 'Two-Point Calculation', 'value': 'twoPoint'}]
         if 'polynomial' in method_list:
             method_options.append({'label': 'Polynomial', 'value': 'polynomial'})
@@ -42,15 +60,15 @@ class InteractivePlotMixin:
             method_options.append({'label': 'Rolling Window', 'value': 'rollingWindowPolynomial'})
         
         # Plot style options for each profile
-        cl_option = {'label': 'Cell Line ID', 'value': 'cellLine'}
-        exp_option = {'label': 'Experiment ID', 'value': 'runID'}
+        cl_option = {'label': 'Cell Line', 'value': 'Cell Line'}
+        exp_option = {'label': 'ID', 'value': 'ID'}
         method_option = {'label': 'Method', 'value': 'method'}
 
         plot_style_options = [cl_option, exp_option]
         plot_style_options2 = [cl_option, exp_option, method_option]
 
-        options = {'cellLine': cell_line_options,
-                   'runID': exp_options,
+        options = {'Cell Line': cell_line_options,
+                   'ID': exp_options,
                    'species': species_options,
                    'profile': profile_options,
                    'method': method_options,
@@ -68,8 +86,8 @@ class InteractivePlotMixin:
             app = Dash(__name__)
 
         # Get options
-        cell_line_options = options['cellLine']
-        exp_options = options['runID']
+        cell_line_options = options['Cell Line']
+        exp_options = options['ID']
         species_options = options['species']
         profile_options = options['profile']
         method_options = options['method']
@@ -93,7 +111,7 @@ class InteractivePlotMixin:
                         style={'width': '40%', 'display': 'inline-block', 'margin-right': '20px'},
                     ),
                     html.Div(
-                        children=[html.Div("Experiment ID: ", style={"margin-right": "10px", "font-weight": "bold"}),
+                        children=[html.Div("ID: ", style={"margin-right": "10px", "font-weight": "bold"}),
                                   dcc.Dropdown(id='experiment-dropdown',
                                                value=[],
                                                placeholder='Select Experiment ID',
@@ -138,10 +156,16 @@ class InteractivePlotMixin:
                 style={'display': 'flex', 'align-items': 'center'},
             ),
             html.Hr(),
-            html.Div(children=radio_buttons, id='radio-container', style={'display': 'flex', 'flex-direction': 'row'}),
+            html.Div(children=radio_buttons_1, id='radio-container-1', style={'display': 'flex', 'flex-direction': 'row',}),
             html.Hr(),
-            # Display
-            html.Div(id='figure-container'),
+            html.Div(children=radio_buttons_2, id='radio-container-2', style={'display': 'flex', 'flex-direction': 'row',}),
+            html.Hr(),
+            html.Div(children=radio_buttons_3, id='radio-container-3', style={'display': 'flex', 'flex-direction': 'row',}),
+            html.Hr(),
+            # Display Cell
+            html.Div(id='figure-container-cell'),
+            # Display Metabolite
+            html.Div(id='figure-container-metabolite'),
         ])
         return app
 
@@ -149,9 +173,11 @@ class InteractivePlotMixin:
         '''Interactive Plot.
         '''
         # Initialization
-        df = self.get_plot_data() # Get data for plotting
-        self._plot_data = df
-        options = self.__init_options(df=df)
+        data = self.get_metabolite_data()['sp_rate']
+        species_list = data['species'].unique()
+        method_list = data['method'].unique()
+
+        options = self.__init_options(species_list, method_list)
         app = self.__init_layout(mode=mode, options=options)
 
         # Update expriment ID dropdown
@@ -160,15 +186,80 @@ class InteractivePlotMixin:
             Input(component_id='cell-line-dropdown', component_property='value'),
         )(self.__set_exp_options)
 
-        # Update graph style options
-        '''app.callback(
-            Output('radio-container', 'children'),
-            Input('profile-dropdown', 'value'),
-        )(self.__update_radio_buttons)'''
-
-        # Update profiles to dosplay
+        # Toggle On/Off
         app.callback(
-            Output('figure-container', 'children'),
+            Output('toggle-output-cell-concentration-style', 'children'),
+            [Input('toggle-button-cell-concentration-style', 'n_clicks')],
+            [State('toggle-output-cell-concentration-style', 'children')]
+        )(self.__toggle_output_cell_conc)
+
+        app.callback(
+            Output('toggle-output-ivcc-style', 'children'),
+            [Input('toggle-button-ivcc-style', 'n_clicks')],
+            [State('toggle-output-ivcc-style', 'children')]
+        )(self.__toggle_output_cell_cumulative)
+
+        app.callback(
+            Output('toggle-output-cell-cumulative-style', 'children'),
+            [Input('toggle-button-cell-cumulative-style', 'n_clicks')],
+            [State('toggle-output-cell-cumulative-style', 'children')]
+        )(self.__toggle_output_ivcc)
+
+        app.callback(
+            Output('toggle-output-growth-rate-style', 'children'),
+            [Input('toggle-button-growth-rate-style', 'n_clicks')],
+            [State('toggle-output-growth-rate-style', 'children')]
+        )(self.__toggle_output_growth_rate)
+
+        app.callback(
+            Output('toggle-output-concentration-style', 'children'),
+            [Input('toggle-button-concentration-style', 'n_clicks')],
+            [State('toggle-output-concentration-style', 'children')]
+        )(self.__toggle_output_conc)
+
+        app.callback(
+            Output('toggle-output-cumulative-style', 'children'),
+            [Input('toggle-button-cumulative-style', 'n_clicks')],
+            [State('toggle-output-cumulative-style', 'children')]
+        )(self.__toggle_output_cumulative)
+
+        app.callback(
+            Output('toggle-output-sp_rate-style', 'children'),
+            [Input('toggle-button-sp_rate-style', 'n_clicks')],
+            [State('toggle-output-sp_rate-style', 'children')]
+        )(self.__toggle_output_sp_rate)
+
+        # Update cell profiles to display
+        app.callback(
+            Output('figure-container-cell', 'children'),
+            Input('profile-dropdown', 'value'),
+            Input('experiment-dropdown', 'value'),
+            Input('method-dropdown', 'value'),
+
+            Input('color-option-cell-conc', 'value'),
+            Input('color-option-ivcc', 'value'),
+            Input('color-option-cell-cumulative', 'value'),
+            Input('color-option-growth-rate', 'value'),
+
+            Input('line-option-cell-conc', 'value'),
+            Input('line-option-ivcc', 'value'),
+            Input('line-option-cell-cumulative', 'value'),
+            Input('line-option-growth-rate', 'value'),
+
+            Input('symbol-option-cell-conc', 'value'),
+            Input('symbol-option-ivcc', 'value'),
+            Input('symbol-option-cell-cumulative', 'value'),
+            Input('symbol-option-growth-rate', 'value'),
+
+            Input('legend-radio', 'value'),
+            Input('x-axis-radio', 'value'),
+            Input('viability-radio', 'value'),
+            State('cell-line-dropdown', 'value')
+        )(self.__display_cell_profiles)
+
+        # Update metabolite profiles to display
+        app.callback(
+            Output('figure-container-metabolite', 'children'),
             Input('profile-dropdown', 'value'),
             Input('experiment-dropdown', 'value'),
             Input('species-dropdown', 'value'),
@@ -183,6 +274,7 @@ class InteractivePlotMixin:
             Input('symbol-option-2', 'value'),
             Input('symbol-option-3', 'value'),
             Input('legend-radio', 'value'),
+            Input('x-axis-radio', 'value'),
             State('cell-line-dropdown', 'value')
         )(self.__display_profiles)
 
@@ -191,7 +283,6 @@ class InteractivePlotMixin:
             app.run_server(mode="inline")
         else:
             app.run_server()
-        
     
     def __set_exp_options(self, cl_chosen):
         '''Update expriment ID dropdown
@@ -199,150 +290,220 @@ class InteractivePlotMixin:
         options = []
         if cl_chosen==[]:
             return options
-        
         for cl in cl_chosen:
-            for exp in cl.split(', '):
-                options.append({'label': exp, 'value': exp})
+            cell_line_handler = self.get_cell_line_handles(cl)
+            exp_list = list(cell_line_handler.get_experiment_handle().keys())
+            for exp in exp_list:
+                options.append({'label': f'{cl}-{exp}', 'value': f'{cl}-{exp}'})
         return options
     
-    def __update_radio_buttons(self, selected_options):
-        '''Update graph style option buttons for each profile.
-        '''
-        radio_buttons = []
-        if 'concentration' in selected_options:
-            radio_buttons.append(html.Div([
-                html.Label('Concentration Graph Style', style={"font-weight": "bold"}),
-                html.Br(),
-                html.Label('Color'),
-                dcc.RadioItems(
-                    id='color-option-1',
-                    options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                             {'label': 'Run ID', 'value': 'runID'}], 
-                    value='cellLine',
-                    labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-                ),
-                html.Label('Line'),
-                dcc.RadioItems(
-                    id='line-option-1',
-                    options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                             {'label': 'Run ID', 'value': 'runID'}],
-                    value='runID',
-                    labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-                ),
-                html.Label('Symbol'),
-                dcc.RadioItems(
-                    id='symbol-option-1',
-                    options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                             {'label': 'Run ID', 'value': 'runID'}],
-                    value='cellLine',
-                    labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-                )
-            ], style={'margin-bottom': '20px', 'margin-right': '40px'}))
+    def __toggle_output_cell_conc(self, n_clicks, current_children):
+        ''''''
+        hidden_children =  CELL_CONCENTRATION_STYLE_CHILDREN
+        if n_clicks is None:
+            return hidden_children
+        if current_children is not None:
+            return None
+        else:
+            return hidden_children
+        
+    def __toggle_output_ivcc(self, n_clicks, current_children):
+        ''''''
+        hidden_children =  CELL_INTEGRAL_STYLE_CHILDREN
+        if n_clicks is None:
+            return hidden_children
+        if current_children is not None:
+            return None
+        else:
+            return hidden_children
+    
+    def __toggle_output_cell_cumulative(self, n_clicks, current_children):
+        ''''''
+        hidden_children =  CELL_CUMULATIVE_STYLE_CHILDREN
+        if n_clicks is None:
+            return hidden_children
+        if current_children is not None:
+            return None
+        else:
+            return hidden_children
+        
+    def __toggle_output_growth_rate(self, n_clicks, current_children):
+        ''''''
+        hidden_children =  GROWTH_RATE_STYLE_CHILDREN
+        if n_clicks is None:
+            return hidden_children
+        if current_children is not None:
+            return None
+        else:
+            return hidden_children
+    
+    def __toggle_output_conc(self, n_clicks, current_children):
+        ''''''
+        hidden_children =  CONCENTRATION_STYLE_CHILDREN
+        if n_clicks is None:
+            return hidden_children
+        if current_children is not None:
+            return None
+        else:
+            return hidden_children
+    
+    def __toggle_output_cumulative(self, n_clicks, current_children):
+        ''''''
+        hidden_children =  CUMULATIVE_STYLE_CHILDREN
+        if n_clicks is None:
+            return hidden_children
+        if current_children is not None:
+            return None
+        else:
+            return hidden_children
+        
+    def __toggle_output_sp_rate(self, n_clicks, current_children):
+        ''''''
+        hidden_children =  SP_RATE_STYLE_CHILDREN
+        if n_clicks is None:
+            return hidden_children
+        if current_children is not None:
+            return None
+        else:
+            return hidden_children
 
-        if 'cumulative' in selected_options:
-            radio_buttons.append(html.Div([
-                html.Label('Cumulative Concentration Graph Style', style={"font-weight": "bold"}),
-                html.Br(),
-                html.Label('Color'),
-                dcc.RadioItems(
-                    id='color-option-2',
-                    options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                             {'label': 'Run ID', 'value': 'runID'}], 
-                    value='cellLine',
-                    labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-                ),
-                html.Label('Line'),
-                dcc.RadioItems(
-                    id='line-option-2',
-                    options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                             {'label': 'Run ID', 'value': 'runID'}],
-                    value='runID',
-                    labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-                ),
-                html.Label('Symbol'),
-                dcc.RadioItems(
-                    id='symbol-option-2',
-                    options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                             {'label': 'Run ID', 'value': 'runID'}],
-                    value='runID',
-                    labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-                )
-            ], style={'margin-bottom': '20px', 'margin-right': '40px'}))
+    def __display_cell_profiles(self, profiles, run_ids, method, 
+                           color_1, color_2, color_3, color_4,
+                           line_1, line_2, line_3, line_4, 
+                           symbol_1, symbol_2, symbol_3, symbol_4,
+                           legend, x_axis, viability, cell_line):
+        ''''''
+        if not (run_ids and profiles and cell_line):
+            return None
+        # Cleaning IDs    
+        for cl in cell_line:
+            run_ids = [id.replace(f'{cl}-', '') for id in run_ids]
 
-        if 'spRate' in selected_options:
-            radio_buttons.append(html.Div([
-                html.Label('Specific Rate Graph Style', style={"font-weight": "bold"}),
-                html.Br(),
-                html.Label('Color'),
-                dcc.RadioItems(
-                    id='color-option-3',
-                    options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                             {'label': 'Run ID', 'value': 'runID'},
-                             {'label': 'Method', 'value': 'method'}], 
-                    value='cellLine',
-                    labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-                ),
-                html.Label('Line'),
-                dcc.RadioItems(
-                    id='line-option-3',
-                    options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                             {'label': 'Run ID', 'value': 'runID'},
-                             {'label': 'Method', 'value': 'method'}],
-                    value='runID',
-                    labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-                ),
-                html.Label('Symbol'),
-                dcc.RadioItems(
-                    id='symbol-option-3',
-                    options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                             {'label': 'Run ID', 'value': 'runID'},
-                             {'label': 'Method', 'value': 'method'}],
-                    value='method',
-                    labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-                )
-            ], style={'margin-bottom': '20px', 'margin-right': '40px'}))
+        print(cell_line, run_ids, profiles)
 
-        return radio_buttons
+        # Get data
+        cell_data = self.get_cell_data()
+
+        # Filtering data
+        conc_df = cell_data['conc']
+        ivcc_df = cell_data['integral']
+        cumulative_conc_df = cell_data['cumulative']
+        growth_rate_df = cell_data['growth_rate']
+
+        conc_df = filter_data(conc_df, 'Cell Line', cell_line)
+        conc_df = filter_data(conc_df, 'ID', run_ids)
+        ivcc_df = filter_data(ivcc_df, 'Cell Line', cell_line)
+        ivcc_df = filter_data(ivcc_df, 'ID', run_ids)
+        cumulative_conc_df = filter_data(cumulative_conc_df, 'Cell Line', cell_line)
+        cumulative_conc_df = filter_data(cumulative_conc_df, 'ID', run_ids)
+        growth_rate_df = filter_data(growth_rate_df, 'Cell Line', cell_line)
+        growth_rate_df = filter_data(growth_rate_df, 'ID', run_ids)
+
+        # print(conc_df.head())
+
+        figures = {}
+        if 'cellConc' in profiles:
+            mask = conc_df['state']=='Viability'
+            df = conc_df[~mask]
+            df2 = conc_df[mask]
+
+            fig1 = px.line(df, x=x_axis, y='value', title='Cell Concentration', color=color_1, line_dash=line_1, symbol=symbol_1)
+            # fig1.update_layout(yaxis_title='Cell concentration' + df['unit'].at[0])
+
+            '''if viability=='on':
+                fig2 = px.line(df2, x=x_axis, y='value', color=color_1, line_dash=line_1, symbol=symbol_1,
+                            color_discrete_sequence=px.colors.qualitative.Pastel1,)
+                fig2.update_traces(yaxis='y2')
+                for fig_data in fig2.data:
+                    fig1.add_trace(fig_data)
+
+                fig1.update_layout(legend_x=1.15, legend_y=1)
+                fig1.update_layout(yaxis2={'side': 'right', 'title': 'Viability (%)', 'overlaying': "y",})
+            '''
+            figures['figure1'] = fig1
+
+        if 'ivcc' in profiles:
+            fig = px.line(ivcc_df, x=x_axis, y='value', title='Integral Viable Cell Concentration', color=color_2, line_dash=line_2, symbol=symbol_2)
+            fig.update_layout(yaxis_title='IVCC' + ivcc_df['unit'].at[0])
+            figures['figure2'] = fig
+
+        if 'cumulativeCell' in profiles:
+            fig = px.line(cumulative_conc_df, x=x_axis, y='value', title='Cumulative Cell Production', color=color_3, line_dash=line_3, symbol=symbol_3)
+            fig.update_layout(yaxis_title='Cumulative Cell Production' + cumulative_conc_df['unit'].at[0])
+            figures['figure3'] = fig
+
+        if 'growthRate' in profiles:
+            fig = px.line(growth_rate_df, x=x_axis, y='value', title='Growth Rate', color=color_4, line_dash=line_4, symbol=symbol_4)
+            fig.update_layout(yaxis_title='Growth Rate' + growth_rate_df['unit'].at[0])
+            figures['figure4'] = fig
+
+        for fig in figures.values():
+            if legend=="on":
+                fig.update_layout(showlegend=True, legend_y=1)
+            else:
+                fig.update_layout(showlegend=False)
+        
+        # Create children
+        children = [dcc.Graph(figure=fig, id=id) for id, fig in figures.items()]
+        return [html.Div(
+                    style={'overflow-x': 'scroll', 'display': 'flex'},
+                    children=children,
+                ),]
+
     
     def __display_profiles(self, profiles, run_ids, species, method, 
                            color_1, color_2, color_3, 
                            line_1, line_2, line_3,
                            symbol_1, symbol_2, symbol_3, 
-                           legend, cell_line,):
+                           legend, x_axis, cell_line):
         '''Display profiles. 
         '''
         if not (run_ids and species and profiles and cell_line):
             return None
+        # Cleaning IDs    
+        for cl in cell_line:
+            run_ids = [id.replace(f'{cl}-', '') for id in run_ids]
+
+        data = self.get_metabolite_data()
+        
         # Filtering data
-        df = self._plot_data
-        df = filter_data(df, 'species', species)
-        df = filter_data(df, 'runID', run_ids)
+        conc_df = data['conc']
+        cumulative_conc_df = data['cumulative']
+        sp_rate_df = data['sp_rate']
+
+        # Filter data by species, Cell Line and ID
+        conc_df = filter_data(conc_df, 'species', species)
+        conc_df = filter_data(conc_df, 'Cell Line', cell_line)
+        conc_df = filter_data(conc_df, 'ID', run_ids)
+        cumulative_conc_df = filter_data(cumulative_conc_df, 'species', species)
+        cumulative_conc_df = filter_data(cumulative_conc_df, 'Cell Line', cell_line)
+        cumulative_conc_df = filter_data(cumulative_conc_df, 'ID', run_ids)
+        sp_rate_df = filter_data(sp_rate_df, 'species', species)
+        sp_rate_df = filter_data(sp_rate_df, 'Cell Line', cell_line)
+        sp_rate_df = filter_data(sp_rate_df, 'ID', run_ids)
         
         # Creating figures
         figures = {}
         if 'concentration' in profiles:
-            data = filter_data(df, 'profile', ['concentration'])
-            data = filter_data(data, 'kind', ['beforeFeed', 'afterFeed'])
-            fig = create_figure(data, 'line', True, 'Concentration', color_1, line_1, symbol_1, legend)
-            fig = rename_yaxis(data, fig, 'concentration')
+            fig = create_figure(conc_df, x_axis, 'line', True, 'Concentration', color_1, line_1, symbol_1, legend)
+            fig = rename_yaxis(conc_df, fig, 'concentration')
             figures['figure1'] = fig
 
         if 'cumulative' in profiles:
-            data = filter_data(df, 'profile', ['cumulative'])
-            data1 = filter_data(data, 'method', ['twoPoint'])
-            data2 = filter_data(data, 'method', ['polynomial'])
+            data1 = filter_data(cumulative_conc_df, 'method', ['twoPoint'])
+            data2 = filter_data(cumulative_conc_df, 'method', ['polynomial'])
 
-            fig1 = create_figure(data1, 'scatter', False, 'Cumulative Concentration', color_2, line_2, symbol_2, legend)
-            fig2 = create_figure(data2, 'line', False, 'Cumulative Concentration', color_2, line_2, None, legend)
+            fig1 = create_figure(data1, x_axis, 'scatter', False, 'Cumulative Consumption/Production', color_2, line_2, symbol_2, legend)
+            fig2 = create_figure(data2, x_axis, 'line', False, 'Cumulative Concentration', color_2, line_2, None, legend)
             for fig_data in fig2.data:
                 fig1.add_trace(fig_data)
             fig = rename_yaxis(data2, fig1, 'cumulative')
+            fig = rename_yaxis(data1, fig1, 'cumulative')
             figures['figure2'] = fig
 
         if 'spRate' in profiles and method:
-            data = filter_data(df, 'profile', ['spRate'])
-            data = filter_data(data, 'method', method)
-            fig = create_figure(data, 'line', True, 'Specific Rate', color_3, line_3, symbol_3, legend)
+            data = filter_data(sp_rate_df, 'method', method)
+            fig = create_figure(data, x_axis, 'line', True, 'Specific Rate', color_3, line_3, symbol_3, legend)
             fig = rename_yaxis(data, fig, 'spRate')
             figures['figure3'] = fig
         
@@ -352,12 +513,12 @@ class InteractivePlotMixin:
                     style={'overflow-x': 'scroll', 'display': 'flex'},
                     children=children,
                 ),]
-    
-def create_figure(df, kind, makers, title, color, line_dash, symbol, legend):
+
+def create_figure(df, x, kind, makers, title, color, line_dash, symbol, legend):
     '''Create a figure of plotly.express
     '''
     if kind=='line':
-        fig = px.line(df, x='runTime', y='value', title=title, facet_row='species',
+        fig = px.line(df, x=x, y='value', title=title, facet_row='species',
                       markers=makers,
                       color=color,
                       line_dash=line_dash,
@@ -365,7 +526,7 @@ def create_figure(df, kind, makers, title, color, line_dash, symbol, legend):
                       )
         
     elif kind=='scatter':
-        fig = px.scatter(df, x='runTime', y='value', title=title, facet_row='species',
+        fig = px.scatter(df, x=x, y='value', title=title, facet_row='species',
                          color=color,
                          symbol=symbol,
                          )
@@ -384,8 +545,7 @@ def create_figure(df, kind, makers, title, color, line_dash, symbol, legend):
     return fig
 
 def filter_data(df, column, values):
-    '''
-    '''
+    '''filtering data by columns with the corresponding values.'''
     return df[df[column].isin(values)]
 
 def rename_yaxis(df, fig, profile):
@@ -393,141 +553,93 @@ def rename_yaxis(df, fig, profile):
     '''
     spc_list = df['species'].unique()
     yaxis_titles = {}
-    for s in spc_list:
-        if profile=='concentration':
-            if s=='product':
-                unit = '(mg/l)'
-            else:
-                unit = '(mM)'
-            yaxis_titles[s] = f"{s.capitalize()} {unit}"
-        elif profile=='cumulative':
-            if s=='product':
-                unit = '(mg)'
-            else:
-                unit = '(mmol)'
-            yaxis_titles[s] = f"{s.capitalize()} {unit}"
-        else: # spRate
-            if s=='product':
-                unit = '(mg/10^9 cell/hr)'
-            else:
-                unit = '(mmol/10^9 cell/hr)'
-            yaxis_titles[s] = f"{s.capitalize()} {unit}"
+    for name in spc_list:
+        mask = df['species']==name
+        unit = df[mask]['unit'].iat[0]
+
+        if profile=='cumulative':
+            state = df[mask]['state'].iat[0]
+            yaxis_titles[name] = f"{name} {state} {unit}"
+        elif profile=='spRate':
+            yaxis_titles[name] = f"q{name} {unit}"
+        else:
+            yaxis_titles[name] = f"{name} {unit}"
 
     for i, annotation in enumerate(fig.layout.annotations):
         yaxis = 'yaxis' + str(i + 1)
         fig['layout'][yaxis]['title']['text'] = yaxis_titles[annotation.text.split('=')[-1]]
     return fig
 
-radio_buttons = []
-radio_buttons.append(html.Div([
-    html.Label('Concentration Graph Style', style={"font-weight": "bold"}),
-    html.Br(),
-    html.Div([
-        html.Label('Color:  '),
-        dcc.RadioItems(
-            id='color-option-1',
-            options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                        {'label': 'Run ID', 'value': 'runID'}], 
-            value='cellLine',
-            labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-        ),
-    ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '5px'}),
-    html.Div([
-        html.Label('Line:   '),
-        dcc.RadioItems(
-            id='line-option-1',
-            options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                        {'label': 'Run ID', 'value': 'runID'}],
-            value='runID',
-            labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-        ),
-    ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '5px'}),
-    html.Div([
-        html.Label('Symbol'),
-        dcc.RadioItems(
-            id='symbol-option-1',
-            options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                        {'label': 'Run ID', 'value': 'runID'}],
-            value='cellLine',
-            labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-        ),
-    ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '5px'})
-], style={'margin-bottom': '20px', 'margin-right': '40px'}))
+radio_buttons_1 = []
+radio_buttons_1.append(html.Div(
+    style={'margin-right': '40px'},
+    children = [
+        html.Button('Cell Concentration Profile Style', id='toggle-button-cell-concentration-style'),
+        html.Br(),
+        html.Div(id='toggle-output-cell-concentration-style', children=None)
+]))
 
-radio_buttons.append(html.Div([
-    html.Label('Cumulative Concentration Graph Style', style={"font-weight": "bold"}),
-    html.Br(),
-    html.Div([
-        html.Label('Color:  '),
-        dcc.RadioItems(
-            id='color-option-2',
-            options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                        {'label': 'Run ID', 'value': 'runID'}], 
-            value='cellLine',
-            labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-        ),
-    ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '5px'}),
-    html.Div([
-        html.Label('Line:   '),
-        dcc.RadioItems(
-            id='line-option-2',
-            options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                        {'label': 'Run ID', 'value': 'runID'}],
-            value='runID',
-            labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-        ),
-    ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '5px'}),
-    html.Div([
-        html.Label('Symbol'),
-        dcc.RadioItems(
-            id='symbol-option-2',
-            options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                        {'label': 'Run ID', 'value': 'runID'}],
-            value='runID',
-            labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-        )
-    ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '5px'}),
-], style={'margin-bottom': '20px', 'margin-right': '40px'}))
+radio_buttons_1.append(html.Div(
+    style={'margin-right': '40px'},
+    children = [
+        html.Button('Integral Viable Cell Profile Style', id='toggle-button-ivcc-style'),
+        html.Br(),
+        html.Div(id='toggle-output-ivcc-style', children=None)
+]))
 
-radio_buttons.append(html.Div([
-    html.Label('Specific Rate Graph Style', style={"font-weight": "bold"}),
-    html.Br(),
-    html.Div([
-        html.Label('Color:  ', ),
-        dcc.RadioItems(
-            id='color-option-3',
-            options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                        {'label': 'Run ID', 'value': 'runID'},
-                        {'label': 'Method', 'value': 'method'}], 
-            value='cellLine',
-            labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-        ),
-    ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '5px'}),
-    html.Div([
-        html.Label('Line:   '),
-        dcc.RadioItems(
-            id='line-option-3',
-            options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                        {'label': 'Run ID', 'value': 'runID'},
-                        {'label': 'Method', 'value': 'method'}],
-            value='runID',
-            labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-        ),
-    ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '5px'}),
-    html.Div([
-        html.Label('Symbol: '),
-        dcc.RadioItems(
-            id='symbol-option-3',
-            options=[{'label': 'Cell Line', 'value': 'cellLine'},
-                        {'label': 'Run ID', 'value': 'runID'},
-                        {'label': 'Method', 'value': 'method'}],
-            value='method',
-            labelStyle={'display': 'inline-block', 'margin-right': '10px'},
-        )
-    ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '5px'})
-], style={'margin-bottom': '20px', 'margin-right': '40px'}))
+radio_buttons_1.append(html.Div(
+    style={'margin-right': '40px'},
+    children = [
+        html.Button('Cumulative Cell Profile Style', id='toggle-button-cell-cumulative-style'),
+        html.Br(),
+        html.Div(id='toggle-output-cell-cumulative-style', children=None)
+]))
 
-radio_buttons.append(html.Div([
+radio_buttons_1.append(html.Div(style={'margin-right': '30px'},
+    children = [
+        html.Button('Growth Rate Profile Style', id='toggle-button-growth-rate-style'),
+        html.Br(),
+        html.Div(id='toggle-output-growth-rate-style', children=None)
+]))
+
+radio_buttons_2 = []
+radio_buttons_2.append(html.Div(
+    style={'margin-right': '40px'},
+    children = [
+        html.Button('Concentration Profile Style', id='toggle-button-concentration-style'),
+        html.Br(),
+        html.Div(id='toggle-output-concentration-style', children=None)
+]))
+
+radio_buttons_2.append(html.Div(
+    style={'margin-right': '40px'},
+    children = [
+        html.Button('Cumulative Profile Style', id='toggle-button-cumulative-style'),
+        html.Br(),
+        html.Div(id='toggle-output-cumulative-style', children=None)
+]))
+
+radio_buttons_2.append(html.Div(
+    style={'margin-right': '40px'},
+    children = [
+        html.Button('Specific Rate Profile Style', id='toggle-button-sp_rate-style'),
+        html.Br(),
+        html.Div(id='toggle-output-sp_rate-style', children=None)
+]))
+
+radio_buttons_3 = []
+radio_buttons_3.append(html.Div([
+    html.Label('x-axis', style={"font-weight": "bold"}),
+    dcc.RadioItems(
+        id='x-axis-radio',
+        options=[{'label': 'Day', 'value': 'Run Time (day)'},
+                 {'label': 'Hour', 'value': 'Run Time (hr)'}],
+        value='Run Time (hr)', 
+        inline=True,
+    ),
+], style={'margin-right': '40px'}))
+
+radio_buttons_3.append(html.Div([
     html.Label('Legend', style={"font-weight": "bold"}),
     dcc.RadioItems(
         id='legend-radio', 

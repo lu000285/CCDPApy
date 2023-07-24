@@ -1,6 +1,6 @@
 from CCDPApy import CellLine    # used to aggregate all cell lines and experiments data
 from CCDPApy import bioprocess_pipeline
-from CCDPApy.BioProcess.BioProcess import BioProcess
+from CCDPApy.cell_line.Fed_batch.BioProcess import BioProcess
 
 input_files = ['04-A1.xlsx', '04-B1.xlsx', '04-C1.xlsx', 'GS_SF13.xlsx']
 measurement_sheet = 'Measured Data'

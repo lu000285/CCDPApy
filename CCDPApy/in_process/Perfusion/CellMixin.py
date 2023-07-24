@@ -17,7 +17,7 @@ class CellMixin:
         self._sp_death_rate = d_rate
         
     def cumulative_calc(self) -> pd.DataFrame:
-        '''Calculate cumulative consumption or production of a metabolite.
+        '''Calculate cumulative production of the cell.
         Parameters
         ---------
             t : numpy array

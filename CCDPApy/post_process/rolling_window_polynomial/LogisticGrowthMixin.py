@@ -37,26 +37,18 @@ class LogisticGrowthMixin:
     def mid_point(self):
         '''Calculate mid points of the run time and concentration.
         '''
-        idx = self._idx                 # Measurement index
-        t = self._run_time_hour.values[idx]      # run time hour
+        idx = self.measurement_index     # Measurement index
+        t_hour = self.run_time_hour[idx]      # run time hour
+        t_day = self.run_time_day[idx]      # run time hour
 
-        t_mid = np.zeros((len(idx)-1))
+        t_day_mid = np.zeros((len(idx)-1))
+        t_hour_mid = np.zeros((len(idx)-1))
 
         for i in range(len(idx)-1):
-            t_mid[i] = 0.5 * (t[i] + t[i+1])
-        return t_mid
-    
-    @property
-    def get_post_process_logistic(self):
-        '''
-        '''
-        t = self._t_mid
-        spr = self._growth_rate['sp_growth_rate_(1/hr)'].values
-        df = pd.DataFrame({'runTime': t, 'value': spr})
-        df['profile'] = 'spRate'
-        df['kind'] = 'growthRate'
-        df['method'] = 'midPoint'
-        return df
+            t_day_mid[i] = 0.5 * (t_day[i] + t_day[i+1])
+            t_hour_mid[i] = 0.5 * (t_hour[i] + t_hour[i+1])
+
+        return t_day_mid, t_hour_mid
 
 # Logistic Growth Function
 def LogisticGrowth_fun(t,N0,K,r):

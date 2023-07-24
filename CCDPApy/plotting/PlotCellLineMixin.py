@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-from ..helper_func.helper_func import output_path
+from CCDPApy.helper import output_path
 
 class PlotMixin:
     '''

@@ -1,3 +1,3 @@
-from CCDPApy.BioProcess.bioprocess_pipeline import bioprocess_pipeline
-from CCDPApy.BioProcess.BioProcess import BioProcess
-from CCDPApy.BioProcess.CellLine import CellLine
+# CCDPApy Initialization
+from .cell_culture_types import FedBatchParameters, FedBatchCellCulture, FedBatchCellLine, FedBatchExpriment
+from .cell_culture_types import PerfusionParameters, PerfusionCellCulture, PerfusionCellLine, PerfusionExperiment

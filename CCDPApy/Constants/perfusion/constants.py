@@ -1,0 +1,5 @@
+CULTURE_VOLUME_COLUMN = 'Culture Volume (ml)'
+FLOWRATE_COLUMN = 'Flowrate (ml/hr)'
+VIABLE_CELL_COLUMN = 'Viable Cell Concentration (10^6 cells/ml)'
+DEAD_CELL_COLUMN = 'Dead Cell Concentration (10^6 cells/ml)'
+TOTAL_CELL_COLUMN = 'Total Cell Concentration (10^6 cells/ml)'

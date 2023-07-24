@@ -1,6 +1,6 @@
 import pandas as pd
 
-from CCDPApy.helper_func.helper_func import input_path
+from CCDPApy.helper import input_path
 
 class PolynomialMixin:
     '''

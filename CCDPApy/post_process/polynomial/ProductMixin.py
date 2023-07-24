@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from .GetterMixin import GetterMixin
+from ..Fed_batch.GetterMixin import GetterMixin
 
 class ProductMixin(GetterMixin):
     '''Product Poly. Reg. Mixin Class

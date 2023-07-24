@@ -1,6 +1,6 @@
 from CCDPApy import CellLine    # used to aggregate all cell lines and experiments data
 from CCDPApy import bioprocess_pipeline
-from CCDPApy import BioProcess
+from CCDPApy import cell_line
 
 data_file_1 = ['CL1_1.xlsx', 'CL1_2.xlsx', 'CL1_3.xlsx']
 key_cl1 = {'use_feed_conc': True,

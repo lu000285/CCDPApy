@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from .GetterMixin import GetterMixin
+from ..Fed_batch.GetterMixin import GetterMixin
 
 class MetaboliteMixin(GetterMixin):
     '''Polynomial Regression Mixin Class

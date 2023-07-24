@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from CCDPApy.in_process.GetterMixin import GetterMixin
+from CCDPApy.in_process.Fed_batch.GetterMixin import GetterMixin
 
 ###########################################################################
 # Oxygen Mixin Class
