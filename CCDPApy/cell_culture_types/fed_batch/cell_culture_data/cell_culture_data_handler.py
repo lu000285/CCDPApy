@@ -1,16 +1,16 @@
 import pandas as pd
 
-from CCDPApy.cell_culture_data import CellCultureDataHandler
 from CCDPApy.plotting.InteractivePlot import InteractivePlotMixin
-
+from CCDPApy.cell_culture_data_base.cell_culture_data_handler import CellCultureDataHandler
+from CCDPApy.cell_culture_types.fed_batch.export.export import ExportMixin
 from .GeterMixin import GetterMixin
 from .constants import DATA_SHEET, FEED_SHEET, SEPARATE_FEED_SHEET, POLYNOMIAL_SHEET
 from .constants import EXPERIMENT_DATA_COLUMN, CONC_BEFOROE_FEED_COLUMN, CONC_AFTER_FEED_COLUMN, MEASURED_CUMULATIVE_COLUMN
-from .constants import CELL_LINE_COLUMN, ID_COLUMN, DATE_COLUMN
+from .constants import CELL_LINE_COLUMN, ID_COLUMN
 
 from CCDPApy.helper import split_df
 
-class FedBatchCellCultureDataHandler(CellCultureDataHandler, GetterMixin, InteractivePlotMixin):
+class FedBatchCellCultureDataHandler(CellCultureDataHandler, GetterMixin, InteractivePlotMixin, ExportMixin):
     ''''''
     def __init__(self, parameters) -> None:
         super().__init__(cell_culture_type='fed-batch')

@@ -20,7 +20,7 @@ class MetaboliteMixin(GetterMixin):
         self._cumulative_conc = pd.concat([run_time, s], axis=1)
 
         # SP. rate
-        self._sp_rate = None
+        self._sp_rate = pd.DataFrame()
         
     def cumulative_calc(self) -> pd.DataFrame:
         '''Calculate cumulative consumption or production of a metabolite.

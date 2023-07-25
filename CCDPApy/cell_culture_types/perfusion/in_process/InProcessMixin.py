@@ -53,6 +53,10 @@ class InProcessMixin(GetterMixin):
             cumulative_data = spc.cumulative_conc.copy()
             cumulative_data['species'] = name.capitalize()
             cumulative_conc_df_list.append(cumulative_data)
+
+            '''sp_rate_data = spc.sp_rate.copy()
+            sp_rate_data['species'] = name.capitalize()
+            sp_rate_data.append(sp_rate_data)'''
         
         # concat and add "ID"
         conc_df = pd.concat(conc_df_list, axis=0, ignore_index=True)
@@ -63,7 +67,7 @@ class InProcessMixin(GetterMixin):
         # save
         self._conc_df = conc_df
         self._cumulative_conc_df = cumulative_conc_df
-        self._sp_rate = None
+        self._sp_rate = pd.DataFrame()
 
     @property
     def conc(self):

@@ -1,6 +1,7 @@
 import pandas as pd
 
-from CCDPApy.cell_culture_data import CellCultureDataHandler
+from CCDPApy.cell_culture_data_base.cell_culture_data_handler import CellCultureDataHandler
+from CCDPApy.cell_culture_types.perfusion.export.export import ExportMixin
 from CCDPApy.plotting.InteractivePlot import InteractivePlotMixin
 
 from .GetterMixin import GetterMixin
@@ -10,7 +11,7 @@ from .constants import CELL_LINE_COLUMN, ID_COLUMN
 
 from CCDPApy.helper import split_df
 
-class PerfusionCellCultureDataHandler(CellCultureDataHandler, GetterMixin, InteractivePlotMixin):
+class PerfusionCellCultureDataHandler(CellCultureDataHandler, GetterMixin, InteractivePlotMixin, ExportMixin):
     ''''''
     def __init__(self, parameters) -> None:
         super().__init__(cell_culture_type='perfusion')
@@ -27,12 +28,15 @@ class PerfusionCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Inter
         # calss members to store processed data
         self._cell_data = {'conc': None,
                            'cumulative': None,
-                           'integral': None,
-                           'growth_rate': None}
+                           'growth_rate': None,
+                           'death_rate': None}
         
         self._metabolite_data = {'conc': None,
                                  'cumulative': None,
                                  'sp_rate': None}
+        
+        # class member to store cell line handlers
+        self._cell_line_handles = {}
 
 
     def load_data(self, file, sheet_name=[DATA_SHEET, FEED_SHEET, POLYNOMIAL_SHEET]):
@@ -74,21 +78,22 @@ class PerfusionCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Inter
         self._data_set = data
 
     def perform_data_process(self):
-        '''in-prcessing data for all cell lines.'''
+        '''data-prcessing for all cell lines.'''
         cell_line_names = self.get_cell_line_names()
         data_set = self.get_all_data()
 
         cell_lines = [name for name in cell_line_names if name in self._param.keys()]
 
-        cell_line_handles = {}
+        cell_line_handles = self._cell_line_handles
         for cell_line in cell_lines:
+            # Get parameter
             param = self._param[cell_line]
+
             # call cell line data handler
             cell_line_data_handler = self._cell_line_handler(
                 cell_line_name=cell_line,
                 data=data_set,
-                use_feed_conc=param.use_feed_conc,
-                use_conc_after_feed=param.use_conc_after_feed
+                parameter=param
             )
             # in-processing
             cell_line_data_handler.in_process()
@@ -96,12 +101,6 @@ class PerfusionCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Inter
             # post-porcessing-polynomial regression
             if param.polynomial:
                 cell_line_data_handler.polynomial()
-
-            # post-processing-rolling window polynomial regression
-            if param.rolling_window_polynomial:
-                deg = param.rolling_polynomial_degree
-                window = param.rolling_polynomial_window
-                cell_line_data_handler.rolling_window_polynomial(deg=deg, window=window)
 
             # store handlers
             cell_line_handles[cell_line] = cell_line_data_handler
@@ -114,14 +113,14 @@ class PerfusionCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Inter
         '''store data for the cell and metabolite from cell line data handlers.'''
         cell_line_handles = self._cell_line_handles
 
-        cell_conc, cell_cumulative, cell_integral, cell_growth_rate = [], [], [], []
+        cell_conc, cell_cumulative, cell_death_rate, cell_growth_rate = [], [], [], []
         conc, cumulative, sp_rate = [], [], []
         for cell_line_handler in cell_line_handles.values():
             # cell data
             cell_data = cell_line_handler.get_cell_data()
             cell_conc.append(cell_data['conc'])
             cell_cumulative.append(cell_data['cumulative'])
-            cell_integral.append(cell_data['integral'])
+            cell_death_rate.append(cell_data['death_rate'])
             cell_growth_rate.append(cell_data['growth_rate'])
 
             # metabolite data
@@ -133,7 +132,7 @@ class PerfusionCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Inter
         # concat
         cell_conc =  pd.concat(cell_conc, axis=0)
         cell_cumulative = pd.concat(cell_cumulative, axis=0)
-        cell_integral = pd.concat(cell_integral, axis=0)
+        cell_death_rate = pd.concat(cell_death_rate, axis=0)
         cell_growth_rate = pd.concat(cell_growth_rate, axis=0)
         conc = pd.concat(conc, axis=0)
         cumulative = pd.concat(cumulative, axis=0)
@@ -142,7 +141,7 @@ class PerfusionCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Inter
         # store data
         self._cell_data['conc'] =  cell_conc
         self._cell_data['cumulative'] = cell_cumulative
-        self._cell_data['integral'] = cell_integral
+        self._cell_data['death_rate'] = cell_death_rate
         self._cell_data['growth_rate'] = cell_growth_rate
         self._metabolite_data['conc'] = conc
         self._metabolite_data['cumulative'] = cumulative

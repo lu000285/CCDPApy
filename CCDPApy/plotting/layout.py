@@ -4,11 +4,11 @@ CELL_CONCENTRATION_STYLE_CHILDREN = [
     html.Div([
         html.Label('Color:  '),
         dcc.RadioItems(
-            id='color-option-cell-conc',
+            id='color-option-vcc',
             options=[
                 {'label': 'Cell Line', 'value': 'Cell Line'},
                 {'label': 'ID', 'value': 'ID'},
-                {'label': 'State', 'value': 'state'}], 
+            ],
             value='Cell Line',
             labelStyle={'display': 'inline-block', 'margin-right': '10px'},
         ),
@@ -16,11 +16,11 @@ CELL_CONCENTRATION_STYLE_CHILDREN = [
     html.Div([
         html.Label('Line:   '),
         dcc.RadioItems(
-            id='line-option-cell-conc',
+            id='line-option-vcc',
             options=[
                 {'label': 'Cell Line', 'value': 'Cell Line'},
                 {'label': 'ID', 'value': 'ID'},
-                {'label': 'State', 'value': 'state'}],
+            ],
             value='ID',
             labelStyle={'display': 'inline-block', 'margin-right': '10px'},
         ),
@@ -28,12 +28,12 @@ CELL_CONCENTRATION_STYLE_CHILDREN = [
     html.Div([
         html.Label('Symbol'),
         dcc.RadioItems(
-            id='symbol-option-cell-conc',
+            id='symbol-option-vcc',
             options=[
                 {'label': 'Cell Line', 'value': 'Cell Line'},
                 {'label': 'ID', 'value': 'ID'},
-                {'label': 'State', 'value': 'state'}],
-            value='state',
+            ],
+            value='ID',
             labelStyle={'display': 'inline-block', 'margin-right': '10px'},
         ),
     ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '5px'}),
