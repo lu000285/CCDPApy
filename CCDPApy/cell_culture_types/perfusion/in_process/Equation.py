@@ -41,14 +41,12 @@ XD: Dead cell concentration
 XV: Viable cell concentration
 D: Dillution rate
 '''
-def death_rate(a, c, xd1, xd2, xv1, xv2, t1, t2, d1, d2) -> float:
+def death_rate(b, xd1, xd2, xv1, xv2, t1, t2, d1, d2) -> float:
     '''Calculate the death rate of the cell.
     Parameters
     ---------
-        a : float
-            a recycling factor
-        c : float
-            a concentration factor
+        b : float
+            bleeding ratio
         xd1 : float
             Dead cell concentration at t-1 (10^6 cells/ml).
         xd2 : float
@@ -70,7 +68,7 @@ def death_rate(a, c, xd1, xd2, xv1, xv2, t1, t2, d1, d2) -> float:
         float
             Death rate of the cell (hr^-1).
     '''
-    return ((xd2-xd1)/(t2-t1)+(1+a-a*c)*(d2+d1)*0.5*(xd2+xd1)*0.5)/((xv2+xv1)*0.5)
+    return ((xd2-xd1)/(t2-t1)+(1-b)*(d2+d1)*0.5*(xd2+xd1)*0.5)/((xv2+xv1)*0.5)
 
 
 '''
@@ -83,14 +81,12 @@ XV: Viable cell concentration
 D: Dillution rate
 dXD/dt: Death rate
 '''
-def growth_rate(a, c, xv1, xv2, t1, t2, d1, d2, dr) -> float:
+def growth_rate(b, xv1, xv2, t1, t2, d1, d2, dr) -> float:
     '''Calculate the death rate of the cell.
     Parameters
     ---------
-        a : float
-            a recycling factor
-        c : float
-            a concentration factor
+        b : float
+            bleeding ratio
         xv1 : float
             Viable cell concentration at t-1 (10^6 cells/ml).
         xv2 : float
@@ -109,4 +105,4 @@ def growth_rate(a, c, xv1, xv2, t1, t2, d1, d2, dr) -> float:
         float
             Growth rate of the cell (hr^-1).
     '''
-    return ((xv2-xv1)/(t2-t1)/((xv2+xv1)*0.5)+(1+a-a*c)*(d2+d1)*0.5)+dr
+    return ((xv2-xv1)/(t2-t1)/((xv2+xv1)*0.5)+(1-b)*(d2+d1)*0.5)+dr

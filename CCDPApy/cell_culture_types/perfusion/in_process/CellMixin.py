@@ -7,15 +7,8 @@ from .Equation import production, death_rate, growth_rate
 class CellMixin(GetterMixin):
     '''
     '''
-    def in_process(self, a:float, c:float):
-        '''
-        Attributes
-        ----------
-            a : float
-                a recycling factor
-            c : float
-                a concentration factor
-        '''
+    def in_process(self):
+        ''''''
         # Get run time dataframe
         run_time = self.run_time
 
@@ -24,7 +17,7 @@ class CellMixin(GetterMixin):
         self._cumulative_conc = pd.concat([run_time, s], axis=1)
 
         # Growth rate and death rate
-        g_rate, d_rate = self.sp_rate_calc(a, c)
+        g_rate, d_rate = self.sp_rate_calc()
         self._sp_rate = pd.concat([run_time, g_rate], axis=1)
         self._sp_death_rate = pd.concat([run_time, d_rate], axis=1)
         
@@ -59,14 +52,10 @@ class CellMixin(GetterMixin):
         s.index.name = 'Cumulatve Production'
         return s
     
-    def sp_rate_calc(self, a, c) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def sp_rate_calc(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         '''Calculate the specific growth rate and death rate of the cell.
         Parameters
         ---------
-            a : float
-                a recycling factor
-            c : float
-                a concentration factor
             t : numpy array
                 Time (hr)
             xd : numpy array
@@ -80,7 +69,8 @@ class CellMixin(GetterMixin):
             g_rate, d_rate : tupple of pandas DataFrames
                 Specific growth rate (hr^1) and death rate (hr^1).
         '''
-        t = t = self.run_time_hour
+        t = self.run_time_hour
+        b = self._bleeding_ratio
         xd = self.dead_cell_conc['value'].values
         xv = self.viable_cell_conc['value'].values
         d = self.dillution_rate['value'].values
@@ -89,8 +79,8 @@ class CellMixin(GetterMixin):
         dr.fill(np.nan)
         gr.fill(np.nan)
         for i in range(1, t.size):
-            dr[i] = death_rate(a, c, xd[i-1], xd[i], xv[i-1], xv[i], t[i-1], t[i], d[i-1], d[i])
-            gr[i] = growth_rate(a, c, xv[i-1], xv[i], t[i-1], t[i], d[i-1], d[i], dr[i])
+            dr[i] = death_rate(b[i-1], xd[i-1], xd[i], xv[i-1], xv[i], t[i-1], t[i], d[i-1], d[i])
+            gr[i] = growth_rate(b[i-1], xv[i-1], xv[i], t[i-1], t[i], d[i-1], d[i], dr[i])
         
         d_rate = pd.DataFrame(data=dr, columns=['value'])
         d_rate['unit'] = '(hr^-1)'

@@ -9,7 +9,7 @@ from CCDPApy.cell_culture_types.perfusion.in_process import InProcessMixin as In
 from CCDPApy.cell_culture_types.perfusion.post_process.polynomial import PolynomialMixin as Polynomial
 from CCDPApy.helper import create_value_unit_df, split_name_unit, create_col_indices
 from CCDPApy.Constants import CELL_LINE_COLUMN, ID_COLUMN
-from CCDPApy.Constants.perfusion.constants import CULTURE_VOLUME_COLUMN, FLOWRATE_COLUMN, VIABLE_CELL_COLUMN, DEAD_CELL_COLUMN, TOTAL_CELL_COLUMN
+from CCDPApy.Constants.perfusion.constants import CULTURE_VOLUME_COLUMN, BLEEDING_RATIO_COLUMN, FLOWRATE_COLUMN, VIABLE_CELL_COLUMN, DEAD_CELL_COLUMN, TOTAL_CELL_COLUMN
 
 COLUMNS_TO_DROP = [CELL_LINE_COLUMN, ID_COLUMN]
 
@@ -35,12 +35,14 @@ class PerfusionExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, 
         # calculate the dillution rate (hr^-1): 
         #       flow rate (ml/hr) / culture volume (ml)
         culture_volume = df[CULTURE_VOLUME_COLUMN].iat[0]
+        beta = df[BLEEDING_RATIO_COLUMN].values
         flow_rate = df[FLOWRATE_COLUMN].values
         rate = flow_rate / culture_volume
         dillution_rate = pd.DataFrame(data=rate, columns=['value'])
         dillution_rate['unit'] = '(hr^-1)'
         dillution_rate.index.name = 'dillution_rate'
         
+        self._bleeding_ratio = beta
         self._dillution_rate = dillution_rate
         self._viable_cell_conc = create_value_unit_df(df[VIABLE_CELL_COLUMN])
         self._dead_cell_conc = create_value_unit_df(df[DEAD_CELL_COLUMN])
@@ -79,6 +81,7 @@ class PerfusionExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, 
         '''crate specise object to analyze.'''
         spc_dict = {}
         run_time = self._run_time
+        bleeding_ratio = self._bleeding_ratio
         dillution_rate = self._dillution_rate
         viable_cell = self._viable_cell_conc
         dead_cell = self._dead_cell_conc
@@ -91,6 +94,7 @@ class PerfusionExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, 
         feed_conc_indices = create_col_indices(feed_conc_df)
 
         cell = Cell(run_time_df=run_time, 
+                    bleeding_ratio=bleeding_ratio,
                     dillution_rate=dillution_rate,
                      viable_cell_conc=viable_cell, 
                     dead_cell_conc=dead_cell, 

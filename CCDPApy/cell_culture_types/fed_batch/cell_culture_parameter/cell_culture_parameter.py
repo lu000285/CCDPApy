@@ -1,7 +1,11 @@
 class FedBatchParameters:
     '''Store key parameters for a fed-batch cell culture data processing.'''
-    def __init__(self, cell_line_name:str, use_feed_concentration:bool, use_concentration_after_feed:bool, 
-                 regression_method=None, polynomial_degreee=None,
+    def __init__(self, 
+                 cell_line_name:str, 
+                 use_feed_concentration:bool, 
+                 use_concentration_after_feed:bool, 
+                 regression_method=None, 
+                 polynomial_degreee=None,
                  rolling_polynomial_degree=None, rolling_polynomial_window=None) -> None:
         '''
         Attributes

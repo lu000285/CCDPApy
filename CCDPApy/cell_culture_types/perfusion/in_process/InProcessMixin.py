@@ -9,15 +9,9 @@ class InProcessMixin(GetterMixin):
     -------
 
     '''
-    def in_process(self, a=0.25, c=3.0):
+    def in_process(self):
         '''
         Calculate cumulative consumptions/productions for species.
-        Parameters
-        ----------
-            a : float, optional, default=0.25
-                a recycling factor
-            c : float, optional, default=3.0
-                a concentration factor
         '''
         # Species dict
         species = self.get_species()
@@ -29,7 +23,7 @@ class InProcessMixin(GetterMixin):
         if 'cell' in species_list:
             species_list.remove('cell')
             cell = species['cell']
-            cell.in_process(a=a, c=c)
+            cell.in_process()
             s = cell.cumulative_conc.copy()
             g_r = cell.growth_rate.copy()
             d_r = cell.death_rate.copy()

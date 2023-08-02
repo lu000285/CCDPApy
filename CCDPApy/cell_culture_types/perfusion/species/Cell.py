@@ -7,7 +7,7 @@ from CCDPApy.cell_culture_types.perfusion.post_process.polynomial import CellMix
 class Cell(Species, Inprocess, Polynomial):
     '''
     '''
-    def __init__(self, run_time_df, dillution_rate, viable_cell_conc, dead_cell_conc, total_cell_conc) -> None:
+    def __init__(self, run_time_df, bleeding_ratio, dillution_rate, viable_cell_conc, dead_cell_conc, total_cell_conc) -> None:
         '''
         '''
         super().__init__('cell', run_time_df, dillution_rate, viable_cell_conc)
@@ -19,6 +19,7 @@ class Cell(Species, Inprocess, Polynomial):
         df.index.name = 'viability'
 
         # Store variables
+        self._bleeding_ratio = bleeding_ratio
         self._dead_cell_conc = dead_cell_conc
         self._total_cell_conc = total_cell_conc
         self._viability = df

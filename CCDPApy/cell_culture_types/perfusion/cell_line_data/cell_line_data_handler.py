@@ -72,15 +72,13 @@ class PerfusionCellLineDataHandler(CellLineDataHandler, GetterMixin):
         data = self.get_all_data()
 
         exp_handles = self._exp_handles
-        param = self._parameter
         for id in experiment_ids:
             # call experiment handler
             exp_handler = self._experiment_handler(cell_line_name=cell_line_name,
                                                    cell_line_id=id,
                                                    data=data)
             # in-processing
-            a, c = param.recycling_factor, param.concentration_factor
-            exp_handler.in_process(a=a, c=c)
+            exp_handler.in_process()
 
             # store the handle with a key of id
             exp_handles[id] = exp_handler
