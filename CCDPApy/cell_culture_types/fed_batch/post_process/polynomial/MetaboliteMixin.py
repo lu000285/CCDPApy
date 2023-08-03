@@ -54,6 +54,7 @@ class MetaboliteMixin(GetterMixin):
             r_poly = y / xv
         else:
             r_poly = y / (xv * v) * 1000
+            
         r_poly[0] = np.nan
         r_poly = pd.DataFrame(data=r_poly, columns=['value'])
         r_poly['unit'] = '(mmol/10^9 cells/hr)'

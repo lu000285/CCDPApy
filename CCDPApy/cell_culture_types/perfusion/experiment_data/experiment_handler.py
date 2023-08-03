@@ -7,13 +7,14 @@ from CCDPApy.experiment_data import ExperimentDataHandler
 from CCDPApy.cell_culture_types.perfusion.species import Cell, Metabolite
 from CCDPApy.cell_culture_types.perfusion.in_process import InProcessMixin as Inprocess
 from CCDPApy.cell_culture_types.perfusion.post_process.polynomial import PolynomialMixin as Polynomial
+from CCDPApy.cell_culture_types.perfusion.post_process.rolling_window_polynomial import RollingWindowPolynomialMixin as RollingPolynomial
 from CCDPApy.helper import create_value_unit_df, split_name_unit, create_col_indices
 from CCDPApy.Constants import CELL_LINE_COLUMN, ID_COLUMN
 from CCDPApy.Constants.perfusion.constants import CULTURE_VOLUME_COLUMN, BLEEDING_RATIO_COLUMN, FLOWRATE_COLUMN, VIABLE_CELL_COLUMN, DEAD_CELL_COLUMN, TOTAL_CELL_COLUMN
 
 COLUMNS_TO_DROP = [CELL_LINE_COLUMN, ID_COLUMN]
 
-class PerfusionExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, Polynomial):
+class PerfusionExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, Polynomial, RollingPolynomial):
     '''
     '''
     def __init__(self, cell_line_name, cell_line_id, data) -> None:

@@ -1,8 +1,9 @@
 from CCDPApy.cell_culture_types.perfusion.in_process import MetaboliteMixin as Inprocess
 from CCDPApy.cell_culture_types.perfusion.post_process.polynomial import MetaboliteMixin as Plynomial
+from CCDPApy.cell_culture_types.perfusion.post_process.rolling_window_polynomial import MetaboliteMixin as RollingPolynomial
 from .Species import Species
 
-class Metabolite(Species, Inprocess, Plynomial):
+class Metabolite(Species, Inprocess, Plynomial, RollingPolynomial):
     '''
     '''
     def __init__(self, name, run_time_df, dillution_rate, conc, feed_conc, viable_cell_conc) -> None:

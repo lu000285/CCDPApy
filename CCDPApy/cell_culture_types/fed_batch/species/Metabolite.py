@@ -9,9 +9,7 @@ from .Species import Species
 
 # from CCDPApy.in_process.Fed_batch.MetaboliteMixin import MetaboliteMixin as Inprocess
 
-class Metabolite(Species, Inprocess, Polynomial, RollingPolynomial
-                 # PlotMixin
-                 ):
+class Metabolite(Species, Inprocess, Polynomial, RollingPolynomial):
     '''
     Metabolite class.
     Attributes
