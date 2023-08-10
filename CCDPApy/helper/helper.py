@@ -3,6 +3,14 @@ import numpy as np
 import os, re
 from pathlib import Path
 
+def add_descriptive_column(df, name):
+    '''add the row of the column that describes the dataframe.'''
+    col_df = pd.DataFrame(data=dict(zip(df.columns, [[col] for col in df.columns])))
+    new_df = pd.concat([col_df, df], axis=0, ignore_index=True)
+    new_column_names = {col: '' if i != 0 else name for i, col in enumerate(df.columns)}
+    new_df = new_df.rename(columns=new_column_names)
+    return new_df
+
 def split_name_unit(string):
     '''Split the string into the parameter name and its unit using regular expression.
     '''

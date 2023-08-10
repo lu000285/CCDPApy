@@ -6,3 +6,4 @@ from .helper import create_value_unit_df
 from .helper import get_measurement_indices
 from .helper import create_col_indices
 from .helper import create_df_dict
+from .helper import add_descriptive_column

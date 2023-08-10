@@ -1,14 +1,14 @@
 import pandas as pd
 
 from CCDPApy.Constants import CELL_LINE_COLUMN, ID_COLUMN, DATE_COLUMN, RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
-
+from CCDPApy.Constants.fed_batch.dict_key import EXP_DATA_KEY 
 class ExperimentDataHandler:
     '''
     '''
     def __init__(self, cell_line_name, cell_line_id, data, cell_culture_type=None) -> None:
         '''
         '''
-        data = data['measured_data'].copy()
+        data = data[EXP_DATA_KEY].copy()
         mask = (data[CELL_LINE_COLUMN]==cell_line_name) & (data[ID_COLUMN]==cell_line_id)
         data_masked = data[mask].copy()
 

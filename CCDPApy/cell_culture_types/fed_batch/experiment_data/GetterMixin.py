@@ -11,6 +11,9 @@ class GetterMixin:
     def cell_conc(self):
         return self._cell_conc
     
+    def get_processed_data(self):
+        return self._processed_data
+    
     def get_conc_before_feed(self):
         '''get measured data for concentration before feeding.'''
         return self._conc_before_feed_data

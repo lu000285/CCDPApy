@@ -2,7 +2,8 @@ import pandas as pd
 
 from CCDPApy.cell_line_data import CellLineDataHandler
 from CCDPApy.cell_culture_types.fed_batch.experiment_data import FedBatchExperimentHandler
-from CCDPApy.Constants import CELL_LINE_COLUMN
+from CCDPApy.Constants.fed_batch.column_name import CELL_LINE_COLUMN
+from CCDPApy.Constants.fed_batch.dict_key import EXP_DATA_KEY, FEED_VOLUME_KEY, CONC_BEFORE_FEED_KEY, CONC_AFTER_FEED_KEY, MEASURED_CUM_CONC_KEY, FEED_CONC_KEY, POLY_DEG_KEY
 
 from .GetterMixin import GetterMixin
 
@@ -15,13 +16,13 @@ class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
         self._use_feed_conc = use_feed_conc
         self._use_conc_after_feed = use_conc_after_feed
 
-        conc_before_feed_data = data['conc_before_feed'].copy()
-        conc_after_feed_data = data['conc_after_feed'].copy()
-        measured_cumulative_conc_data = data['measured_cumulative_conc'].copy()
-        feed_conc_data = data['feed_conc'].copy()
-        separate_feed_conc_data = data['separate_feed_conc'].copy()
+        conc_before_feed_data = data[CONC_BEFORE_FEED_KEY].copy()
+        conc_after_feed_data = data[CONC_AFTER_FEED_KEY].copy()
+        measured_cumulative_conc_data = data[MEASURED_CUM_CONC_KEY].copy()
+        feed_conc_data = data[FEED_CONC_KEY].copy()
+        feed_volume_data = data[FEED_VOLUME_KEY].copy()
         feed_mask = feed_conc_data[CELL_LINE_COLUMN]==cell_line_name
-        separate_feed_mask = separate_feed_conc_data[CELL_LINE_COLUMN]==cell_line_name
+        # separate_feed_mask = separate_feed_conc_data[CELL_LINE_COLUMN]==cell_line_name
 
         polynomial_degree_data = data['polynomial_degree_data'].copy()
         polynomial_degree_mask = polynomial_degree_data[CELL_LINE_COLUMN]==cell_line_name
@@ -31,16 +32,16 @@ class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
         self._conc_after_feed_data  = conc_after_feed_data[self._mask].copy()
         self._measured_cumulative_conc_data = measured_cumulative_conc_data[self._mask].copy()
         self._feed_data  = feed_conc_data[feed_mask].copy()
-        self._separate_feed_data  = separate_feed_conc_data[separate_feed_mask].copy()
+        self._feed_volume_data  = feed_volume_data[self._mask].copy()
 
         # Store all data in dict
-        data = {'measured_data': self._measured_data,
-                'conc_before_feed': self._conc_before_feed_data,
-                'conc_after_feed': self._conc_after_feed_data,
-                'measured_cumulative_conc': self._measured_cumulative_conc_data,
-                'feed_conc': self._feed_data,
-                'separate_feed_conc': self._separate_feed_data,
-                'polynomial_degree_data': self._polynomial_degree_data}
+        data = {EXP_DATA_KEY: self._measured_data,
+                CONC_BEFORE_FEED_KEY: self._conc_before_feed_data,
+                CONC_AFTER_FEED_KEY: self._conc_after_feed_data,
+                MEASURED_CUM_CONC_KEY: self._measured_cumulative_conc_data,
+                FEED_CONC_KEY: self._feed_data,
+                FEED_VOLUME_KEY: self._feed_volume_data,
+                POLY_DEG_KEY: self._polynomial_degree_data}
         self._data_set = data
 
         # calss members to store processed data

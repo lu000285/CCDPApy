@@ -35,6 +35,8 @@ class FedBatchParameters:
             else:
                 self._rolling_polynomial_window = 6
         else:
+            self._rolling_polynomial_degree = None
+            self._rolling_polynomial_window = None
             self._rolling_window_polynomial = False
 
     @property
@@ -66,16 +68,16 @@ class FedBatchParameters:
         return self._polynomial
     
     @polynomial.setter
-    def polynomial(self, polynomial):
-        self._polynomial = polynomial
+    def polynomial(self, poly):
+        self._polynomial = poly
     
     @property
     def rolling_window_polynomial(self):
         return self._rolling_window_polynomial
     
     @rolling_window_polynomial.setter
-    def rolling_window_polynomial(self, rolling_window_polynomial):
-        self._rolling_window_polynomial = rolling_window_polynomial
+    def rolling_window_polynomial(self, rolling_window_poly):
+        self._rolling_window_polynomial = rolling_window_poly
     
     @property
     def rolling_polynomial_degree(self):

@@ -18,6 +18,7 @@ class MetaboliteMixin(GetterMixin):
         self._use_feed_conc = use_feed_conc
         self._use_conc_after_feed = use_conc_after_feed
 
+        # Calculate concentration after feeding
         if not use_conc_after_feed:
             self._conc_after_feed = self.conc_after_feeding_calc()
 
@@ -57,18 +58,20 @@ class MetaboliteMixin(GetterMixin):
         s = self.conc_before_feed['value'].values[idx]# Substrate Concentration (mM)
         f_media = self.feed_media_added[idx]# Feed Flowrate (ml/hr)
         v = self.volume_after_sampling[idx]# Culture Volume After Sampling (ml)
-        separate_feed = self.separate_feed# Separate Feed DataFrame
+        # separate_feed = self.separate_feed# Separate Feed DataFrame
+        f = self.separate_feed[idx]
         separate_f_added = self.separate_feed_sum # Separate Feed Sum Added (E.g. glutamine, glucose, etc.)
 
         # Check if species has the separate feed
-        if separate_feed is None:
+        '''if separate_feed is None:
             f = f_media
         else:
-            f = separate_feed['value'].values[idx]
+            f = separate_feed['value'].values[idx]'''
 
         # Concentration After Feeding
         if self.use_feed_conc:
-            sf = self.feed_conc['value'].values[idx]# Substrate Feed Concentration (mM)
+            # sf = self.feed_conc['value'].values[idx]# Substrate Feed Concentration (mM)
+            sf = self.feed_conc
             c = ((s*v + sf*f) / (v + f_media + separate_f_added))
         else:
             c = (s*v / (v + f_media + separate_f_added))
@@ -81,17 +84,19 @@ class MetaboliteMixin(GetterMixin):
         '''
         idx = self.measurement_index
         s = self.conc_before_feed['value'].values[idx]     # Substrate Concentration (mM)
-        sf = self.feed_conc['value'].values[idx]           # Substrate Feed Concentration (mM)
+        # sf = self.feed_conc['value'].values[idx]           # Substrate Feed Concentration (mM)
+        sf = self.feed_conc
         feed_media = self.feed_media_added[idx]     # Feed Flowrate (ml/hr)
         v1 = self.volume_before_sampling[idx]   # Culture Volume Before Sampling (ml)
         v2 = self.volume_after_sampling[idx]    # Culture Volume After Sampling (ml)
-        separate_feed = self.separate_feed        # Separate Feed data
+        # separate_feed = self.separate_feed        # Separate Feed data
+        f = self.separate_feed[idx]
 
         # Check if species has the separate feed
-        if separate_feed is None:
+        '''if separate_feed is None:
             f = feed_media
         else:
-            f = separate_feed['value'].values[idx]
+            f = separate_feed['value'].values[idx]'''
 
         # Initialize
         c = np.zeros(self.samples)
@@ -100,7 +105,8 @@ class MetaboliteMixin(GetterMixin):
 
         # Consumed Substrate = sf*f + s[i-1]*v[i-1] - s[i]*v[i]
         for i in range(1, len(idx)):
-            c_i = (sf[i] * f[i-1] - s[i] * v1[i] + s[i-1] * v2[i-1]) / 1000
+            # c_i = (sf[i] * f[i-1] - s[i] * v1[i] + s[i-1] * v2[i-1]) / 1000
+            c_i = (sf * f[i-1] - s[i] * v1[i] + s[i-1] * v2[i-1]) / 1000
             c[idx[i]] = c[idx[i-1]] + c_i
         if SPECIES_STATE[self.name] == 'Produced':
             c *= -1

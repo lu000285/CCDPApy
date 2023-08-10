@@ -24,3 +24,5 @@ PRODUCT_COLUMN = 'IgG (mg/L)'
 
 RUN_TIME_DAY_COLUMN = 'Run Time (day)'
 RUN_TIME_HOUR_COLUMN = 'Run Time (hr)'
+RUN_TIME_DAY_MID_COLUMN = 'Run Time Mid (day)'
+RUN_TIME_HOUR_MID_COLUMN = 'Run Time Mid (hr)'

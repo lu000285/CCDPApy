@@ -4,6 +4,10 @@ class GetterMixin:
         '''get dictionary for all dataset.'''
         return self._data_set
     
+    def get_processed_data(self):
+        ''''''
+        return self._processed_data
+    
     def get_cell_data(self):
         return self._cell_data
     
@@ -30,9 +34,9 @@ class GetterMixin:
         '''get feed concentration data.'''
         return self._feed_data
 
-    def get_separate_feed_conc(self):
+    #def get_separate_feed_conc(self):
         '''get separate feed concentration data.'''
-        return self._separate_feed_data
+        #return self._separate_feed_data
     
     def get_polynomial_degree(self):
         '''get polynomial degreee data.'''

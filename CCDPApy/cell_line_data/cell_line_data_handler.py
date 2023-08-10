@@ -1,4 +1,6 @@
 from CCDPApy.Constants import CELL_LINE_COLUMN, ID_COLUMN
+from CCDPApy.Constants.fed_batch.dict_key import EXP_DATA_KEY
+
 from CCDPApy.cell_culture_types.fed_batch.experiment_data import FedBatchExperimentHandler
 from CCDPApy.cell_culture_types.perfusion.experiment_data.experiment_handler import PerfusionExperimentHandler
 class CellLineDataHandler:
@@ -14,7 +16,7 @@ class CellLineDataHandler:
         elif cell_culture_type=='perfusion':
             self._experiment_handler = PerfusionExperimentHandler
 
-        data = data['measured_data'].copy()
+        data = data[EXP_DATA_KEY].copy()
         mask = data[CELL_LINE_COLUMN]==cell_line_name
         data_masked = data[mask].copy()
 

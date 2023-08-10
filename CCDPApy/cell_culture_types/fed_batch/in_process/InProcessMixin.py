@@ -1,5 +1,9 @@
 import pandas as pd
 
+from CCDPApy.helper import add_descriptive_column
+
+from CCDPApy.Constants.fed_batch.column_name import CUMULATIVE_CONC_COLUMN, SP_RATE_COLUMN, CONC_AFTER_FEED_COLUMN
+
 class InProcessMixin:
     '''
     Mixin class for BioProcess class to do in-processing.
@@ -13,6 +17,11 @@ class InProcessMixin:
         species = self.get_species('all')
         species_list = list(species.keys())
 
+        # initialize df for logging
+        cumulative_conc_dataframe = pd.DataFrame()
+        sp_rate_dataframe = pd.DataFrame()
+
+        # initialize list to store data for plottng
         conc_df_list = []
         cumulative_conc_df_list = []
         sp_rate_df_list = []
@@ -34,6 +43,10 @@ class InProcessMixin:
             self._integral_viable_cell = i
             self._cell_growth_rate = r
 
+            cumulative_conc_dataframe[f"Cell {s['unit'].iat[0]}"] = s['value']
+            cumulative_conc_dataframe[f"IVCC {i['unit'].iat[0]}"] = i['value']
+            sp_rate_dataframe[f"Cell {r['unit'].iat[0]}"] = r['value']
+
         if 'product' in species_list:
             species_list.remove('product')
             prod = species['product']
@@ -51,10 +64,16 @@ class InProcessMixin:
             sp_rate_data['species'] = prod.name
             sp_rate_df_list.append(sp_rate_data)
 
+            cumulative_conc_dataframe[f"{prod.name} {cumulative_data['unit'].iat[0]}"] = cumulative_data['value']
+            sp_rate_dataframe[f"{prod.name} {sp_rate_data['unit'].iat[0]}"] = sp_rate_data['value']
+
         if 'oxygen' in species_list:
             species_list.remove('oxygen')
             prod = species['oxygen']
             prod.in_process()
+
+        # original df for concentration after feeding
+        conc_after_feed_df = self.get_conc_after_feed()
 
         for name in species_list:
             spc = species[name] # Species object
@@ -71,6 +90,16 @@ class InProcessMixin:
             sp_rate_data = spc.sp_rate.copy()
             sp_rate_data['species'] = name.capitalize()
             sp_rate_df_list.append(sp_rate_data)
+
+            # Replace measured value with calculated value
+            if not self.use_conc_after_feed:
+                conc_data = spc.conc_after_feed
+                n =  name.upper() if name == 'nh3' else name.capitalize()
+                col = f"{n} {conc_data['unit'].iat[0]}"
+                conc_after_feed_df[col] = conc_data['value']
+
+            cumulative_conc_dataframe[f"{name.capitalize()} {cumulative_data['unit'].iat[0]}"] = cumulative_data['value']
+            sp_rate_dataframe[f"{name.capitalize()} {sp_rate_data['unit'].iat[0]}"] = sp_rate_data['value']
         
         conc_df = pd.concat(conc_df_list, axis=0, ignore_index=True)
         conc_df['ID'] = self.cell_line_id
@@ -83,6 +112,17 @@ class InProcessMixin:
         self._cumulative_conc_df = cumulative_conc_df
         self._sp_rate_df = sp_rate_df
 
+        self._cumulative_conc_data = cumulative_conc_dataframe
+        self._sp_rate_data = sp_rate_dataframe
+
+        # to concat all processed data
+        processed_data = self._processed_data
+        conc_after_feed = add_descriptive_column(self.get_conc_after_feed(), CONC_AFTER_FEED_COLUMN)
+        cumulative_conc = add_descriptive_column(cumulative_conc_dataframe, CUMULATIVE_CONC_COLUMN)
+        sp_rate = add_descriptive_column(sp_rate_dataframe, SP_RATE_COLUMN)
+        self._processed_data = pd.concat([processed_data, conc_after_feed, cumulative_conc, sp_rate], axis=1)
+
+
         # Cumulative for Nitrogen, and AA Carbon
         # self.__cumulative_others()
 
@@ -90,6 +130,12 @@ class InProcessMixin:
         # self.set_process_flag(process='inpro', flag=True)
 
     #*** End inprocess ***#
+    def get_cumulative_conc(self):
+        return self._cumulative_conc_data
+    
+    def get_sp_rate(self):
+        return self._sp_rate_data
+    
     @property
     def conc(self):
         return self._conc_df
