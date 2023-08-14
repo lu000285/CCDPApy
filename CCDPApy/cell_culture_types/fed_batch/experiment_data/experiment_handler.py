@@ -127,6 +127,9 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         # variable to store processed data
         df.insert(df.shape[1]-1, "Viability (%)", viab['value'])
 
+        # add run time df
+        self._measured_data = pd.concat([df, self._run_time], axis=1)
+
         # Processed data
         exp_data = add_descriptive_column(self.get_measured_data(), EXPERIMENT_DATA_COLUMN)
         conc_before_feed = add_descriptive_column(self.get_conc_before_feed(), CONC_BEFOROE_FEED_COLUMN)

@@ -143,8 +143,8 @@ class FedBatchCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Intera
         if self._processed_data.size==0:
             self._processed_data = pd.concat(df_list, axis=0, ignore_index=True)
         else:
-            df = self._processed_data
-            df_list.append(df.drop(df.index[0]).reset_index(drop=True))
+            df = self._processed_data.iloc[2:]
+            df_list.append(df)
             self._processed_data = pd.concat(df_list, axis=0, ignore_index=True)
 
     def store_data(self):
