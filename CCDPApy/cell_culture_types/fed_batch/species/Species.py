@@ -1,4 +1,4 @@
-from CCDPApy.Constants import SPECIES_ABBR, RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
+from CCDPApy.constants import SPECIES_ABBR, RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
 
 class Species():
     '''

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from CCDPApy.Constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
+from CCDPApy.constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
 
 from .GetterMixin import GetterMixin
 

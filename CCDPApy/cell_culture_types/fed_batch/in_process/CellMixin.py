@@ -5,8 +5,8 @@ from .GetterMixin import GetterMixin
 
 from .equation import integral_viable_cell, cell_production, growth_rate
 
-from CCDPApy.Constants import CellNameSpace
-from CCDPApy.Constants import RUN_TIME_HOUR_COLUMN
+from CCDPApy.constants import CellNameSpace
+from CCDPApy.constants import RUN_TIME_HOUR_COLUMN
 
 CONSTANTS = CellNameSpace()
 

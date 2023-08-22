@@ -2,8 +2,8 @@ import pandas as pd
 
 from CCDPApy.cell_line_data import CellLineDataHandler
 from CCDPApy.cell_culture_types.fed_batch.experiment_data import FedBatchExperimentHandler
-from CCDPApy.Constants.fed_batch.column_name import CELL_LINE_COLUMN
-from CCDPApy.Constants.fed_batch.dict_key import EXP_DATA_KEY, FEED_VOLUME_KEY, CONC_BEFORE_FEED_KEY, CONC_AFTER_FEED_KEY, MEASURED_CUM_CONC_KEY, FEED_CONC_KEY, POLY_DEG_KEY
+from CCDPApy.constants.fed_batch.column_name import CELL_LINE_COLUMN
+from CCDPApy.constants.fed_batch.dict_key import EXP_DATA_KEY, FEED_VOLUME_KEY, CONC_BEFORE_FEED_KEY, CONC_AFTER_FEED_KEY, MEASURED_CUM_CONC_KEY, FEED_CONC_KEY, POLY_DEG_KEY
 
 from .GetterMixin import GetterMixin
 

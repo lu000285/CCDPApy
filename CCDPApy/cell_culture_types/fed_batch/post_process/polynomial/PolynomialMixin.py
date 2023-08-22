@@ -1,8 +1,8 @@
 import pandas as pd
 
 from CCDPApy.helper import add_descriptive_column
-from CCDPApy.Constants import CELL_LINE_COLUMN, ID_COLUMN
-from CCDPApy.Constants.fed_batch.column_name import SP_RATE_POLY_COLUMN
+from CCDPApy.constants import CELL_LINE_COLUMN, ID_COLUMN
+from CCDPApy.constants.fed_batch.column_name import SP_RATE_POLY_COLUMN
 
 COLUMNS_TO_DROP = [CELL_LINE_COLUMN, ID_COLUMN]
 

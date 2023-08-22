@@ -4,7 +4,7 @@ import pandas as pd
 # My Libraries
 from CCDPApy.helper import split_name_unit, create_col_indices, create_value_unit_df
 from CCDPApy.MeasuredData import FedBatchMeasuredData as MeasuredData
-from CCDPApy.Constants import ExpInfoNamespace as Constants
+from CCDPApy.constants import ExpInfoNamespace as Constants
 from CCDPApy.Species.Fed_batch import Cell, Oxygen, Product, Metabolite
 from CCDPApy.in_process.Fed_batch import InProcessMixin as Inprocess
 

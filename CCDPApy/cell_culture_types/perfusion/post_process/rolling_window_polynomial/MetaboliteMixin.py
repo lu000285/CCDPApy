@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from CCDPApy.Species.Perfusion.Variables import molar_mass_dict
-from CCDPApy.Constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
+from CCDPApy.constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
 
 from .mid_point_calc import mid_point_conc
 

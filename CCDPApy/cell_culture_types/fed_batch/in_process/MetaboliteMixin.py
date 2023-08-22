@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 
 from .GetterMixin import GetterMixin
-from CCDPApy.Constants import MetaboliteNameSpace, ExpDataNamespace
-from CCDPApy.Constants import SPECIES_STATE, RUN_TIME_HOUR_COLUMN
+from CCDPApy.constants import MetaboliteNameSpace, ExpDataNamespace
+from CCDPApy.constants import SPECIES_STATE, RUN_TIME_HOUR_COLUMN
 
 CONSTANTS = MetaboliteNameSpace()
 KEY = ExpDataNamespace()

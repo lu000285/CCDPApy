@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 from .GetterMixin import GetterMixin
-from CCDPApy.Constants import ProductNameSpace
+from CCDPApy.constants import ProductNameSpace
 
 CONSTANTS = ProductNameSpace()
 

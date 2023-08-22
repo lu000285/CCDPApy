@@ -1,7 +1,7 @@
 import pandas as pd
 
-from CCDPApy.Constants import CELL_LINE_COLUMN, ID_COLUMN, DATE_COLUMN, RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
-from CCDPApy.Constants.fed_batch.dict_key import EXP_DATA_KEY 
+from CCDPApy.constants import CELL_LINE_COLUMN, ID_COLUMN, DATE_COLUMN, RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
+from CCDPApy.constants.fed_batch.dict_key import EXP_DATA_KEY 
 class ExperimentDataHandler:
     '''
     '''

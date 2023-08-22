@@ -1,6 +1,6 @@
 import pandas as pd
 
-from CCDPApy.Constants import CELL_LINE_COLUMN, ID_COLUMN
+from CCDPApy.constants import CELL_LINE_COLUMN, ID_COLUMN
 
 COLUMNS_TO_DROP = [CELL_LINE_COLUMN, ID_COLUMN]
 

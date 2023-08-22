@@ -3,6 +3,18 @@ import numpy as np
 import os, re
 from pathlib import Path
 
+def compile_df(df):
+    # Remove ".X" from Cell Line Name. X is a number.
+    pattern = re.compile(r'\.\d+')
+    cell_lines = [pattern.sub('', s) for s in df.columns][1:]
+    # Transpose df, rename columns and insert "Cell Line" column at first.
+    df_T = df.T.reset_index(drop=True)
+    new_cols = df_T.iloc[0]
+    df = df_T.iloc[1:]
+    df.columns = new_cols
+    df.insert(0, 'Cell Line', cell_lines)
+    return df
+
 def add_descriptive_column(df, name):
     '''add the row of the column that describes the dataframe.'''
     col_df = pd.DataFrame(data=dict(zip(df.columns, [[col] for col in df.columns])))

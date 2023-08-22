@@ -1,6 +1,6 @@
 import pandas as pd
 
-from CCDPApy.Constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN, SPECIES_ABBR
+from CCDPApy.constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN, SPECIES_ABBR
 
 class Species:
     '''

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 from CCDPApy.cell_culture_types.fed_batch.in_process.equation import growth_rate
-from CCDPApy.Constants import CellNameSpace, RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
+from CCDPApy.constants import CellNameSpace, RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
 
 from .GetterMixin import GetterMixin
 

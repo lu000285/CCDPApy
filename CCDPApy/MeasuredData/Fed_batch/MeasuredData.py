@@ -6,9 +6,9 @@ import numpy as np
 from .pre_process import get_culture_volume, get_run_time
 from CCDPApy.helper import split_df, input_path, create_value_unit_df
 
-from CCDPApy.Constants import ExpInfoNamespace as ExpInfoConst
-from CCDPApy.Constants import ExpDataNamespace as ExpDataConst
-from CCDPApy.Constants import CellNameSpace, OxygenNameSpace, ProductNameSpace
+from CCDPApy.constants import ExpInfoNamespace as ExpInfoConst
+from CCDPApy.constants import ExpDataNamespace as ExpDataConst
+from CCDPApy.constants import CellNameSpace, OxygenNameSpace, ProductNameSpace
 
 
 # Constants

@@ -16,7 +16,7 @@ class GetterMixin:
 
     def get_measured_data(self):
         '''get measured data.'''
-        return self._data
+        return self._exp_data
     
     def get_conc_before_feed(self):
         '''get measured data for concentration before feeding.'''
@@ -32,11 +32,7 @@ class GetterMixin:
 
     def get_feed_conc(self):
         '''get feed concentration data.'''
-        return self._feed_data
-
-    #def get_separate_feed_conc(self):
-        '''get separate feed concentration data.'''
-        #return self._separate_feed_data
+        return self._feed_conc_data
     
     def get_polynomial_degree(self):
         '''get polynomial degreee data.'''

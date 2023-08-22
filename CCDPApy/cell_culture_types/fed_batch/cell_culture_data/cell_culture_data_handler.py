@@ -6,12 +6,12 @@ from CCDPApy.cell_culture_data_base.cell_culture_data_handler import CellCulture
 from CCDPApy.cell_culture_types.fed_batch.export_data.export_data import ExportMixin
 from CCDPApy.cell_culture_types.fed_batch.import_data.import_data import ImportMixin
 
-from CCDPApy.Constants.fed_batch.sheet_name import DATA_SHEET, FEED_SHEET, POLYNOMIAL_SHEET, PROCESSED_DATA_SHEET
-from CCDPApy.Constants.fed_batch.column_name import EXPERIMENT_DATA_COLUMN, FEED_VOLUME_COLUMN, CONC_BEFOROE_FEED_COLUMN, CONC_AFTER_FEED_COLUMN, MEASURED_CUMULATIVE_COLUMN
-from CCDPApy.Constants.fed_batch.column_name import CELL_LINE_COLUMN, ID_COLUMN
-from CCDPApy.Constants.fed_batch.dict_key import EXP_DATA_KEY, FEED_VOLUME_KEY, CONC_BEFORE_FEED_KEY, CONC_AFTER_FEED_KEY, MEASURED_CUM_CONC_KEY, FEED_CONC_KEY, POLY_DEG_KEY
+from CCDPApy.constants.fed_batch.sheet_name import DATA_SHEET, FEED_SHEET, POLYNOMIAL_SHEET
+from CCDPApy.constants.fed_batch.column_name import EXPERIMENT_DATA_COLUMN, FEED_VOLUME_COLUMN, CONC_BEFOROE_FEED_COLUMN, CONC_AFTER_FEED_COLUMN, MEASURED_CUMULATIVE_COLUMN
+from CCDPApy.constants.fed_batch.column_name import CELL_LINE_COLUMN, ID_COLUMN
+from CCDPApy.constants.fed_batch.dict_key import EXP_DATA_KEY, FEED_VOLUME_KEY, CONC_BEFORE_FEED_KEY, CONC_AFTER_FEED_KEY, MEASURED_CUM_CONC_KEY, FEED_CONC_KEY, POLY_DEG_KEY
 
-from CCDPApy.helper import split_df
+from CCDPApy.helper import split_df, compile_df
 
 from .GeterMixin import GetterMixin
 
@@ -42,54 +42,61 @@ class FedBatchCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Intera
                                  'sp_rate': None}
 
 
-    def load_data(self, file, sheet_name=[DATA_SHEET, FEED_SHEET, POLYNOMIAL_SHEET]):
+    def load_data(self, file):
         '''load an excel file.'''
+        sheet_name=[DATA_SHEET, FEED_SHEET, POLYNOMIAL_SHEET]
         sheets_dict = super().load_data(file=file)
 
         measured_data = sheets_dict[sheet_name[0]]
-        feed_data = sheets_dict[sheet_name[1]]
-        # separate_feed_data = sheets_dict[sheet_name[2]]
-        polynomial_degree = sheets_dict[sheet_name[2]]
+        feed_conc = compile_df(sheets_dict[sheet_name[1]])
+        polynomial_degree = compile_df(sheets_dict[sheet_name[2]])
         
-        # change dtype at Cell Line and ID columns
+        # change dtype of "Cell Line" and "ID" columns
         cols = [CELL_LINE_COLUMN, ID_COLUMN]
-        feed_data[cols] = feed_data[cols].astype('string')
-        # separate_feed_data[cols] = separate_feed_data[cols].astype('string')
+        feed_conc[cols] = feed_conc[cols].astype('string')
         polynomial_degree[cols] = polynomial_degree[cols].astype('string')
         
-        # save
-        # measured_data.iloc[1:, :] = measured_data.iloc[1:, :].sort_values(by=EXPERIMENT_DATA_COLUMN, kind='stable')
-        self._data = measured_data#.reset_index(drop=True)
-        self._feed_data = feed_data#.sort_values(by=DATE_COLUMN, kind='stable', ignore_index=True)
-        # self._separate_feed_data = separate_feed_data#.sort_values(by=DATE_COLUMN, kind='stable', ignore_index=True)
+        # store data
+        self._exp_data = measured_data
+        self._feed_conc_data = feed_conc
         self._polynomial_degree_data = polynomial_degree
         
         # pre-process
         self.preprocess_data()
 
-    def preprocess_data(self, taerget_columns=[EXPERIMENT_DATA_COLUMN, FEED_VOLUME_COLUMN, CONC_BEFOROE_FEED_COLUMN, CONC_AFTER_FEED_COLUMN, MEASURED_CUMULATIVE_COLUMN]):
-        '''loaded data formatting.'''
-        data_list = split_df(self._data, taerget_columns)
+    def preprocess_data(self):
+        '''format loaded data.'''
+        taerget_columns=[EXPERIMENT_DATA_COLUMN, 
+                         FEED_VOLUME_COLUMN, 
+                         CONC_BEFOROE_FEED_COLUMN, 
+                         CONC_AFTER_FEED_COLUMN, 
+                         MEASURED_CUMULATIVE_COLUMN]
+        data_list = split_df(self._exp_data, taerget_columns)
         taerget_column_indices = dict(zip(taerget_columns, np.arange(len(taerget_columns))))
         
         data = data_list[taerget_column_indices[EXPERIMENT_DATA_COLUMN]]
         data[[CELL_LINE_COLUMN, ID_COLUMN]] = data[[CELL_LINE_COLUMN, ID_COLUMN]].astype('string')
         
-        self._data = data
+        self._exp_data = data
         self._feed_volume = data_list[taerget_column_indices[FEED_VOLUME_COLUMN]]
         self._conc_before_feed_data = data_list[taerget_column_indices[CONC_BEFOROE_FEED_COLUMN]]
         self._conc_after_feed_data = data_list[taerget_column_indices[CONC_AFTER_FEED_COLUMN]]
         self._measured_cumulative_data = data_list[taerget_column_indices[MEASURED_CUMULATIVE_COLUMN]].astype('float64')
-        self._cell_line_names = list(self._data[CELL_LINE_COLUMN].unique())
+        self._cell_line_names = list(self._exp_data[CELL_LINE_COLUMN].unique())
+
+        # Species for each data
+        self._spc_conc_before = list(self._conc_before_feed_data.columns)
+        self._spc_conc_after = list(self._conc_after_feed_data.columns)
+        self._spc_measured_cumu = list(self._measured_cumulative_data.columns)
+        self._spc_feed = list(self._feed_conc_data.columns[3:])
 
         # Store all data in dict
-        data = {EXP_DATA_KEY: self._data,
+        data = {EXP_DATA_KEY: self._exp_data,
                 FEED_VOLUME_KEY: self._feed_volume,
                 CONC_BEFORE_FEED_KEY: self._conc_before_feed_data,
                 CONC_AFTER_FEED_KEY: self._conc_after_feed_data,
                 MEASURED_CUM_CONC_KEY: self._measured_cumulative_data,
-                FEED_CONC_KEY: self._feed_data,
-                # 'separate_feed_conc': self._separate_feed_data,
+                FEED_CONC_KEY: self._feed_conc_data,
                 POLY_DEG_KEY: self._polynomial_degree_data}
         self._data_set = data
 

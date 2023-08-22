@@ -2,7 +2,7 @@ import pandas as pd
 
 from CCDPApy.helper import add_descriptive_column
 
-from CCDPApy.Constants.fed_batch.column_name import CUMULATIVE_CONC_COLUMN, SP_RATE_COLUMN, CONC_AFTER_FEED_COLUMN
+from CCDPApy.constants.fed_batch.column_name import CUMULATIVE_CONC_COLUMN, SP_RATE_COLUMN, CONC_AFTER_FEED_COLUMN
 
 class InProcessMixin:
     '''

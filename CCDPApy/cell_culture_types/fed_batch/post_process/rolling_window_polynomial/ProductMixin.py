@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 
-from CCDPApy.Constants import ProductNameSpace
-from CCDPApy.Constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
+from CCDPApy.constants import ProductNameSpace
+from CCDPApy.constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
 
 from .mid_point_calc import mid_point_production
 from .GetterMixin import GetterMixin

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from CCDPApy.Constants import SPECIES_STATE
+from CCDPApy.constants import SPECIES_STATE
 
 from .GetterMixin import GetterMixin
 from .Equation import production

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from CCDPApy.Constants import ExpDataNamespace as Constants
+from CCDPApy.constants import ExpDataNamespace as Constants
 
 def get_run_time(date_df, time_df) -> pd.DataFrame:
     '''Calculate run time (day, hour) and return time DataFrame.

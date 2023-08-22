@@ -2,7 +2,7 @@ import pandas as pd
 
 from CCDPApy.cell_line_data import CellLineDataHandler
 
-from CCDPApy.Constants import CELL_LINE_COLUMN
+from CCDPApy.constants import CELL_LINE_COLUMN
 
 from .GetterMixin import GetterMixin
 

@@ -1,5 +1,5 @@
-from CCDPApy.Constants import CELL_LINE_COLUMN, ID_COLUMN
-from CCDPApy.Constants.fed_batch.dict_key import EXP_DATA_KEY
+from CCDPApy.constants import CELL_LINE_COLUMN, ID_COLUMN
+from CCDPApy.constants.fed_batch.dict_key import EXP_DATA_KEY
 
 from CCDPApy.cell_culture_types.fed_batch.experiment_data import FedBatchExperimentHandler
 from CCDPApy.cell_culture_types.perfusion.experiment_data.experiment_handler import PerfusionExperimentHandler

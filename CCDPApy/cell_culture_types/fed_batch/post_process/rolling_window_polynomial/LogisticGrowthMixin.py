@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 from scipy.optimize import curve_fit
 
-from CCDPApy.Constants import CellNameSpace
-from CCDPApy.Constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
+from CCDPApy.constants import CellNameSpace
+from CCDPApy.constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
 
 CONSTANTS = CellNameSpace()
 
