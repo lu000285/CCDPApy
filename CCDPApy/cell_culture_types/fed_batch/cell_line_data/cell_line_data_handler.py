@@ -3,6 +3,7 @@ import pandas as pd
 from CCDPApy.cell_line_data import CellLineDataHandler
 from CCDPApy.cell_culture_types.fed_batch.experiment_data import FedBatchExperimentHandler
 from CCDPApy.constants.fed_batch.column_name import CELL_LINE_COLUMN
+from CCDPApy.constants.fed_batch.dict_key import SPC_CONC_BEFORE_FEED_KEY, SPC_CONC_AFTER_FEED_KEY, SPC_FEED_CONC_KEY, SPC_MEASURED_CUM_CONC_KEY
 from CCDPApy.constants.fed_batch.dict_key import EXP_DATA_KEY, FEED_VOLUME_KEY, CONC_BEFORE_FEED_KEY, CONC_AFTER_FEED_KEY, MEASURED_CUM_CONC_KEY, FEED_CONC_KEY, POLY_DEG_KEY
 
 from .GetterMixin import GetterMixin
@@ -13,8 +14,18 @@ class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
     def __init__(self, cell_line_name, data, use_feed_conc, use_conc_after_feed) -> None:
         super().__init__(cell_line_name, data=data, cell_culture_type='fed-batch')
 
-        self._use_feed_conc = use_feed_conc
-        self._use_conc_after_feed = use_conc_after_feed
+        # Check species name for each data
+        if use_feed_conc:
+            for spc in self._spc_feed:
+                assert spc in self._spc_conc_before, f"{spc} is not included in 'Feed Concentration beore Feeding' data."
+            for spc in self._spc_conc_before:
+                assert spc in self._spc_feed, f"{spc} is not included in 'Feed Concentration' data."
+        
+        elif use_conc_after_feed:
+            for spc in self._spc_conc_after:
+                assert spc in self._spc_conc_before, f"{spc} is not included in 'Feed Concentration beore Feeding' data."
+            for spc in self._spc_conc_before:
+                assert spc in self._spc_conc_after, f"{spc} is not included in 'Feed Concentration after Feeding' data."
 
         conc_before_feed_data = data[CONC_BEFORE_FEED_KEY].copy()
         conc_after_feed_data = data[CONC_AFTER_FEED_KEY].copy()
@@ -22,9 +33,8 @@ class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
         feed_conc_data = data[FEED_CONC_KEY].copy()
         feed_volume_data = data[FEED_VOLUME_KEY].copy()
         feed_mask = feed_conc_data[CELL_LINE_COLUMN]==cell_line_name
-        # separate_feed_mask = separate_feed_conc_data[CELL_LINE_COLUMN]==cell_line_name
 
-        polynomial_degree_data = data['polynomial_degree_data'].copy()
+        polynomial_degree_data = data[POLY_DEG_KEY].copy()
         polynomial_degree_mask = polynomial_degree_data[CELL_LINE_COLUMN]==cell_line_name
 
         self._polynomial_degree_data = polynomial_degree_data[polynomial_degree_mask]
@@ -34,8 +44,14 @@ class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
         self._feed_data  = feed_conc_data[feed_mask].copy()
         self._feed_volume_data  = feed_volume_data[self._mask].copy()
 
-        # Store all data in dict
-        data = {EXP_DATA_KEY: self._measured_data,
+        # Store
+        self._use_feed_conc = use_feed_conc
+        self._use_conc_after_feed = use_conc_after_feed
+        data = {SPC_CONC_BEFORE_FEED_KEY: list(self._conc_before_feed_data.columns),
+                SPC_CONC_AFTER_FEED_KEY: list(self._conc_after_feed_data.columns),
+                SPC_FEED_CONC_KEY: list(self._feed_data.columns[3:]),
+                SPC_MEASURED_CUM_CONC_KEY: list(self._measured_cumulative_conc_data.columns),
+                EXP_DATA_KEY: self._measured_data,
                 CONC_BEFORE_FEED_KEY: self._conc_before_feed_data,
                 CONC_AFTER_FEED_KEY: self._conc_after_feed_data,
                 MEASURED_CUM_CONC_KEY: self._measured_cumulative_conc_data,

@@ -61,7 +61,7 @@ class CellMixin(GetterMixin):
         t = self.run_time_hour[idx]
 
         # Initialize
-        s = np.zeros(t.size)
+        s = np.zeros(self.samples)
         for i in range(1, len(t)):
             s_i = integral_viable_cell(c[i-1], c[i], t[i-1], t[i])
             s[idx[i]] = s[idx[i-1]] + s_i
@@ -91,16 +91,15 @@ class CellMixin(GetterMixin):
         c = self.viable_cell_conc['value'].values[idx]
         v1 = self.volume_before_sampling[idx]
         v2 = self.volume_after_sampling[idx]
-        sample_size = self.run_time_hour.size
 
         # Initialize
-        s = np.zeros(sample_size)
+        s = np.zeros(self.samples)
         s.fill(np.nan)
         s[0] = 0.0
 
         for i in range(1, len(idx)):
             s_i = cell_production(c[i-1], c[i], v1[i], v2[i-1])
-            s[i] = s_i + s[i-1]
+            s[idx[i]] = s_i + s[idx[i-1]]
         
         s = pd.DataFrame(data=s, columns=['value'])
         s['unit'] = CONSTANTS.CUMULATIVE_UNIT
@@ -132,13 +131,12 @@ class CellMixin(GetterMixin):
         s = self.cumulative_conc['value'].values[idx]            # Cumulative Cell Concentraion (10e6 cells/mL)
         v1 = self.volume_before_sampling[idx]
         v2 = self.volume_after_sampling[idx]
-        sample_size = self.run_time_hour.size
 
         # Initialize
-        r = np.zeros(sample_size)
+        r = np.zeros(self.samples)
         r.fill(np.nan)
         for i in range(1, len(t)):
-            r[i] = growth_rate(s[i-1], s[i], xv[i-1], xv[i], v1[i], v2[i-1], t[i-1], t[i])
+            r[idx[i]] = growth_rate(s[i-1], s[i], xv[i-1], xv[i], v1[i], v2[i-1], t[i-1], t[i])
         r = pd.DataFrame(data=r, columns=['value'])
         r['unit'] = CONSTANTS.SP_RATE_UNIT
         r['method'] = 'twoPoint'

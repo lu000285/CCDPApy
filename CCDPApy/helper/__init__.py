@@ -8,3 +8,4 @@ from .helper import create_col_indices
 from .helper import create_df_dict
 from .helper import add_descriptive_column
 from .helper import compile_df
+from .helper import remove_units

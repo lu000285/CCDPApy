@@ -4,7 +4,7 @@ import pandas as pd
 from .GetterMixin import GetterMixin
 
 from CCDPApy.experiment_data import ExperimentDataHandler
-from CCDPApy.helper import create_value_unit_df, split_name_unit, create_col_indices, add_descriptive_column
+from CCDPApy.helper import remove_units, create_value_unit_df, split_name_unit, create_col_indices, add_descriptive_column
 from CCDPApy.cell_culture_types.fed_batch.species import Cell, Product, Metabolite
 from CCDPApy.cell_culture_types.fed_batch.in_process import InProcessMixin as Inprocess
 
@@ -30,11 +30,12 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         conc_before_feed_data = data[CONC_BEFORE_FEED_KEY].copy()
         conc_after_feed_data = data[CONC_AFTER_FEED_KEY].copy()
         measured_cumulative_conc_data = data[MEASURED_CUM_CONC_KEY].copy()
-        feed_conc_data = data[FEED_CONC_KEY].copy()
         feed_volume_data = data[FEED_VOLUME_KEY].copy()
+
+        feed_conc_data = data[FEED_CONC_KEY].copy()
         feed_mask = (feed_conc_data[CELL_LINE_COLUMN]==cell_line_name) & (feed_conc_data[ID_COLUMN]==cell_line_id)
         
-        polynomial_degree_data = data['polynomial_degree_data'].copy()
+        polynomial_degree_data = data[POLY_DEG_KEY].copy()
         polynomial_degree_mask = (polynomial_degree_data[CELL_LINE_COLUMN]==cell_line_name) & (polynomial_degree_data[ID_COLUMN]==cell_line_id)
 
         # work with separate feed volume
@@ -63,17 +64,7 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
                     }
         else:
             feed_data = {'feed_conc': 0.0, 'feed_vol': feed_media_added}
-        '''
-        separate_feed_mask = (separate_feed_conc_data[CELL_LINE_COLUMN]==cell_line_name) & (separate_feed_conc_data[ID_COLUMN]==cell_line_id)
-        separate_feed_conc_data = separate_feed_conc_data[separate_feed_mask].copy()
-        separate_feed_conc_data.drop(COLUMNS_TO_DROP, axis=1, inplace=True)
 
-        # if all values are NAN, drop that column
-        for col in separate_feed_conc_data.columns:
-            df = separate_feed_conc_data[col]
-            if df.isna().all():
-                separate_feed_conc_data.drop(col, axis=1, inplace=True)
-        '''
         self._feed_volume_data = feed_volume_data.fillna(0)
         self._conc_before_feed_data = conc_before_feed_data[self._mask].copy().reset_index(drop=True)
         self._conc_after_feed_data = conc_after_feed_data[self._mask].copy().reset_index(drop=True)
@@ -98,8 +89,31 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         # pre-processing
         self._preprocess()
 
+        # work with parameters
+        # if separate feed is empty, fill it with 0
+        if feed_volume_sum.size==0:
+            feed_volume_sum = np.zeros_like(run_time.shape[0])
+        param_dict = {'time': self._run_time,
+                      'v_before_sample': self._v_before_sample,
+                      'v_after_sample': self._v_after_sample,
+                      'feed_media': self._feed_media_added,
+                      'viable_cell': self._viable_cell_conc,
+                      'dead_cell': self._dead_cell_conc,
+                      'total_cell': self._total_cell_conc,
+                      'production': self._product_conc,
+                      'feed_data': self._feed_data,
+                      'feed_volume_sum': self._feed_volume_sum,
+                      }
+
         # work with species object
-        self._create_species()
+        spc_dict = {}
+        cell = Cell(name='cell', param_data=param_dict)
+        spc_dict['cell'] = cell
+        product = Product(name=name, param_data=param_dict)
+        spc_dict['product'] = product
+        metabolite_dict = self._create_species(param_dict)
+        spc_dict.update(metabolite_dict)
+        self._spc_dict = spc_dict
 
         # work with cell concentration
         run_time = self._run_time
@@ -135,7 +149,6 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         conc_before_feed = add_descriptive_column(self.get_conc_before_feed(), CONC_BEFOROE_FEED_COLUMN)
         self._processed_data = pd.concat([exp_data, conc_before_feed], axis=1)
         
-
     def _preprocess(self):
         '''data pre-processing.
         '''
@@ -165,7 +178,6 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
 
             # Added Supplements Volume; base + feed media + feed
             supplements_added = base + feed_media + feed_sum
-            # supplements_added = base + feed_sum
 
             for i in range(n):
                 # Volume After Sampling
@@ -186,74 +198,53 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         df[VOLUME_BEFORE_SAMPLE_COLUMN] = v_before_sample
         df[VOLUME_AFTER_SAMPLE_COLUMN] = v_after_sample
 
-    def _create_species(self):
+    def _create_species(self, param_data):
         '''crate specise object to analyze.'''
-        spc_dict = {}
-        run_time = self._run_time
-        v_before_sample = self._v_before_sample
-        v_after_sample = self._v_after_sample
-        feed_media = self._feed_media_added
-        viable_cell = self._viable_cell_conc
-        dead_cell = self._dead_cell_conc
-        total_cell = self._total_cell_conc
-        production = self._product_conc
-        conc_before_feed_df = self._conc_before_feed_data
-        conc_after_feed_df = self._conc_after_feed_data
-        feed_conc_df = self._feed_conc_data
-        measured_cumulative_df = self._measured_cumulative_conc_data
+        conc_before_feed_df = self._conc_before_feed_data.copy()
+        conc_after_feed_df = self._conc_after_feed_data.copy()
+        feed_conc_df = self._feed_conc_data.copy()
+        measured_cumulative_df = self._measured_cumulative_conc_data.copy()
         feed_data = self._feed_data
-        feed_volume_sum = self._feed_volume_sum
 
-        # if separate feed is empty, fill it with 0
-        if feed_volume_sum.size==0:
-            feed_volume_sum = np.zeros_like(run_time.shape[0])
+        # create name: column dict
+        species_namas = [remove_units(col) for col in conc_before_feed_df.columns]
+        conc_before_feed_names = dict(zip(species_namas, conc_before_feed_df.columns))
+        conc_after_feed_names = dict(zip(species_namas, conc_after_feed_df.columns))
+        measured_cumulative_names = dict(zip(species_namas, measured_cumulative_df.columns))
+        feed_conc_df.columns = [remove_units(col) for col in feed_conc_df.columns]
 
-        # Get indices
-        conc_before_feed_indices = create_col_indices(conc_before_feed_df)
-        conc_after_feed_indices = create_col_indices(conc_after_feed_df)
-        feed_conc_indices = create_col_indices(feed_conc_df)
-        measured_cumulative_indices = create_col_indices(measured_cumulative_df)
-
-        cell = Cell(name='cell', run_time_df=run_time, volume_before_sampling=v_before_sample, volume_after_sampling=v_after_sample,
-                    feed_media_added=feed_media, viable_cell_conc=viable_cell,
-                    dead_cell_conc=dead_cell, total_cell_conc=total_cell)
-        spc_dict['cell'] = cell
-
-        name, _ = split_name_unit(production.index.name)
-        product = Product(name=name, run_time_df=run_time, volume_before_sampling=v_before_sample,
-                          volume_after_sampling=v_after_sample, feed_media_added=feed_media,
-                          viable_cell_conc=viable_cell, production=production)
-        spc_dict['product'] = product
-
-        for name in conc_before_feed_indices.keys():
+        spc_dict = {}
+        for name in species_namas:
+            # work with feed volume and feed conc.
             if feed_conc_df.size==0:
                 feed_conc = feed_data['feed_conc']
                 feed_vol = feed_data['feed_vol']
             else:
-                # Feeed conc.
                 feed_conc = feed_data[name]['feed_conc']
-                # Feed volume
                 feed_vol = feed_data[name]['feed_vol']
 
             # Conc. before feeding
-            index = conc_before_feed_indices[name]['index']
-            data = conc_before_feed_df.iloc[:, index]
-            conc_before_feed = create_value_unit_df(data)
+            key = conc_before_feed_names[name]
+            conc_before_feed = create_value_unit_df(conc_before_feed_df[key])
 
             # Conc. after feeding
-            index = conc_after_feed_indices[name]['index']
-            data = conc_after_feed_df.iloc[:, index]
-            conc_after_feed = create_value_unit_df(data)
+            key = conc_after_feed_names[name]
+            conc_after_feed = create_value_unit_df(conc_after_feed_df[key])
             
             # Measured cumulative conc.
-            index = measured_cumulative_indices[name]['index']
-            data = measured_cumulative_df.iloc[:, index]
-            measured_cumulative = create_value_unit_df(data)
+            if name in measured_cumulative_df:
+                key = measured_cumulative_names[name]
+                if measured_cumulative_df[key].any():
+                    measured_cumulative = create_value_unit_df(measured_cumulative_df[key])
+            else:
+                measured_cumulative = None
 
-            metabolite = Metabolite(name=name, run_time_df=run_time, volume_before_sampling=v_before_sample,
-                                    volume_after_sampling=v_after_sample, feed_media_added=feed_media,
-                                    viable_cell_conc=viable_cell, separate_feed_sum=feed_volume_sum, separate_feed=feed_vol,
-                                    conc_before_feed=conc_before_feed, conc_after_feed=conc_after_feed, feed_conc=feed_conc,
+            metabolite = Metabolite(name=name, 
+                                    param_data=param_data,
+                                    separate_feed=feed_vol,
+                                    conc_before_feed=conc_before_feed, 
+                                    conc_after_feed=conc_after_feed, 
+                                    feed_conc=feed_conc,
                                     measured_cumulative_conc=measured_cumulative)
             spc_dict[name.lower()] = metabolite
-            self._spc_dict = spc_dict
+        return spc_dict

@@ -13,16 +13,17 @@ class Cell(Species, Inprocess, Polynomial, LogisticGrowoth):
     ---------
     '''
     # Constructor
-    def __init__(self, name, run_time_df, volume_before_sampling, 
-                 volume_after_sampling, feed_media_added,
-                 viable_cell_conc, dead_cell_conc, total_cell_conc):
+    def __init__(self, name, param_data):
         '''
         Parameters
         ---------
         '''
         # Constructor for Spcies Class
-        super().__init__(name, run_time_df, volume_before_sampling, volume_after_sampling, 
-                         feed_media_added, viable_cell_conc)
+        super().__init__(name, param_data)
+
+        viable_cell_conc = param_data['viable_cell']
+        total_cell_conc = param_data['total_cell']
+        dead_cell_conc = param_data['dead_cell']
         
         # Calculate viability
         value = viable_cell_conc['value'].values / total_cell_conc['value'].values * 100
@@ -31,25 +32,23 @@ class Cell(Species, Inprocess, Polynomial, LogisticGrowoth):
         viab['value'] = value
         viab['unit'] = '%'
 
-        # Get indices of the measurement from the viable cell concentration
-        xv = self._viable_cell_conc['value']
-        idx = get_measurement_indices(xv)
-
         # Class Members
-        self._idx = idx
         self._dead_cell_conc = dead_cell_conc
         self._total_cell_conc = total_cell_conc
         self._viability = viab
 
     @property
     def measurement_index(self):
-        return self._idx
+        return self.vcc_index
+    
     @property
     def dead_cell_conc(self):
         return self._dead_cell_conc
+    
     @property
     def total_cell_conc(self):
         return self._total_cell_conc
+    
     @property
     def viability(self):
         return self._viability

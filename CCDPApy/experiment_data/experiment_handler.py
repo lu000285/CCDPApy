@@ -8,9 +8,15 @@ class ExperimentDataHandler:
     def __init__(self, cell_line_name, cell_line_id, data, cell_culture_type=None) -> None:
         '''
         '''
-        data = data[EXP_DATA_KEY].copy()
-        mask = (data[CELL_LINE_COLUMN]==cell_line_name) & (data[ID_COLUMN]==cell_line_id)
-        data_masked = data[mask].copy()
+        df = data[EXP_DATA_KEY].copy()
+
+        # Check Cell Line name
+        assert df[CELL_LINE_COLUMN].isin([cell_line_name]).any(), f"Cell Line '{cell_line_name}' is not in data file."
+        # Check Cell Line ID
+        assert df[ID_COLUMN].isin([cell_line_id]).any(), f"Cell Line ID '{cell_line_id}' is not in data file."
+
+        mask = (df[CELL_LINE_COLUMN]==cell_line_name) & (df[ID_COLUMN]==cell_line_id)
+        data_masked = df[mask].copy()
 
         self._cell_culture_name = cell_line_name
         self._cell_line_id = cell_line_id
@@ -44,7 +50,9 @@ class ExperimentDataHandler:
         key = species.lower()
         if key=='all':
             return spc
-        elif key in spc.keys() or key=='igg':
+        elif key in spc.keys():
+            if key=='igg':
+                key = 'product'
             return spc[key]
         else:
             print("Wrong species name. Please check below.")

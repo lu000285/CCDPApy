@@ -3,6 +3,10 @@ import numpy as np
 import os, re
 from pathlib import Path
 
+def remove_units(text):
+    modified_text = re.sub(r'\s*\(.*?\)', '', text)
+    return modified_text
+
 def compile_df(df):
     # Remove ".X" from Cell Line Name. X is a number.
     pattern = re.compile(r'\.\d+')
@@ -59,7 +63,7 @@ def split_df(df, target_columns) -> list:
 
 def get_measurement_indices(data):
     '''Get indices of the data where measurement exist.'''
-    return data[data.notnull()].index
+    return data[data.notnull()].index.values
 
 def create_col_indices(df) -> dict[str, str]:
     '''Create the dictionary of column indices and units.

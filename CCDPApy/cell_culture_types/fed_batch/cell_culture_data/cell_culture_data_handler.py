@@ -9,6 +9,7 @@ from CCDPApy.cell_culture_types.fed_batch.import_data.import_data import ImportM
 from CCDPApy.constants.fed_batch.sheet_name import DATA_SHEET, FEED_SHEET, POLYNOMIAL_SHEET
 from CCDPApy.constants.fed_batch.column_name import EXPERIMENT_DATA_COLUMN, FEED_VOLUME_COLUMN, CONC_BEFOROE_FEED_COLUMN, CONC_AFTER_FEED_COLUMN, MEASURED_CUMULATIVE_COLUMN
 from CCDPApy.constants.fed_batch.column_name import CELL_LINE_COLUMN, ID_COLUMN
+from CCDPApy.constants.fed_batch.dict_key import SPC_CONC_BEFORE_FEED_KEY, SPC_CONC_AFTER_FEED_KEY, SPC_FEED_CONC_KEY, SPC_MEASURED_CUM_CONC_KEY
 from CCDPApy.constants.fed_batch.dict_key import EXP_DATA_KEY, FEED_VOLUME_KEY, CONC_BEFORE_FEED_KEY, CONC_AFTER_FEED_KEY, MEASURED_CUM_CONC_KEY, FEED_CONC_KEY, POLY_DEG_KEY
 
 from CCDPApy.helper import split_df, compile_df
@@ -84,14 +85,12 @@ class FedBatchCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Intera
         self._measured_cumulative_data = data_list[taerget_column_indices[MEASURED_CUMULATIVE_COLUMN]].astype('float64')
         self._cell_line_names = list(self._exp_data[CELL_LINE_COLUMN].unique())
 
-        # Species for each data
-        self._spc_conc_before = list(self._conc_before_feed_data.columns)
-        self._spc_conc_after = list(self._conc_after_feed_data.columns)
-        self._spc_measured_cumu = list(self._measured_cumulative_data.columns)
-        self._spc_feed = list(self._feed_conc_data.columns[3:])
-
         # Store all data in dict
-        data = {EXP_DATA_KEY: self._exp_data,
+        data = {SPC_CONC_BEFORE_FEED_KEY: list(self._conc_before_feed_data.columns),
+                SPC_CONC_AFTER_FEED_KEY: list(self._conc_after_feed_data.columns),
+                SPC_FEED_CONC_KEY: list(self._feed_conc_data.columns[3:]),
+                SPC_MEASURED_CUM_CONC_KEY: list(self._measured_cumulative_data.columns),
+                EXP_DATA_KEY: self._exp_data,
                 FEED_VOLUME_KEY: self._feed_volume,
                 CONC_BEFORE_FEED_KEY: self._conc_before_feed_data,
                 CONC_AFTER_FEED_KEY: self._conc_after_feed_data,

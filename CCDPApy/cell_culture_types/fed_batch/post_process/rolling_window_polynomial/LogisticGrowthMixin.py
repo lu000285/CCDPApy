@@ -11,8 +11,9 @@ class LogisticGrowthMixin:
     '''Logistic Growth Mixin Class.
     '''
     def LogisticGrowthFit(self):
-        tcc = self.total_cell_conc['value'].values[0:11]
-        t = self.run_time_hour[0:11]
+        idx = self.measurement_index
+        tcc = self.total_cell_conc['value'].values[idx]
+        t = self.run_time_hour[idx]
         N0 = tcc[0]
         popt, pcov = curve_fit(lambda t,K,r:LogisticGrowth_fun(t,N0,K,r), t, tcc, p0=[24,0.05])
         return popt

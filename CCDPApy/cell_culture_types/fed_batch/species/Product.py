@@ -14,28 +14,35 @@ class Product(Species, Inprocess, Polynomial, RollingPolynomial):
     ---------
     '''
     # Constructor
-    def __init__(self, name, run_time_df, volume_before_sampling, 
-                 volume_after_sampling, feed_media_added,
-                 viable_cell_conc, production):
+    def __init__(self, name, param_data):
         '''
         Parameters
         ---------
         '''
-        super().__init__(name, run_time_df, volume_before_sampling, 
-                         volume_after_sampling, feed_media_added, 
-                         viable_cell_conc)
+        super().__init__(name, param_data)
         
         # Get indices of the measurements from the concentration
+        production = param_data['production']
         conc = production['value']
         idx = get_measurement_indices(conc)
 
+        # Get the same index in both lists
+        set1 = set(idx)
+        set2 = set(self.vcc_index)
+        common_idx = list(set1.intersection(set2))
+
         # Class Members
         self._idx = idx
+        self._common_idx = common_idx
         self._production = production
 
     @property
-    def measurement_index(self):
+    def index(self):
         return self._idx
+    
+    @property
+    def measurement_index(self):
+        return self._common_idx
     
     @property
     def production(self):
