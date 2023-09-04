@@ -44,9 +44,9 @@ class MetaboliteMixin(GetterMixin):
 
                 dy = dp1(x_mid[i])      # derivetive values corresponding to x
                 if(self._measured_cumulative_flag):
-                    q[i] = dy / (vcc[i] + vcc[i+1])*2
+                    q[idx[i]] = dy / (vcc[i] + vcc[i+1])*2
                 else:
-                    q[i] = dy / (vcc[i] * v[i]+vcc[i+1] * v[i+1]) * 2 * 1000
+                    q[idx[i]] = dy / (vcc[i] * v[i]+vcc[i+1] * v[i+1]) * 2 * 1000
 
             elif (i + windows / 2) > len(x):
                 x_roll = x[int(len(x)-windows/2-1):len(x)]
@@ -59,9 +59,9 @@ class MetaboliteMixin(GetterMixin):
 
                 dy = dp1(x_mid[i])      # derivetive values corresponding to x
                 if(self._measured_cumulative_flag):
-                    q[i] = dy / (vcc[i] + vcc[i+1]) * 2
+                    q[idx[i]] = dy / (vcc[i] + vcc[i+1]) * 2
                 else:
-                    q[i] = dy / (vcc[i] * v[i]+vcc[i+1] * v[i+1]) * 2 * 1000
+                    q[idx[i]] = dy / (vcc[i] * v[i]+vcc[i+1] * v[i+1]) * 2 * 1000
                 
             else:
                 x_roll = x[int(i-windows/2+1):int(i+windows/2+1)]
@@ -74,9 +74,9 @@ class MetaboliteMixin(GetterMixin):
 
                 dy = dp1(x_mid[i])      # derivetive values corresponding to x
                 if(self._measured_cumulative_flag):
-                    q[i] = dy / (vcc[i] + vcc[i+1]) * 2
+                    q[idx[i]] = dy / (vcc[i] + vcc[i+1]) * 2
                 else:
-                    q[i] = dy / (vcc[i] * v[i] + vcc[i+1] * v[i+1]) * 2 * 1000
+                    q[idx[i]] = dy / (vcc[i] * v[i] + vcc[i+1] * v[i+1]) * 2 * 1000
 
         #Concentration middle points.
         conc_mid = pd.DataFrame(data={'Run Time Mid (day)': t_day_mid,
