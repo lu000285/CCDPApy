@@ -11,7 +11,7 @@ class MetaboliteMixin(GetterMixin):
     -------
         polynomial
     '''
-    def polynomial(self, deg, data_num=50):
+    def polynomial(self, deg, data_num=100):
         '''Calculate the cumulative concentration and specific rate of a metabolite using polynomial regression.
         Parameters
         ----------
@@ -37,8 +37,8 @@ class MetaboliteMixin(GetterMixin):
         day_poly = np.floor(t_poly / 24).astype(int)
         run_time_poly = pd.DataFrame(data={RUN_TIME_DAY_COLUMN: day_poly,
                                            RUN_TIME_HOUR_COLUMN: t_poly})
-        
-        s_poly = poly_func(t)
+        # use run time for polynomial plotting
+        s_poly = poly_func(t_poly)
         s_poly = pd.DataFrame(data=s_poly, columns=['value'])
         s_poly['unit'] = unit
         s_poly['state'] = state
@@ -48,7 +48,7 @@ class MetaboliteMixin(GetterMixin):
 
         # Get the derivetive of the polynomial, and evaluate the derivetive at the run time.
         poly_deriv = poly_func.deriv()
-        y = poly_deriv(t)
+        y = poly_deriv(t) # use run time in measured data
 
         # Calculate the specific rate from the derivetive of the polynomial function
         if self.measured_cumulative_flag:
@@ -66,6 +66,6 @@ class MetaboliteMixin(GetterMixin):
         # Store the variables
         self._poly_degree = deg
         self._poly_func = poly_func
-        # self._cumulative_poly = pd.concat([run_time_poly, s_poly], axis=1)
-        self._cumulative_poly = pd.concat([run_time, s_poly], axis=1)
+        self._cumulative_poly = pd.concat([run_time_poly, s_poly], axis=1)
+        # self._cumulative_poly = pd.concat([run_time, s_poly], axis=1)
         self._sp_rate_poly = pd.concat([run_time, r_poly], axis=1)

@@ -1,6 +1,6 @@
 class GetterMixin:
     ''''''
-    def get_all_data(self):
+    def get_pre_process_data(self):
         '''get dictionary for all dataset.'''
         return self._data_set
     

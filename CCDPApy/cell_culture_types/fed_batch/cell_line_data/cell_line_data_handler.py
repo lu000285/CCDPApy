@@ -11,21 +11,8 @@ from .GetterMixin import GetterMixin
 class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
     '''
     '''
-    def __init__(self, cell_line_name, data, use_feed_conc, use_conc_after_feed) -> None:
+    def __init__(self, cell_line_name, data) -> None:
         super().__init__(cell_line_name, data=data, cell_culture_type='fed-batch')
-
-        # Check species name for each data
-        if use_feed_conc:
-            for spc in self._spc_feed:
-                assert spc in self._spc_conc_before, f"{spc} is not included in 'Feed Concentration beore Feeding' data."
-            for spc in self._spc_conc_before:
-                assert spc in self._spc_feed, f"{spc} is not included in 'Feed Concentration' data."
-        
-        elif use_conc_after_feed:
-            for spc in self._spc_conc_after:
-                assert spc in self._spc_conc_before, f"{spc} is not included in 'Feed Concentration beore Feeding' data."
-            for spc in self._spc_conc_before:
-                assert spc in self._spc_conc_after, f"{spc} is not included in 'Feed Concentration after Feeding' data."
 
         conc_before_feed_data = data[CONC_BEFORE_FEED_KEY].copy()
         conc_after_feed_data = data[CONC_AFTER_FEED_KEY].copy()
@@ -45,8 +32,8 @@ class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
         self._feed_volume_data  = feed_volume_data[self._mask].copy()
 
         # Store
-        self._use_feed_conc = use_feed_conc
-        self._use_conc_after_feed = use_conc_after_feed
+        # self._use_feed_conc = use_feed_conc
+        # self._use_conc_after_feed = use_conc_after_feed
         data = {SPC_CONC_BEFORE_FEED_KEY: list(self._conc_before_feed_data.columns),
                 SPC_CONC_AFTER_FEED_KEY: list(self._conc_after_feed_data.columns),
                 SPC_FEED_CONC_KEY: list(self._feed_data.columns[3:]),
@@ -70,7 +57,7 @@ class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
                                  'cumulative': None,
                                  'sp_rate': None}
 
-    def get_all_data(self):
+    def get_pre_process_data(self):
         '''get all data set'''
         return self._data_set
     
@@ -90,11 +77,12 @@ class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
         else:
             return exp_handles
 
-    def in_process(self):
+    def in_process(self, use_feed_conc, use_conc_after_feed):
         '''in-processing the data for the same cell line name.'''
+        self._check_species_name(use_feed_conc=use_feed_conc, use_conc_after_feed=use_conc_after_feed)
         cell_line_name = self.cell_line_name
         experiment_ids = self.get_experiment_names()
-        data = self.get_all_data()
+        data = self.get_pre_process_data()
 
         exp_handles = {}
         for id in experiment_ids:
@@ -102,8 +90,8 @@ class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
             exp_handler = FedBatchExperimentHandler(cell_line_name=cell_line_name,
                                                     cell_line_id=id,
                                                     data=data,
-                                                    use_feed_conc=self._use_feed_conc,
-                                                    use_conc_after_feed=self._use_conc_after_feed)
+                                                    use_feed_conc=use_feed_conc,
+                                                    use_conc_after_feed=use_conc_after_feed)
             # in-processing
             exp_handler.in_process()
 
@@ -180,6 +168,20 @@ class FedBatchCellLineDataHandler(CellLineDataHandler, GetterMixin):
         self._metabolite_data['cumulative'] = cumulative
         self._metabolite_data['sp_rate'] = sp_rate
 
+    def _check_species_name(self, use_feed_conc, use_conc_after_feed):
+        '''Check species name in the measured data file'''
+        # Check species name for each data
+        if use_feed_conc:
+            for spc in self._spc_feed:
+                assert spc in self._spc_conc_before, f"{spc} is not included in 'Feed Concentration beore Feeding' data."
+            for spc in self._spc_conc_before:
+                assert spc in self._spc_feed, f"{spc} is not included in 'Feed Concentration' data."
+        
+        elif use_conc_after_feed:
+            for spc in self._spc_conc_after:
+                assert spc in self._spc_conc_before, f"{spc} is not included in 'Feed Concentration beore Feeding' data."
+            for spc in self._spc_conc_before:
+                assert spc in self._spc_conc_after, f"{spc} is not included in 'Feed Concentration after Feeding' data."
 
 
 

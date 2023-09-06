@@ -3,6 +3,7 @@ import numpy as np
 
 from CCDPApy.plotting.InteractivePlot import InteractivePlotMixin
 from CCDPApy.cell_culture_data_base.cell_culture_data_handler import CellCultureDataHandler
+from CCDPApy.cell_culture_types.fed_batch.cell_line_data import FedBatchCellLineDataHandler
 from CCDPApy.cell_culture_types.fed_batch.export_data.export_data import ExportMixin
 from CCDPApy.cell_culture_types.fed_batch.import_data.import_data import ImportMixin
 
@@ -18,17 +19,11 @@ from .GeterMixin import GetterMixin
 
 class FedBatchCellCultureDataHandler(CellCultureDataHandler, GetterMixin, InteractivePlotMixin, ExportMixin, ImportMixin):
     ''''''
-    def __init__(self, parameters) -> None:
+    def __init__(self) -> None:
         super().__init__(cell_culture_type='fed-batch')
-        
-        # Cell culture parameters
-        param_dict = {}
-        if isinstance(parameters, list):
-            for param in parameters:
-                param_dict[param.cell_line_name] = param
-        else:
-            param_dict[parameters.cell_line_name] = parameters
-        self._param = param_dict
+
+        # Fed-batch cell line data handler
+        self._cell_line_handler = FedBatchCellLineDataHandler
 
         # calss members to store processed data
         self._processed_data = pd.DataFrame()
@@ -99,10 +94,19 @@ class FedBatchCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Intera
                 POLY_DEG_KEY: self._polynomial_degree_data}
         self._data_set = data
 
-    def perform_data_process(self):
+    def perform_data_process(self, parameters):
         '''in-prcessing data for all cell lines.'''
+        # Cell culture parameters
+        param_dict = {}
+        if isinstance(parameters, list):
+            for param in parameters:
+                param_dict[param.cell_line_name] = param
+        else:
+            param_dict[parameters.cell_line_name] = parameters
+        self._param = param_dict
+        
         cell_line_names = self.get_cell_line_names()
-        data_set = self.get_all_data()
+        data_set = self.get_pre_process_data()
 
         cell_lines = [name for name in cell_line_names if name in self._param.keys()]
 
@@ -113,12 +117,11 @@ class FedBatchCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Intera
             # call cell line data handler
             cell_line_data_handler = self._cell_line_handler(
                 cell_line_name=cell_line,
-                data=data_set,
-                use_feed_conc=param.use_feed_conc,
-                use_conc_after_feed=param.use_conc_after_feed
-            )
+                data=data_set)
+            
             # in-processing
-            cell_line_data_handler.in_process()
+            cell_line_data_handler.in_process(use_feed_conc=param.use_feed_conc,
+                                              use_conc_after_feed=param.use_conc_after_feed)
 
             # post-porcessing-polynomial regression
             if param.polynomial:

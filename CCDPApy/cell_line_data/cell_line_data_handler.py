@@ -28,7 +28,7 @@ class CellLineDataHandler:
         self._measured_data = data_masked
         self._experiment_names = list(data_masked[ID_COLUMN].unique())
         self._spc_conc_before = data[SPC_CONC_BEFORE_FEED_KEY]
-        self._spc_conc_aftet = data[SPC_CONC_AFTER_FEED_KEY]
+        self._spc_conc_after = data[SPC_CONC_AFTER_FEED_KEY]
         self._spc_feed = data[SPC_FEED_CONC_KEY]
     
     def get_experiment_names(self):

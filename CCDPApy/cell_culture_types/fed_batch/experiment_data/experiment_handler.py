@@ -46,7 +46,8 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         feed_media_added = df[FEED_MEDIA_ADDED_COLUMN].fillna(0).values
 
         feed_data = {}
-        if feed_conc_data.size!=0:
+        
+        if feed_conc_data.size!=0 and use_feed_conc==True:
             for name in feed_conc_data['Feed Name'].unique():
                 mask = feed_conc_data['Feed Name']==name
                 df = feed_conc_data[mask].copy().dropna(axis=1)
@@ -56,7 +57,7 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
                     feed_vol = feed_volume_data[name].values
                 else:
                     feed_vol = feed_media_added
-
+                
                 for col in df.columns:
                     feed_data[col.replace(' (mM)', '')] = {
                         'feed_conc': df[col].iat[0],
@@ -109,7 +110,7 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         spc_dict = {}
         cell = Cell(name='cell', param_data=param_dict)
         spc_dict['cell'] = cell
-        product = Product(name=name, param_data=param_dict)
+        product = Product(name='igg', param_data=param_dict)
         spc_dict['product'] = product
         metabolite_dict = self._create_species(param_dict)
         spc_dict.update(metabolite_dict)
@@ -203,20 +204,21 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         conc_before_feed_df = self._conc_before_feed_data.copy()
         conc_after_feed_df = self._conc_after_feed_data.copy()
         feed_conc_df = self._feed_conc_data.copy()
-        measured_cumulative_df = self._measured_cumulative_conc_data.copy()
+        measured_cumulative_df = self._measured_cumulative_conc_data.copy().dropna(axis=1)
         feed_data = self._feed_data
 
         # create name: column dict
         species_namas = [remove_units(col) for col in conc_before_feed_df.columns]
         conc_before_feed_names = dict(zip(species_namas, conc_before_feed_df.columns))
         conc_after_feed_names = dict(zip(species_namas, conc_after_feed_df.columns))
-        measured_cumulative_names = dict(zip(species_namas, measured_cumulative_df.columns))
+        measured_cumulative_species_namas = [s.split(' ')[0] for s in measured_cumulative_df.columns]
+        measured_cumulative_names = dict(zip(measured_cumulative_species_namas, measured_cumulative_df.columns))
         feed_conc_df.columns = [remove_units(col) for col in feed_conc_df.columns]
 
         spc_dict = {}
         for name in species_namas:
             # work with feed volume and feed conc.
-            if feed_conc_df.size==0:
+            if feed_conc_df.size==0 or self._use_feed_conc==False:
                 feed_conc = feed_data['feed_conc']
                 feed_vol = feed_data['feed_vol']
             else:
@@ -232,7 +234,7 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
             conc_after_feed = create_value_unit_df(conc_after_feed_df[key])
             
             # Measured cumulative conc.
-            if name in measured_cumulative_df:
+            if name in measured_cumulative_names.keys():
                 key = measured_cumulative_names[name]
                 if measured_cumulative_df[key].any():
                     measured_cumulative = create_value_unit_df(measured_cumulative_df[key])

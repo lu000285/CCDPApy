@@ -5,14 +5,6 @@ from CCDPApy.helper import input_path, split_df, create_value_unit_df
 from CCDPApy.constants.fed_batch.column_name import EXPERIMENT_DATA_COLUMN, CONC_BEFOROE_FEED_COLUMN, CONC_AFTER_FEED_COLUMN, CUMULATIVE_CONC_COLUMN, SP_RATE_COLUMN, SP_RATE_POLY_COLUMN, SP_RATE_ROLLING_COLUMN
 from CCDPApy.constants.fed_batch.column_name import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN, RUN_TIME_DAY_MID_COLUMN, RUN_TIME_HOUR_MID_COLUMN, CELL_LINE_COLUMN, ID_COLUMN, VIABLE_CELL_COLUMN, DEAD_CELL_COLUMN, TOTAL_CELL_COLUMN, PRODUCT_COLUMN, VIABILITY_COLUMN
 
-SHEET_NAME_1 = 'Cell Concentration'
-SHEET_NAME_2 = 'Cumulative Cell Production'
-SHEET_NAME_3 = 'Integral of Viable Cell'
-SHEET_NAME_4 = 'Cell Growth Rate'
-SHEET_NAME_5 = 'Concentration'
-SHEET_NAME_6 = 'Cumulative Concentration'
-SHEET_NAME_7 = 'SP Rate'
-
 TARGET_COLUMNS = [EXPERIMENT_DATA_COLUMN, 
                   CONC_BEFOROE_FEED_COLUMN, 
                   CONC_AFTER_FEED_COLUMN,
@@ -106,14 +98,14 @@ class ImportMixin:
         growth_rate_df = pd.concat([run_time, growth_rate, cell_line_id], axis=1)
 
         if not sp_rate_poly is None:
-            growth_rate_poly = create_value_unit_df(sp_rate['Cell (hr^-1)'])
+            growth_rate_poly = create_value_unit_df(sp_rate_poly['Cell (hr^-1)'])
             growth_rate_poly['method'] = 'polynomial'
             growth_rate_poly_df = pd.concat([run_time, growth_rate_poly, cell_line_id], axis=1)
             growth_rate_df = pd.concat([growth_rate_df, growth_rate_poly_df], axis=0, ignore_index=True)
 
         if not sp_rate_rolling is None:
-            run_time_mid = sp_rate[[RUN_TIME_DAY_MID_COLUMN, RUN_TIME_HOUR_MID_COLUMN]]
-            growth_rate_roll = create_value_unit_df(sp_rate['Cell (hr^-1)'])
+            run_time_mid = sp_rate_rolling[[RUN_TIME_DAY_MID_COLUMN, RUN_TIME_HOUR_MID_COLUMN]]
+            growth_rate_roll = create_value_unit_df(sp_rate_rolling['Cell (hr^-1)'])
             growth_rate_roll['method'] = 'rollingWindowPolynomial'
             growth_rate_roll_df = pd.concat([run_time_mid, growth_rate_roll, cell_line_id], axis=1)
             growth_rate_df = pd.concat([growth_rate_df, growth_rate_roll_df], axis=0, ignore_index=True)
