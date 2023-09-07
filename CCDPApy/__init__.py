@@ -1,5 +1,5 @@
 # CCDPApy Initialization
-from CCDPApy.cell_culture_types.cell_culture_pipeline import cell_culture_pipeline
+from CCDPApy.cell_culture_types.cell_culture_pipeline import cell_culture_pipeline, CellCulturePipeline
 
 from CCDPApy.cell_culture_types.fed_batch.cell_culture_parameter.cell_culture_parameter import FedBatchParameters
 from CCDPApy.cell_culture_types.fed_batch.cell_culture_data.cell_culture_data_handler import FedBatchCellCultureDataHandler as FedBatchCellCulture

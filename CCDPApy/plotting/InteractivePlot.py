@@ -115,7 +115,7 @@ class InteractivePlotMixin:
         ])
         return app
 
-    def interactive_plot(self, mode='inline'):
+    def interactive_plot(self, port=8050, mode='inline'):
         '''Interactive Plot.
         '''
         # Initialization
@@ -226,9 +226,9 @@ class InteractivePlotMixin:
 
         # Start the app
         if mode=='inline':
-            app.run_server(mode="inline")
+            app.run_server(port=port, mode="inline")
         else:
-            app.run_server()
+            app.run_server(port=port)
     
     def __set_exp_options(self, cl_chosen):
         '''Update expriment ID dropdown

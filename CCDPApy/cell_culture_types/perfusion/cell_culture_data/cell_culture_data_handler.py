@@ -1,6 +1,7 @@
 import pandas as pd
 
 from CCDPApy.cell_culture_data_base.cell_culture_data_handler import CellCultureDataHandler
+from CCDPApy.cell_culture_types.perfusion.cell_line_data.cell_line_data_handler import PerfusionCellLineDataHandler
 from CCDPApy.cell_culture_types.perfusion.export.export import ExportMixin
 from CCDPApy.plotting.InteractivePlot import InteractivePlotMixin
 
@@ -13,17 +14,10 @@ from CCDPApy.helper import split_df
 
 class PerfusionCellCultureDataHandler(CellCultureDataHandler, GetterMixin, InteractivePlotMixin, ExportMixin):
     ''''''
-    def __init__(self, parameters) -> None:
+    def __init__(self) -> None:
         super().__init__(cell_culture_type='perfusion')
-        
-        # Cell culture parameters
-        param_dict = {}
-        if isinstance(parameters, list):
-            for param in parameters:
-                param_dict[param.cell_line_name] = param
-        else:
-            param_dict[parameters.cell_line_name] = parameters
-        self._param = param_dict
+        # Perfusion cell line data handler
+        self._cell_line_handler = PerfusionCellLineDataHandler
 
         # calss members to store processed data
         self._cell_data = {'conc': None,
@@ -77,8 +71,17 @@ class PerfusionCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Inter
                 'polynomial_degree_data': self._polynomial_degree_data}
         self._data_set = data
 
-    def perform_data_process(self):
+    def perform_data_process(self, parameters):
         '''data-prcessing for all cell lines.'''
+         # Cell culture parameters
+        param_dict = {}
+        if isinstance(parameters, list):
+            for param in parameters:
+                param_dict[param.cell_line_name] = param
+        else:
+            param_dict[parameters.cell_line_name] = parameters
+        self._param = param_dict
+
         cell_line_names = self.get_cell_line_names()
         data_set = self.get_all_data()
 
