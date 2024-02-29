@@ -146,6 +146,12 @@ class FedBatchCellCultureDataHandler(CellCultureDataHandler, GetterMixin, Intera
 
         self._cell_line_handles = cell_line_handles
 
+        # store processed cell line name and id
+        processed_info = {}
+        for cell_line, cl_handler in cell_line_handles.items():
+            processed_info[cell_line] = list(cl_handler.get_experiment_handle().keys())
+        self._processed_cell_lines = processed_info
+
         # store data
         self.store_data()
 

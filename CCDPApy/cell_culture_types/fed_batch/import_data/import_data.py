@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 
-from CCDPApy.helper import input_path, split_df, create_value_unit_df
+from CCDPApy.helper import input_path, split_df, create_value_unit_df, remove_units
 from CCDPApy.constants.fed_batch.column_name import EXPERIMENT_DATA_COLUMN, CONC_BEFOROE_FEED_COLUMN, CONC_AFTER_FEED_COLUMN, CUMULATIVE_CONC_COLUMN, SP_RATE_COLUMN, SP_RATE_POLY_COLUMN, SP_RATE_ROLLING_COLUMN
 from CCDPApy.constants.fed_batch.column_name import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN, RUN_TIME_DAY_MID_COLUMN, RUN_TIME_HOUR_MID_COLUMN, CELL_LINE_COLUMN, ID_COLUMN, VIABLE_CELL_COLUMN, DEAD_CELL_COLUMN, TOTAL_CELL_COLUMN, PRODUCT_COLUMN, VIABILITY_COLUMN
+from CCDPApy.constants import SPECIES_STATE
 
 TARGET_COLUMNS = [EXPERIMENT_DATA_COLUMN, 
                   CONC_BEFOROE_FEED_COLUMN, 
@@ -58,8 +59,13 @@ class ImportMixin:
         cell_line_id = exp_data[[ID_COLUMN, CELL_LINE_COLUMN]]
         run_time = exp_data[[RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN]]
 
-        self._get_processed_cell_data(cell_line_id, run_time, exp_data, cumulative_data, sp_rate_data, sp_rate_poly_data, sp_rate_rolling_data)
+        processed_info = {}
+        for cell_line in cell_line_id['Cell Line'].unique():
+            processed_info[cell_line] = list(cell_line_id[cell_line_id['Cell Line']==cell_line]['ID'].unique())
+        self._processed_cell_lines.update(processed_info)
 
+        self._get_processed_cell_data(cell_line_id, run_time, exp_data, cumulative_data, sp_rate_data, sp_rate_poly_data, sp_rate_rolling_data)
+        self._get_processed_metabolite_data(cell_line_id, run_time, exp_data, conc_before_data, conc_after_data, cumulative_data, sp_rate_data, sp_rate_poly_data, sp_rate_rolling_data)
 
         # Concat all processed data
         if self._processed_data.size==0:
@@ -105,6 +111,8 @@ class ImportMixin:
 
         if not sp_rate_rolling is None:
             run_time_mid = sp_rate_rolling[[RUN_TIME_DAY_MID_COLUMN, RUN_TIME_HOUR_MID_COLUMN]]
+            run_time_mid = run_time_mid.rename(columns={RUN_TIME_DAY_MID_COLUMN: RUN_TIME_DAY_COLUMN,
+                                                        RUN_TIME_HOUR_MID_COLUMN: RUN_TIME_HOUR_COLUMN})
             growth_rate_roll = create_value_unit_df(sp_rate_rolling['Cell (hr^-1)'])
             growth_rate_roll['method'] = 'rollingWindowPolynomial'
             growth_rate_roll_df = pd.concat([run_time_mid, growth_rate_roll, cell_line_id], axis=1)
@@ -117,5 +125,112 @@ class ImportMixin:
         data['integral'] = ivcc_df
         data['growth_rate'] = growth_rate_df
 
+        self._cell_data
+        self._cell_data['conc'] = pd.concat([self._cell_data['conc'], conc_df])
+        self._cell_data['integral'] = pd.concat([self._cell_data['integral'], ivcc_df])
+        self._cell_data['cumulative'] = pd.concat([self._cell_data['cumulative'], cumu_df])
+        self._cell_data['growth_rate'] = pd.concat([self._cell_data['growth_rate'], growth_rate_df])
+
         self._imported_cell_data = data
+
+    def _get_processed_metabolite_data(self, cell_line_id, run_time, exp_data, conc_before, conc_after, cumulative, sp_rate, sp_rate_poly, sp_rate_rolling):
+        ''''''
+        # Delete Cell and IVCC
+        del cumulative['Cell (10^6 cells)']
+        del cumulative['IVCC (10^6 cells hr/mL)']
+        del sp_rate['Cell (hr^-1)']
+
+        # IgG concentration 
+        conc_df_list = []
+        product = create_value_unit_df(exp_data['IgG (mg/L)'])
+        product['species'] = 'IgG'
+        product_df = pd.concat([run_time, product, cell_line_id], axis=1)
+        conc_df_list.append(product_df)
+
+        # Concentration
+        for col1, col2 in zip(conc_before.columns, conc_after.columns):
+            temp1 = create_value_unit_df(conc_before[col1])
+            temp1['species'] = remove_units(col1).capitalize()
+            temp2 = create_value_unit_df(conc_after[col2])
+            temp2['species'] = remove_units(col2).capitalize()
+            temp1_df = pd.concat([run_time, temp1, cell_line_id], axis=1)
+            temp2_df = pd.concat([run_time, temp2, cell_line_id], axis=1)
+
+            temp = pd.concat([temp1_df, temp2_df], axis=0)
+            temp = temp.sort_values(by=[RUN_TIME_HOUR_COLUMN], kind='stable', ignore_index=True)
+            conc_df_list.append(temp)
+        conc_df = pd.concat(conc_df_list, axis=0)
+
+        # Create Cumulative production/consumption
+        cumu_df_list = []
+        for col in cumulative.columns:
+            name = remove_units(col)
+            name = name.capitalize() if name != 'IgG' else 'IgG'
+
+            temp = create_value_unit_df(cumulative[col])
+            temp['state'] = SPECIES_STATE[name]
+            temp['method'] = 'twoPoint'
+            temp['species'] = name
+            temp_df = pd.concat([run_time, temp, cell_line_id], axis=1)
+            cumu_df_list.append(temp_df)
+        cumu_df = pd.concat(cumu_df_list, axis=0)
             
+        # Create SP. rate data
+        sp_rate_df_list = []
+        for col in sp_rate.columns:
+            name = remove_units(col)
+            name = name.capitalize() if name != 'IgG' else 'IgG'
+
+            temp = create_value_unit_df(sp_rate[col])
+            temp['method'] = 'twoPoint'
+            temp['species'] = name
+            temp_df = pd.concat([run_time, temp, cell_line_id], axis=1)
+            sp_rate_df_list.append(temp_df)
+        sp_rate_df = pd.concat(sp_rate_df_list, axis=0)
+        
+        if not sp_rate_poly is None:
+            del sp_rate_poly['Cell (hr^-1)']
+
+            sp_rate_poly_df_list = []
+            for col in sp_rate_poly.columns:
+                name = remove_units(col)
+                name = name.capitalize() if name != 'IgG' else 'IgG'
+
+                temp = create_value_unit_df(sp_rate_poly[col])
+                temp['method'] = 'polynomial'
+                temp['species'] = name
+                temp_df = pd.concat([run_time, temp, cell_line_id], axis=1)
+                sp_rate_poly_df_list.append(temp_df)
+            sp_rate_poly_df = pd.concat(sp_rate_poly_df_list, axis=0)
+            sp_rate_df = pd.concat([sp_rate_df, sp_rate_poly_df], axis=0, ignore_index=True)
+
+        if not sp_rate_rolling is None:
+            del sp_rate_rolling['Cell (hr^-1)']
+            run_time_mid = sp_rate_rolling[[RUN_TIME_DAY_MID_COLUMN, RUN_TIME_HOUR_MID_COLUMN]]
+            run_time_mid = run_time_mid.rename(columns={RUN_TIME_DAY_MID_COLUMN: RUN_TIME_DAY_COLUMN,
+                                                        RUN_TIME_HOUR_MID_COLUMN: RUN_TIME_HOUR_COLUMN})
+            
+            sp_rate_roll_df_list = []
+            for col in sp_rate_rolling.columns:
+                name = remove_units(col)
+                name = name.capitalize() if name != 'IgG' else 'IgG'
+
+                temp = create_value_unit_df(sp_rate_rolling[col])
+                temp['method'] = 'rollingWindowPolynomial'
+                temp['species'] = name
+                temp_df = pd.concat([run_time_mid, temp, cell_line_id], axis=1)
+                sp_rate_roll_df_list.append(temp_df)
+            sp_rate_rolling_df = pd.concat(sp_rate_roll_df_list, axis=0)
+            sp_rate_df = pd.concat([sp_rate_df, sp_rate_rolling_df], axis=0, ignore_index=True)
+
+        # store
+        data = {}
+        data['conc'] = conc_df
+        data['cumulative'] = cumu_df
+        data['sp_rate'] = sp_rate_df
+
+        self._metabolite_data['conc'] = pd.concat([self._metabolite_data['conc'], conc_df])
+        self._metabolite_data['cumulative'] = pd.concat([self._metabolite_data['cumulative'], cumu_df])
+        self._metabolite_data['sp_rate'] = pd.concat([self._metabolite_data['sp_rate'], sp_rate_df])
+
+        self._imported_metabolite_data = data

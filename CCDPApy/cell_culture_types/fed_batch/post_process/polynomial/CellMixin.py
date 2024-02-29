@@ -28,7 +28,6 @@ class CellMixin(GetterMixin):
         # Get run time dataframe
         run_time = self.run_time
 
-        
         # Fitting a polynomial
         poly_func = np.poly1d(np.polyfit(x=t[idx], y=s[idx].astype('float'), deg=deg))
 

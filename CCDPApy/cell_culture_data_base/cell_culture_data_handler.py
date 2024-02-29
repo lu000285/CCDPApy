@@ -19,6 +19,9 @@ class CellCultureDataHandler:
         # file handler
         self._file_handler = FileHandler
 
+        # Processed Cell line name and ID
+        self._processed_cell_lines = {}
+
     def load_data(self, file):
         '''load an excel file and return the dictionary.'''
         file_handler = self._file_handler(file=file)

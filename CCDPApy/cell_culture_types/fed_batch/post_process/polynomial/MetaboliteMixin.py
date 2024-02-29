@@ -20,6 +20,7 @@ class MetaboliteMixin(GetterMixin):
         '''
         idx = self.measurement_index
         t = self.run_time_hour
+        t_day = self.run_time_day
         s = self.cumulative_conc['value'].values
         xv = self.viable_cell_conc['value'].values
         v = self.volume_before_sampling
@@ -30,7 +31,10 @@ class MetaboliteMixin(GetterMixin):
         run_time = self.run_time
 
         # Fitting a polynomial
+        # For run time (hours)
         poly_func = np.poly1d(np.polyfit(x=t[idx], y=s[idx].astype('float64'), deg=deg))
+        # For run time (days)
+        poly_func_day = np.poly1d(np.polyfit(x=t_day[idx], y=s[idx].astype('float64'), deg=deg))
 
         # Calculate cumulative concentration from the polynomial function
         t_poly = np.linspace(t[0], t[-1], data_num)
@@ -39,7 +43,9 @@ class MetaboliteMixin(GetterMixin):
                                            RUN_TIME_HOUR_COLUMN: t_poly})
         # use run time for polynomial plotting
         s_poly = poly_func(t_poly)
+        s_poly_day = poly_func_day(t_poly)
         s_poly = pd.DataFrame(data=s_poly, columns=['value'])
+        # s_poly = pd.DataFrame(data={'Value'})
         s_poly['unit'] = unit
         s_poly['state'] = state
         s_poly['method'] = 'polynomial'
@@ -56,7 +62,7 @@ class MetaboliteMixin(GetterMixin):
         else:
             r_poly = y / (xv * v) * 1000
             
-        r_poly[0] = np.nan
+        # r_poly[0] = np.nan
         r_poly = pd.DataFrame(data=r_poly, columns=['value'])
         r_poly['unit'] = '(mmol/10^9 cells/hr)'
         r_poly['method'] = 'polynomial'

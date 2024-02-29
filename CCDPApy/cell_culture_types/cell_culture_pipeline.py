@@ -2,7 +2,7 @@ from CCDPApy.cell_culture_types.fed_batch.cell_culture_data.cell_culture_data_ha
 from CCDPApy.cell_culture_types.perfusion.cell_culture_data.cell_culture_data_handler import PerfusionCellCultureDataHandler
 from CCDPApy.helper import input_path
 
-def cell_culture_pipeline(cell_culture_type, file):
+def cell_culture_pipeline(cell_culture_type, file=None):
     ''''''
 
     if cell_culture_type=='perfusion':
@@ -17,8 +17,9 @@ def cell_culture_pipeline(cell_culture_type, file):
     cell_culture = cell_culture_data_handler()
 
     # load data file
-    file_path = input_path(file_name=file)
-    cell_culture.load_data(file=file_path)
+    if file:
+        file_path = input_path(file_name=file)
+        cell_culture.load_data(file=file_path)
 
     return cell_culture
 

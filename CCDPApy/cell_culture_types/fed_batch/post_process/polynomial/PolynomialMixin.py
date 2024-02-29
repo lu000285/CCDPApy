@@ -55,8 +55,8 @@ class PolynomialMixin:
 
             sp_rate_dataframe[f"Cell {sp_rate_poly['unit'].iat[0]}"] = sp_rate_poly['value']
 
-        if 'product' in species_list:
-            name = 'product'
+        if 'IgG' in species_list:
+            name = 'IgG'
             species_list.remove(name)
             prod = species[name]
             if polynomial_degree.get('igg', None) is not None:

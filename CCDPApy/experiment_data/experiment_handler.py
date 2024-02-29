@@ -52,7 +52,7 @@ class ExperimentDataHandler:
             return spc
         elif key in spc.keys():
             if key=='igg':
-                key = 'product'
+                key = 'IgG'
             return spc[key]
         else:
             print("Wrong species name. Please check below.")

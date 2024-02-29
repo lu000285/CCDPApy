@@ -55,6 +55,7 @@ SPECIES_ABBR = {
     }
 
 SPECIES_STATE = {
+    'IgG'           : 'Produced',
     'Alanine'       : 'Consumed', 
     'Ammonia'       : 'Produced',
     'Arginine'      : 'Consumed', 

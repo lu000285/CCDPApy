@@ -47,9 +47,9 @@ class InProcessMixin:
             cumulative_conc_dataframe[f"IVCC {i['unit'].iat[0]}"] = i['value']
             sp_rate_dataframe[f"Cell {r['unit'].iat[0]}"] = r['value']
 
-        if 'product' in species_list:
-            species_list.remove('product')
-            prod = species['product']
+        if 'IgG' in species_list:
+            species_list.remove('IgG')
+            prod = species['IgG']
             prod.in_process()
 
             conc_data = prod.conc.copy()

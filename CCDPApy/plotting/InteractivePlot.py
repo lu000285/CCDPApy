@@ -20,15 +20,17 @@ class InteractivePlotMixin:
         '''
         # Cell line list
         cell_line_list = list(self.get_cell_line_handles().keys())
-        cell_line_options = cell_line_list
+        # cell_line_options = list(self._processed_cell_lines.keys())
+        cell_line_options = list(self._processed_cell_lines.keys())
 
         # Cell line options; [{'label': 'CL1', 'value': ['CL1-1', 'CL1-2', 'CL1-3']}]
         # Experiment ID options; {'cell line': 'experiment ID'}
-        exp_options = {}
+        exp_options = self._processed_cell_lines
         for cell_line in cell_line_list:
             cell_line_handler = self.get_cell_line_handles(cell_line)
             exp_list = list(cell_line_handler.get_experiment_handle().keys())
-            exp_options[cell_line] = [exp for exp in exp_list]        
+            exp_options[cell_line] = [exp for exp in exp_list]
+        #print(exp_options)
 
         # Species options
         species_options = spec_list
@@ -237,8 +239,9 @@ class InteractivePlotMixin:
         if cl_chosen==[]:
             return options
         for cl in cl_chosen:
-            cell_line_handler = self.get_cell_line_handles(cl)
-            exp_list = list(cell_line_handler.get_experiment_handle().keys())
+            #cell_line_handler = self.get_cell_line_handles(cl)
+            #exp_list = list(cell_line_handler.get_experiment_handle().keys())
+            exp_list = self._processed_cell_lines[cl]
             for exp in exp_list:
                 options.append({'label': f'{cl}-{exp}', 'value': f'{cl}-{exp}'})
         return options

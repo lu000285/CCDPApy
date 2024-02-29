@@ -53,7 +53,7 @@ class ProductMixin(GetterMixin):
 
         # Calculate the specific rate from the derivetive of the polynomial function
         r_poly = y / (xv * v) * 1000
-        r_poly[0] = np.nan
+        # r_poly[0] = np.nan
         r_poly = pd.DataFrame(data=r_poly, columns=['value'])
         r_poly['unit'] = Constants.SP_RATE_UNIT
         r_poly['method'] = 'polynomial'

@@ -54,15 +54,16 @@ class RollingWindowPolynomialMixin():
         # Product/IgG and Metabolite
         for name in species_list:
             spc = species[name]
+            spc_name = name.capitalize() if name != "IgG" else name
 
             # calculate sp. rate.
             spc.rolling_window_polynomial(degree=degree, windows=window)
 
             sp_rate_data = spc.sp_rate_rolling.copy()
-            sp_rate_data['species'] = name.capitalize()
+            sp_rate_data['species'] = spc_name
             sp_rate_df_list.append(sp_rate_data)
 
-            sp_rate_dataframe[f"{name.capitalize()} {sp_rate_data['unit'].iat[0]}"] = sp_rate_data['value']
+            sp_rate_dataframe[f"{spc_name} {sp_rate_data['unit'].iat[0]}"] = sp_rate_data['value']
         
         # concat sp. rate for rolling polynomial
         sp_rate_rolling_df = pd.concat(sp_rate_df_list, axis=0, ignore_index=True)

@@ -54,7 +54,7 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
                 df = df.drop(['Cell Line', 'ID', 'Feed Name'], axis=1)
 
                 if name in feed_volume_data.columns:
-                    feed_vol = feed_volume_data[name].values
+                    feed_vol = feed_volume_data[name].fillna(0).values
                 else:
                     feed_vol = feed_media_added
                 
@@ -110,8 +110,8 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         spc_dict = {}
         cell = Cell(name='cell', param_data=param_dict)
         spc_dict['cell'] = cell
-        product = Product(name='igg', param_data=param_dict)
-        spc_dict['product'] = product
+        product = Product(name='IgG', param_data=param_dict)
+        spc_dict['IgG'] = product
         metabolite_dict = self._create_species(param_dict)
         spc_dict.update(metabolite_dict)
         self._spc_dict = spc_dict
@@ -204,7 +204,8 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         conc_before_feed_df = self._conc_before_feed_data.copy()
         conc_after_feed_df = self._conc_after_feed_data.copy()
         feed_conc_df = self._feed_conc_data.copy()
-        measured_cumulative_df = self._measured_cumulative_conc_data.copy().dropna(axis=1)
+        measured_cumulative_df = self._measured_cumulative_conc_data.copy()
+        measured_cumulative_df.dropna(axis=1, how='all', inplace=True)
         feed_data = self._feed_data
 
         # create name: column dict
@@ -217,6 +218,16 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
 
         spc_dict = {}
         for name in species_namas:
+            # Conc. before feeding
+            key = conc_before_feed_names[name]
+            conc_df = conc_before_feed_df[key]
+
+            # skip the species if no concentration values in data sheet
+            if conc_df.isna().all().all():
+                continue
+
+            conc_before_feed = create_value_unit_df(conc_df)
+
             # work with feed volume and feed conc.
             if feed_conc_df.size==0 or self._use_feed_conc==False:
                 feed_conc = feed_data['feed_conc']
@@ -224,10 +235,6 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
             else:
                 feed_conc = feed_data[name]['feed_conc']
                 feed_vol = feed_data[name]['feed_vol']
-
-            # Conc. before feeding
-            key = conc_before_feed_names[name]
-            conc_before_feed = create_value_unit_df(conc_before_feed_df[key])
 
             # Conc. after feeding
             key = conc_after_feed_names[name]

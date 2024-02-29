@@ -27,9 +27,15 @@ class Metabolite(Species, Inprocess, Polynomial, RollingPolynomial):
         ---------
         '''
         super().__init__(name, param_data=param_data)
+
+        # Check measured cumulative concentration
+        measured_cumulative_flag = False if measured_cumulative_conc is None else True
         
         # Get indices of the measurements from the concentration
-        conc = conc_before_feed['value']
+        if measured_cumulative_flag:
+            conc = measured_cumulative_conc['value']
+        else:
+            conc = conc_before_feed['value']
         idx = get_measurement_indices(conc)
 
         # Get the same index in both lists
