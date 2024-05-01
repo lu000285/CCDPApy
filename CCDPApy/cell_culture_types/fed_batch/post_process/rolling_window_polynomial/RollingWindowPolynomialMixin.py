@@ -27,29 +27,12 @@ class RollingWindowPolynomialMixin():
             t_day_mid[i] = 0.5 * (t_day[i] + t_day[i+1])
             t_hour_mid[i] = 0.5 * (t_hour[i] + t_hour[i+1])
 
-        run_time_mid = pd.DataFrame(data={RUN_TIME_DAY_MID_COLUMN: t_day_mid,
-                                                RUN_TIME_HOUR_MID_COLUMN: t_hour_mid})
+        run_time = pd.DataFrame(data={RUN_TIME_DAY_COLUMN: t_day,
+                                                RUN_TIME_HOUR_COLUMN: t_hour})
         
         # initialize df for logging
-        sp_rate_dataframe = run_time_mid.copy()
+        sp_rate_dataframe = run_time.copy()
 
-        # Logistic growth rate for the cell.
-        if 'cell' in species_list:
-            name = 'cell'
-            species_list.remove(name)
-            cell = species[name]
-
-            # calculate growth rate
-            cell.midcalc_growth_rate_calc()
-
-            # concat
-            sp_rate = cell.growth_rate.copy()
-            sp_rate_logistic = cell.growth_rate_logistic.copy()
-            sp_rate_data = pd.concat([sp_rate, sp_rate_logistic], axis=0).reset_index(drop=True)
-            sp_rate_data['ID'] = self.cell_line_id
-            cell.growth_rate = sp_rate_data
-
-            sp_rate_dataframe[f"Cell {sp_rate_logistic['unit'].iat[0]}"] = sp_rate_logistic['value']
 
         # Product/IgG and Metabolite
         for name in species_list:
@@ -75,7 +58,6 @@ class RollingWindowPolynomialMixin():
         sp_rate_data['ID'] = self.cell_line_id
         
         # save
-        self._run_time_mid = run_time_mid
         self.sp_rate = sp_rate_data
         self._sp_rate_data_rolling = sp_rate_dataframe
 
@@ -84,10 +66,6 @@ class RollingWindowPolynomialMixin():
         sp_rate = add_descriptive_column(sp_rate_dataframe, SP_RATE_ROLLING_COLUMN)
         self._processed_data = pd.concat([processed_data, sp_rate], axis=1)
 
-
-    @property
-    def run_time_mid(self):
-        return self._run_time_mid
 
     def get_sp_rate_rolling(self):
         return self._sp_rate_data_rolling

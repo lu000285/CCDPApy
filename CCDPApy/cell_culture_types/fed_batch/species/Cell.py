@@ -5,9 +5,10 @@ from CCDPApy.helper import get_measurement_indices
 from CCDPApy.cell_culture_types.fed_batch.in_process import CellMixin as Inprocess
 from CCDPApy.cell_culture_types.fed_batch.post_process.polynomial import CellMixin as Polynomial
 from CCDPApy.cell_culture_types.fed_batch.post_process.rolling_window_polynomial import LogisticGrowthMixin as LogisticGrowoth
+from CCDPApy.cell_culture_types.fed_batch.post_process.rolling_window_polynomial import CellMixin as RollingPolynomial
 from .Species import Species
 
-class Cell(Species, Inprocess, Polynomial, LogisticGrowoth):
+class Cell(Species, Inprocess, Polynomial, RollingPolynomial):
     '''Cell class.
     Attributes
     ---------

@@ -1,15 +1,15 @@
 import pandas as pd
 import numpy as np
 
-from CCDPApy.constants import ProductNameSpace
-from CCDPApy.constants import RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
+from CCDPApy.cell_culture_types.fed_batch.in_process.equation import growth_rate
+from CCDPApy.constants import CellNameSpace, RUN_TIME_DAY_COLUMN, RUN_TIME_HOUR_COLUMN
 
 from .GetterMixin import GetterMixin
 
-CONSTANTS = ProductNameSpace()
+CONSTANTS = CellNameSpace()
 
-class ProductMixin(GetterMixin):
-    '''Rolling window polynomial regression Mixin Class for Product/IgG.
+class CellMixin(GetterMixin):
+    '''Cell Mixin Class for Rolling window polynomial regression.
     '''
     def rolling_window_polynomial(self, degree, windows):
         '''Calculate Specific Rate from Derivetive of Polynomial Regression on Cumularive Consumption/Production.
@@ -37,7 +37,7 @@ class ProductMixin(GetterMixin):
 
                 dy = dp1(x[i])      # derivetive values corresponding to x
 
-                q[i] = dy / (vcc[i] * v[i]) * 1000
+                q[i] = dy / (vcc[i] * v[i]) #* 1000
 
             elif (i + windows / 2) > len(x):
                 x_roll = x[int(len(x)-windows):len(x)]
@@ -50,7 +50,7 @@ class ProductMixin(GetterMixin):
 
                 dy = dp1(x[i])      # derivetive values corresponding to x
 
-                q[i] = dy / (vcc[i] * v[i]) * 1000
+                q[i] = dy / (vcc[i] * v[i]) #* 1000
                 
             else:
                 x_roll = x[int(i-windows/2+1):int(i+windows/2+1)]
@@ -62,8 +62,9 @@ class ProductMixin(GetterMixin):
                 dp1 = p.deriv()      # first derivetive of polynomial fit
 
                 dy = dp1(x[i])      # derivetive values corresponding to x
-                
-                q[i] = dy / (vcc[i] * v[i])  * 1000
+
+                q[i] = dy / (vcc[i] * v[i]) #* 1000
+
 
 
         # Sp. rate by rolling window polynomial
