@@ -165,8 +165,7 @@ class ImportMixin:
         cumu_df_list = []
         for col in cumulative.columns:
             name = remove_units(col)
-            name = name.capitalize() if name != 'IgG' else 'IgG'
-
+            name = name.capitalize() if name != 'Igg' else 'IgG'
             temp = create_value_unit_df(cumulative[col])
             temp['state'] = SPECIES_STATE[name]
             temp['method'] = 'twoPoint'
