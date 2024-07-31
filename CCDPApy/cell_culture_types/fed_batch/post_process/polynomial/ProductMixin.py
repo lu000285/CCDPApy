@@ -35,7 +35,8 @@ class ProductMixin(GetterMixin):
 
         # Calculate cumulative concentration from the polynomial function
         t_poly = np.linspace(t[0], t[-1], data_num)
-        day_poly = np.floor(t_poly / 24).astype(int)
+        # day_poly = np.floor(t_poly / 24).astype(int)
+        day_poly = t_poly / 24.0
         run_time_poly = pd.DataFrame(data={RUN_TIME_DAY_COLUMN: day_poly,
                                            RUN_TIME_HOUR_COLUMN: t_poly})
         # use run time for polynomial plotting

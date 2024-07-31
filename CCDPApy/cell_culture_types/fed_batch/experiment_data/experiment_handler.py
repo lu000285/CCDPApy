@@ -43,10 +43,10 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         feed_conc_data = feed_conc_data[feed_mask].copy().reset_index(drop=True)
         feed_volume_data = feed_volume_data[self._mask].copy().reset_index(drop=True)
         feed_volume_sum = feed_volume_data.fillna(0).sum(axis=1).values
+        df[FEED_MEDIA_ADDED_COLUMN]=0
         feed_media_added = df[FEED_MEDIA_ADDED_COLUMN].fillna(0).values
 
         feed_data = {}
-        
         if feed_conc_data.size!=0 and use_feed_conc==True:
             for name in feed_conc_data['Feed Name'].unique():
                 mask = feed_conc_data['Feed Name']==name
@@ -55,6 +55,7 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
 
                 if name in feed_volume_data.columns:
                     feed_vol = feed_volume_data[name].fillna(0).values
+                    # feed_media_added = feed_media_added + feed_vol
                 else:
                     feed_vol = feed_media_added
                 
@@ -81,6 +82,7 @@ class FedBatchExperimentHandler(ExperimentDataHandler, GetterMixin, Inprocess, P
         self._sample_volumne = df[SAMPLE_VOLUME_COLUMN].fillna(0).values
         self._base_added = df[BASE_ADDED_COLUMN].fillna(0).values
         self._feed_media_added = feed_media_added
+        # df[FEED_MEDIA_ADDED_COLUMN] = feed_media_added
         
         self._viable_cell_conc = create_value_unit_df(df[VIABLE_CELL_COLUMN])
         self._dead_cell_conc = create_value_unit_df(df[DEAD_CELL_COLUMN])

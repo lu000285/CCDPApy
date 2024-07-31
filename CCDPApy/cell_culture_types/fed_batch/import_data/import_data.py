@@ -45,6 +45,7 @@ class ImportMixin:
         sp_rate_data = data_list[taerget_column_indices[SP_RATE_COLUMN]]
         
         if SP_RATE_POLY_COLUMN in imported_data.columns:
+            print(taerget_column_indices[SP_RATE_POLY_COLUMN])
             sp_rate_poly_data = data_list[taerget_column_indices[SP_RATE_POLY_COLUMN]]
         else:
             sp_rate_poly_data = None
@@ -110,12 +111,12 @@ class ImportMixin:
             growth_rate_df = pd.concat([growth_rate_df, growth_rate_poly_df], axis=0, ignore_index=True)
 
         if not sp_rate_rolling is None:
-            run_time_mid = sp_rate_rolling[[RUN_TIME_DAY_MID_COLUMN, RUN_TIME_HOUR_MID_COLUMN]]
-            run_time_mid = run_time_mid.rename(columns={RUN_TIME_DAY_MID_COLUMN: RUN_TIME_DAY_COLUMN,
-                                                        RUN_TIME_HOUR_MID_COLUMN: RUN_TIME_HOUR_COLUMN})
+            # run_time_mid = sp_rate_rolling[[RUN_TIME_DAY_MID_COLUMN, RUN_TIME_HOUR_MID_COLUMN]]
+            # run_time_mid = run_time_mid.rename(columns={RUN_TIME_DAY_MID_COLUMN: RUN_TIME_DAY_COLUMN,
+            #                                             RUN_TIME_HOUR_MID_COLUMN: RUN_TIME_HOUR_COLUMN})
             growth_rate_roll = create_value_unit_df(sp_rate_rolling['Cell (hr^-1)'])
             growth_rate_roll['method'] = 'rollingWindowPolynomial'
-            growth_rate_roll_df = pd.concat([run_time_mid, growth_rate_roll, cell_line_id], axis=1)
+            growth_rate_roll_df = pd.concat([run_time, growth_rate_roll, cell_line_id], axis=1)
             growth_rate_df = pd.concat([growth_rate_df, growth_rate_roll_df], axis=0, ignore_index=True)
 
         # store
@@ -165,7 +166,7 @@ class ImportMixin:
         cumu_df_list = []
         for col in cumulative.columns:
             name = remove_units(col)
-            name = name.capitalize() if name != 'Igg' else 'IgG'
+            name = name.capitalize() if name != 'IgG' else 'IgG'
             temp = create_value_unit_df(cumulative[col])
             temp['state'] = SPECIES_STATE[name]
             temp['method'] = 'twoPoint'
@@ -205,9 +206,9 @@ class ImportMixin:
 
         if not sp_rate_rolling is None:
             del sp_rate_rolling['Cell (hr^-1)']
-            run_time_mid = sp_rate_rolling[[RUN_TIME_DAY_MID_COLUMN, RUN_TIME_HOUR_MID_COLUMN]]
-            run_time_mid = run_time_mid.rename(columns={RUN_TIME_DAY_MID_COLUMN: RUN_TIME_DAY_COLUMN,
-                                                        RUN_TIME_HOUR_MID_COLUMN: RUN_TIME_HOUR_COLUMN})
+            # run_time_mid = sp_rate_rolling[[RUN_TIME_DAY_MID_COLUMN, RUN_TIME_HOUR_MID_COLUMN]]
+            # run_time_mid = run_time_mid.rename(columns={RUN_TIME_DAY_MID_COLUMN: RUN_TIME_DAY_COLUMN,
+            #                                             RUN_TIME_HOUR_MID_COLUMN: RUN_TIME_HOUR_COLUMN})
             
             sp_rate_roll_df_list = []
             for col in sp_rate_rolling.columns:
@@ -217,7 +218,7 @@ class ImportMixin:
                 temp = create_value_unit_df(sp_rate_rolling[col])
                 temp['method'] = 'rollingWindowPolynomial'
                 temp['species'] = name
-                temp_df = pd.concat([run_time_mid, temp, cell_line_id], axis=1)
+                temp_df = pd.concat([run_time, temp, cell_line_id], axis=1)
                 sp_rate_roll_df_list.append(temp_df)
             sp_rate_rolling_df = pd.concat(sp_rate_roll_df_list, axis=0)
             sp_rate_df = pd.concat([sp_rate_df, sp_rate_rolling_df], axis=0, ignore_index=True)

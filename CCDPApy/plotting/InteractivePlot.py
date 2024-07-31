@@ -1,6 +1,6 @@
 # Import packages
 import numpy as np
-from jupyter_dash import JupyterDash
+# from jupyter_dash import JupyterDash
 from dash import Dash, html, dcc, callback, Output, Input, State
 import plotly.express as px
 
@@ -60,10 +60,10 @@ class InteractivePlotMixin:
         '''Initialize the layout
         '''
         # Initialize the app
-        if mode=='inline':
-            app = JupyterDash(__name__)
-        else:
-            app = Dash(__name__)
+        # if mode=='inline':
+        #     app = JupyterDash(__name__)
+        # else:
+        app = Dash(__name__)
 
         # Get options
         cell_line_options = options['Cell Line']

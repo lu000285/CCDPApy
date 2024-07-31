@@ -34,7 +34,8 @@ class ExperimentDataHandler:
         time_diff = date_time - date_time.iat[0]
         
         run_time_hour = time_diff.dt.total_seconds() / 3600.0
-        run_time_day = time_diff.dt.days
+        run_time_day = time_diff.dt.total_seconds() / 3600.0 / 24.0
+        # run_time_day = time_diff.dt.days
         run_time = pd.DataFrame(data={RUN_TIME_DAY_COLUMN: run_time_day,
                                       RUN_TIME_HOUR_COLUMN: run_time_hour})
         self._run_time = run_time

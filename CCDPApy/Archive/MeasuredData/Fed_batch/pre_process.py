@@ -19,7 +19,8 @@ def get_run_time(date_df, time_df) -> pd.DataFrame:
     
     time_diff = date_time - date_time.iat[0]
     run_time_hour = time_diff.dt.total_seconds() / 3600.0
-    run_time_day = time_diff.dt.days
+    run_time_day = time_diff.dt.total_seconds() / 3600.0 / 24.0
+    # run_time_day = time_diff.dt.days
 
     df = pd.DataFrame()
     #df[key.DATE] = date_df
